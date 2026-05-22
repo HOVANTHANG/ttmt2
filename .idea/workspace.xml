@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="7d25e814-0334-4c5f-b2d0-e7e86938a564" name="Changes" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Enum" />
+        <option value="Interface" />
+        <option value="Class" />
+        <option value="HTML File" />
+        <option value="JavaScript File" />
+        <option value="Record" />
+      </list>
+    </option>
+  </component>
+  <component name="InvalidFacetManager">
+    <ignored-facets>
+      <facet id="phonestore/invalid/JPA" />
+      <facet id="phonestore/invalid/Spring" />
+      <facet id="phonestore/invalid/Web" />
+    </ignored-facets>
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
+  <component name="ProjectId" id="2eAXRROzTAyMD8gNStc15ohbzbE" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.BaoNgocMobileApplication.executor": "Run",
+    "Application.PhoneStoreApplication.executor": "Run",
+    "Application.PhonestoreApplication.executor": "Run",
+    "DefaultHtmlFileTemplate": "HTML File",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "D:/baongocmobile",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "spring.configuration.checksum": "7828e856c5c54a5f1d0756d0a0875ae3",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="E:\baongocmobile" />
+      <recent name="E:\baongocmobile\src\main\java\com\web" />
+      <recent name="E:\baongocmobile\src\main\java\com\web\api" />
+      <recent name="E:\baongocmobile\src\main\resources\templates\admin" />
+      <recent name="D:\java_spring_boot\phonestore\phonestore\src\main\java\com\web\api" />
+    </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.web.utils" />
+      <recent name="com.web.repository" />
+      <recent name="com.web.entity" />
+      <recent name="com.web.dto.response" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="PhoneStoreApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.web.PhoneStoreApplication" />
+      <module name="phonestore" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.web.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.PhoneStoreApplication" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.23892.409" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="7d25e814-0334-4c5f-b2d0-e7e86938a564" name="Changes" comment="" />
+      <created>1711348385579</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1711348385579</updated>
+      <workItem from="1711348386925" duration="22131000" />
+      <workItem from="1711413738994" duration="9292000" />
+      <workItem from="1711434339464" duration="11624000" />
+      <workItem from="1714781322868" duration="1518000" />
+      <workItem from="1716377676688" duration="650000" />
+      <workItem from="1716524856156" duration="596000" />
+      <workItem from="1716532693757" duration="2413000" />
+      <workItem from="1716684283936" duration="1289000" />
+      <workItem from="1716775504737" duration="621000" />
+      <workItem from="1717038639105" duration="2470000" />
+      <workItem from="1718000568366" duration="499000" />
+      <workItem from="1719329359666" duration="1290000" />
+      <workItem from="1719388140140" duration="70000" />
+      <workItem from="1720856192318" duration="114000" />
+      <workItem from="1720971544295" duration="335000" />
+      <workItem from="1721988012986" duration="951000" />
+      <workItem from="1722011924739" duration="1399000" />
+      <workItem from="1724140494974" duration="842000" />
+      <workItem from="1725588444344" duration="1995000" />
+      <workItem from="1725606414199" duration="2511000" />
+      <workItem from="1725610288911" duration="8820000" />
+      <workItem from="1727508568309" duration="634000" />
+      <workItem from="1727698314977" duration="797000" />
+      <workItem from="1729214303707" duration="258000" />
+      <workItem from="1729528450635" duration="3047000" />
+      <workItem from="1729558095704" duration="32000" />
+      <workItem from="1732290019358" duration="2742000" />
+      <workItem from="1732322173311" duration="5839000" />
+      <workItem from="1736557107981" duration="1491000" />
+      <workItem from="1736644466418" duration="186000" />
+      <workItem from="1739329459707" duration="564000" />
+      <workItem from="1739369986353" duration="198000" />
+      <workItem from="1740882597361" duration="730000" />
+      <workItem from="1740927342848" duration="808000" />
+      <workItem from="1741163660889" duration="1638000" />
+      <workItem from="1741185056169" duration="1599000" />
+      <workItem from="1741857860734" duration="1813000" />
+      <workItem from="1743830290071" duration="804000" />
+      <workItem from="1743837005896" duration="1196000" />
+      <workItem from="1744074114537" duration="888000" />
+      <workItem from="1744344686976" duration="997000" />
+      <workItem from="1745486339575" duration="629000" />
+      <workItem from="1745585575263" duration="2387000" />
+      <workItem from="1746242411162" duration="120000" />
+      <workItem from="1746403778729" duration="663000" />
+      <workItem from="1747795717722" duration="456000" />
+      <workItem from="1747994702028" duration="352000" />
+      <workItem from="1748614044601" duration="627000" />
+      <workItem from="1750678558194" duration="628000" />
+      <workItem from="1754378110960" duration="634000" />
+      <workItem from="1754408008579" duration="397000" />
+      <workItem from="1758882997144" duration="646000" />
+      <workItem from="1758896465112" duration="641000" />
+      <workItem from="1762642276092" duration="6155000" />
+      <workItem from="1762741039519" duration="1978000" />
+      <workItem from="1762748282754" duration="182000" />
+      <workItem from="1762850555960" duration="3337000" />
+      <workItem from="1762904937054" duration="2473000" />
+      <workItem from="1762991618932" duration="10447000" />
+      <workItem from="1763017768673" duration="10282000" />
+      <workItem from="1763082452423" duration="2000" />
+      <workItem from="1763082734882" duration="48000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/web/utils/CommonPage.java</url>
+          <line>22</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

@@ -1,0 +1,606 @@
+var token = localStorage.getItem("token");
+var size = 10;
+
+/* =========================
+   NEW ORDER POLLING SYSTEM
+========================= */
+let lastKnownMaxId = 0;
+let newOrderCount = 0;
+let pollingTimer = null;
+const POLL_INTERVAL = 15000; // 15 giây
+
+async function initPolling() {
+    try {
+        const data = await fetchLatestId();
+        lastKnownMaxId = data.latestId || 0;
+        setNotifStatus('active');
+        pollingTimer = setInterval(checkNewOrders, POLL_INTERVAL);
+    } catch (e) {
+        setNotifStatus('error');
+        // Retry sau 30s nếu lỗi lần đầu
+        setTimeout(initPolling, 30000);
+    }
+}
+
+async function fetchLatestId() {
+    const res = await fetch('http://localhost:8080/api/invoice/seller/latest-id', {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) throw new Error('fetch failed');
+    return await res.json();
+}
+
+async function checkNewOrders() {
+    try {
+        const data = await fetchLatestId();
+        const newId = data.latestId || 0;
+
+        if (newId > lastKnownMaxId) {
+            const delta = newId - lastKnownMaxId;
+            lastKnownMaxId = newId;
+            newOrderCount += delta;
+
+            // Cập nhật badge
+            updateNotifBadge(newOrderCount);
+
+            // Rung chuông
+            ringBell();
+
+            // Âm thanh thông báo
+            playNotifSound();
+
+            // Toast
+            toastr.success(
+                `Bạn có <strong>${delta}</strong> đơn hàng mới! Mã đơn mới nhất: <strong>#${newId}</strong>`,
+                '🔔 Đơn hàng mới',
+                { timeOut: 8000, closeButton: true, enableHtml: true, positionClass: 'toast-top-right' }
+            );
+
+            // Chuyển sort sang mới nhất và reload
+            const sortEl = document.getElementById('sort');
+            if (sortEl) sortEl.value = sortEl.querySelector('option[value$=",desc"]') ? 'id,desc' : 'desc';
+
+            await loadInvoice(0);
+
+            // Highlight dòng mới nhất
+            highlightNewOrderRow(newId);
+        }
+    } catch (e) {
+        console.warn('[Polling] checkNewOrders error:', e);
+    }
+}
+
+function updateNotifBadge(count) {
+    const badge = document.getElementById('notifBadge');
+    if (!badge) return;
+    if (count > 0) {
+        badge.style.display = 'inline-block';
+        badge.textContent = count > 99 ? '99+' : count;
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+function ringBell() {
+    const bell = document.getElementById('notifBell');
+    if (!bell) return;
+    bell.classList.add('ringing');
+    setTimeout(() => bell.classList.remove('ringing'), 4000);
+}
+
+function playNotifSound() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [880, 1100, 880, 1320]; // ding-dong pattern
+        notes.forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
+            gain.gain.setValueAtTime(0.22, ctx.currentTime + i * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.1);
+            osc.start(ctx.currentTime + i * 0.12);
+            osc.stop(ctx.currentTime + i * 0.12 + 0.12);
+        });
+    } catch (e) { /* âm thanh không bắt buộc */ }
+}
+
+function highlightNewOrderRow(newId) {
+    setTimeout(() => {
+        const rows = document.querySelectorAll('#listinvoice tr');
+        for (const row of rows) {
+            const firstCell = row.querySelector('td:first-child');
+            if (firstCell && Number(firstCell.textContent.trim()) === Number(newId)) {
+                row.classList.add('new-order-row');
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Xóa class sau 5s
+                setTimeout(() => row.classList.remove('new-order-row'), 5000);
+                break;
+            }
+        }
+    }, 600);
+}
+
+function setNotifStatus(state) {
+    const el = document.getElementById('notifStatus');
+    if (!el) return;
+    if (state === 'active') {
+        el.innerHTML = '<i class="fas fa-circle me-1" style="font-size:8px;color:#4ade80"></i>Đang theo dõi đơn hàng...';
+    } else if (state === 'error') {
+        el.innerHTML = '<i class="fas fa-circle me-1" style="font-size:8px;color:#f87171"></i>Mất kết nối, đang thử lại...';
+    }
+}
+
+/* Reset badge khi click chuông */
+document.addEventListener('DOMContentLoaded', () => {
+    const bell = document.getElementById('notifBell');
+    if (bell) {
+        bell.closest('.notif-bell-wrap')?.addEventListener('click', () => {
+            newOrderCount = 0;
+            updateNotifBadge(0);
+        });
+    }
+});
+
+/* =========================
+   HELPERS
+========================= */
+function getVariantDisplayName(variant) {
+    if (!variant) return "Mặc định";
+
+    const tier1 = variant.tier1value || "";
+    const tier2 = variant.tier2value || "";
+
+    if (tier1 && tier2) return `${tier1} / ${tier2}`;
+    if (tier1) return tier1;
+    if (tier2) return tier2;
+
+    return "Mặc định";
+}
+
+function getVariantImage(product, variant) {
+    if (variant && variant.image && variant.image.trim() !== "") {
+        return variant.image;
+    }
+    if (product && product.imageBanner && product.imageBanner.trim() !== "") {
+        return product.imageBanner;
+    }
+    return "image/product1.webp";
+}
+
+/* =========================
+   LOAD LIST INVOICE BY SHOP
+========================= */
+async function loadInvoice(page) {
+    var start = document.getElementById("start").value;
+    var end = document.getElementById("end").value;
+    var type = document.getElementById("type").value;
+    var trangthai = document.getElementById("trangthai").value;
+    var sort = document.getElementById("sort").value;
+
+    var url = 'http://localhost:8080/api/invoice/seller/my-shop-invoices?page=' + page + '&size=' + size + '&sort=' + sort;
+
+    if (start !== "" && end !== "") {
+        url += '&from=' + start + '&to=' + end;
+    }
+    if (type != -1) {
+        url += '&paytype=' + type;
+    }
+    if (trangthai != -1) {
+        url += '&status=' + trangthai;
+    }
+
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: new Headers({
+                'Authorization': 'Bearer ' + token
+            })
+        });
+
+        const result = await response.json();
+        const list = result.content || [];
+        const totalPage = result.totalPages || 0;
+
+        let main = '';
+        for (let i = 0; i < list.length; i++) {
+            main += `
+                <tr>
+                    <td>${list[i].id}</td>
+                    <td>${list[i].createdTime || ''}<br>${list[i].createdDate || ''}</td>
+                    <td>${list[i].address || ''}</td>
+                    <td>${formatmoney(list[i].totalAmount || 0)}</td>
+                    <td>${formatmoney(list[i].shipCost || 0)}</td>
+                    <td>
+                        ${list[i].payType === 'MOMO'
+                    ? '<span class="dathanhtoan">Đã thanh toán</span>'
+                    : '<span class="chuathanhtoan">Thanh toán khi nhận hàng (COD)</span>'}
+                    </td>
+                    <td>${list[i].statusInvoice || ''}</td>
+                    <td class="sticky-col">
+                        <div class="act-group">
+                            <button onclick="loadDetailInvoice(${list[i].id})"
+                               data-bs-toggle="modal"
+                               data-bs-target="#modaldeail"
+                               class="btn-act btn-act-blue" data-tip="Xem chi tiết">
+                                <i class="fa fa-eye"></i>
+                            </button>
+                            <button onclick="openStatus(${list[i].id},'${list[i].statusInvoice}')"
+                               data-bs-toggle="modal"
+                               data-bs-target="#capnhatdonhang"
+                               class="btn-act btn-act-teal" data-tip="Cập nhật">
+                                <i class="fa fa-edit"></i>
+                            </button>
+                            <a target="_blank" href="/seller/in-don?id=${list[i].id}"
+                               class="btn-act btn-act-purple" data-tip="In đơn">
+                                <i class="fa fa-print"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        document.getElementById("listinvoice").innerHTML = main;
+
+        let mainpage = '';
+        for (let i = 1; i <= totalPage; i++) {
+            mainpage += `
+                <li onclick="loadInvoice(${Number(i) - 1})" class="page-item">
+                    <a class="page-link" href="#listsp">${i}</a>
+                </li>
+            `;
+        }
+        document.getElementById("pageable").innerHTML = mainpage;
+    } catch (error) {
+        console.error("Lỗi loadInvoice:", error);
+        toastr.error("Không tải được danh sách hóa đơn theo shop");
+    }
+}
+
+/* =========================
+   LOAD DETAIL INVOICE BY SHOP
+========================= */
+async function loadDetailInvoice(id) {
+    try {
+        var url = 'http://localhost:8080/api/invoice-detail/seller/find-by-invoice?idInvoice=' + id;
+        const res = await fetch(url, {
+            method: 'GET',
+            headers: new Headers({
+                'Authorization': 'Bearer ' + token
+            })
+        });
+
+        const list = await res.json();
+        let main = '';
+
+        for (let i = 0; i < list.length; i++) {
+            const item = list[i];
+            const product = item.product || {};
+            const variant = item.productVariant || {};
+
+            const image = getVariantImage(product, variant);
+            const variantText = getVariantDisplayName(variant);
+            const price = Number(item.price || variant.price || 0);
+            const quantity = Number(item.quantity || 0);
+
+            main += `
+                <tr>
+                    <td>
+                        <img src="${image}" class="imgdetailacc"
+                             onerror="this.src='image/product1.webp'">
+                    </td>
+                    <td>
+                        <a href="../detail?id=${product.id || ''}">${product.name || ''}</a><br>
+                        <span>${variantText}</span><br>
+                        <span>Mã sản phẩm: ${product.code || ''}</span><br>
+                        <span class="slmobile">SL: ${quantity}</span>
+                    </td>
+                    <td>${formatmoney(price)}</td>
+                    <td class="sldetailacc">${quantity}</td>
+                    <td class="pricedetailacc yls">${formatmoney(price * quantity)}</td>
+                </tr>
+            `;
+        }
+
+        document.getElementById("listDetailinvoice").innerHTML = main;
+
+        var urlInvoice = 'http://localhost:8080/api/invoice/seller/find-by-id?idInvoice=' + id;
+        const resp = await fetch(urlInvoice, {
+            method: 'GET',
+            headers: new Headers({
+                'Authorization': 'Bearer ' + token
+            })
+        });
+
+        const result = await resp.json();
+
+        document.getElementById("ngaytaoinvoice").innerHTML = (result.createdTime || '') + " " + (result.createdDate || '');
+        document.getElementById("trangthaitt").innerHTML = result.payType === "MOMO" ? "Đã thanh toán" : "Thanh toán khi nhận hàng";
+        document.getElementById("loaithanhtoan").innerHTML = result.payType === "MOMO"
+            ? "Thanh toán qua momo"
+            : "Thanh toán khi nhận hàng (COD)";
+        document.getElementById("ttvanchuyen").innerHTML = result.statusInvoice || '';
+        document.getElementById("tennguoinhan").innerHTML = result.receiverName || '';
+        document.getElementById("addnhan").innerHTML = result.address || '';
+        document.getElementById("phonenhan").innerHTML = result.phone || '';
+        document.getElementById("ghichunh").innerHTML =
+            result.note === "" || result.note == null ? 'Không có ghi chú' : result.note;
+        document.getElementById("reasonCancel").innerHTML = result.reasonCancel || '';
+        viewDetailInvoice(result.reasonCancel);
+    } catch (error) {
+        console.error("Lỗi loadDetailInvoice:", error);
+        toastr.error("Không tải được chi tiết hóa đơn");
+    }
+}
+
+
+
+// Hàm đổ dữ liệu vào modal của bạn (Ví dụ đặt tên là viewDetail)
+function viewDetailInvoice(reasonCancel) {
+
+    // 2. XỬ LÝ ẨN / HIỆN LÝ DO HỦY ĐƠN
+    const wrapperReason = document.getElementById("wrapperReasonCancel");
+    const txtReason = document.getElementById("reasonCancel");
+
+    // Thay 'CANCELED' (hoặc số trạng thái hủy của bạn trong DB) cho đúng nhé
+    if (reasonCancel) {
+        txtReason.innerText = reasonCancel;
+        wrapperReason.classList.remove("d-none"); // Hiển thị ra nếu là trạng thái hủy
+    } else {
+        wrapperReason.classList.add("d-none");    // Ẩn đi hoàn toàn nếu là trạng thái khác
+    }
+}
+
+/* =========================
+   STATUS UPDATE
+========================= */
+function openStatus(idinvoice, idstatus) {
+    document.getElementById("iddonhangupdate").value = idinvoice;
+    document.getElementById("trangthaiupdate").value = idstatus;
+}
+
+async function updateStatus() {
+    var trangthai = document.getElementById("trangthaiupdate").value;
+    var idinvoice = document.getElementById("iddonhangupdate").value;
+    var url = 'http://localhost:8080/api/invoice/seller/update-status?idInvoice=' + idinvoice + '&status=' + trangthai;
+
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: new Headers({
+                'Authorization': 'Bearer ' + token
+            })
+        });
+
+        if (res.status < 300) {
+            toastr.success("Cập nhật trạng thái đơn hàng thành công!");
+            $("#capnhatdonhang").modal("hide");
+            loadInvoice(0);
+            return;
+        }
+
+        if (res.status == exceptionCode) {
+            var result = await res.json();
+            toastr.warning(result.defaultMessage);
+        }
+    } catch (error) {
+        console.error("Lỗi updateStatus:", error);
+        toastr.error("Không thể cập nhật trạng thái đơn hàng");
+    }
+}
+
+async function loadStatusUpdate() {
+    var url = 'http://localhost:8080/api/invoice/seller/all-status';
+
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: new Headers({
+                'Authorization': 'Bearer ' + token
+            })
+        });
+
+        var list = await response.json();
+        var main = '';
+
+        for (let i = 0; i < list.length; i++) {
+            main += `<option value="${list[i]}">${list[i]}</option>`;
+        }
+        document.getElementById("trangthaiupdate").innerHTML = main;
+    } catch (error) {
+        console.error("Lỗi loadStatusUpdate:", error);
+    }
+}
+
+async function loadAllStatus() {
+    var url = 'http://localhost:8080/api/invoice/seller/all-status';
+
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: new Headers({
+                'Authorization': 'Bearer ' + token
+            })
+        });
+
+        var list = await response.json();
+        var main = '<option value="-1">--- Tất cả ---</option>';
+
+        for (let i = 0; i < list.length; i++) {
+            main += `<option value="${list[i]}">${list[i]}</option>`;
+        }
+        document.getElementById("trangthai").innerHTML = main;
+    } catch (error) {
+        console.error("Lỗi loadAllStatus:", error);
+    }
+}
+
+/* =========================
+   UPDATE IMEI
+========================= */
+async function updateImei(iddetail) {
+    var imei = document.getElementById("imei" + iddetail).value;
+    var url = `http://localhost:8080/api/invoice/seller/update-imei?detailId=${iddetail}&imei=${imei}`;
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: new Headers({
+                'Authorization': 'Bearer ' + token
+            })
+        });
+
+        if (response.status < 300) {
+            toastr.success("Cập nhật imei thành công");
+            return;
+        }
+
+        if (response.status == exceptionCode) {
+            var result = await response.json();
+            toastr.error(result.defaultMessage);
+        } else {
+            toastr.error("Có lỗi " + response.status + " xảy ra");
+        }
+    } catch (error) {
+        console.error("Lỗi updateImei:", error);
+        toastr.error("Không thể cập nhật imei");
+    }
+}
+
+/* =========================
+   PRINT INVOICE
+========================= */
+async function loadDetailInvoicePrint() {
+    try {
+        var uls = new URL(document.URL);
+        var id = uls.searchParams.get("id");
+
+        var url = 'http://localhost:8080/api/invoice-detail/seller/find-by-invoice?idInvoice=' + id;
+        const res = await fetch(url, {
+            method: 'GET',
+            headers: new Headers({
+                'Authorization': 'Bearer ' + token
+            })
+        });
+
+        const list = await res.json();
+        let main = '';
+        let tongTienTam = 0;
+
+        for (let i = 0; i < list.length; i++) {
+            const item = list[i];
+            const product = item.product || {};
+            const variant = item.productVariant || {};
+            const quantity = Number(item.quantity || 0);
+            const price = Number(item.price || variant.price || 0);
+            const variantText = getVariantDisplayName(variant);
+
+            tongTienTam += price * quantity;
+
+            main += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${product.name || ''}</td>
+                    <td>${variantText}</td>
+                    <td>${quantity}</td>
+                    <td>${formatmoney(price)}</td>
+                    <td>${formatmoney(price * quantity)}</td>
+                </tr>
+            `;
+        }
+
+        document.getElementById("listDetailinvoice").innerHTML = main;
+        document.getElementById("tongtam").innerHTML = formatmoney(tongTienTam);
+        document.getElementById("tongTientt").innerHTML = formatmoney(tongTienTam);
+
+        var urlInvoice = 'http://localhost:8080/api/invoice/seller/find-by-id?idInvoice=' + id;
+        const resp = await fetch(urlInvoice, {
+            method: 'GET',
+            headers: new Headers({
+                'Authorization': 'Bearer ' + token
+            })
+        });
+
+        const result = await resp.json();
+        document.getElementById("mahoadon").innerHTML = "#" + result.id;
+        document.getElementById("ngayTao").innerHTML = result.createdDate || '';
+
+        if (result.voucher != null) {
+            document.getElementById("giamgia").innerHTML = "- " + formatmoney(result.voucher.discount || 0);
+            document.getElementById("tongTientt").innerHTML = formatmoney(tongTienTam - (result.voucher.discount || 0));
+        }
+
+        if (result.receiverName != null) {
+            document.getElementById("tenkhachhang").innerHTML = `
+                <p>Khách Hàng</p>
+                <span>${result.receiverName}</span>
+            `;
+        }
+    } catch (error) {
+        console.error("Lỗi loadDetailInvoicePrint:", error);
+        toastr.error("Không tải được hóa đơn in");
+    }
+}
+
+/* =========================
+   SEARCH INVOICE
+========================= */
+function searchInvoice(page = 0) {
+    var q = document.getElementById("search").value.trim();
+    if (q === "") {
+        loadInvoice(0);
+        return;
+    }
+
+    var url = `http://localhost:8080/api/invoice/seller/search?q=${q}&page=${page}&size=${size}`;
+
+    fetch(url, {
+        method: "GET",
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+    })
+        .then(res => res.json())
+        .then(result => {
+            var list = result.content || [];
+            var main = "";
+
+            for (let i = 0; i < list.length; i++) {
+                main += `
+                <tr>
+                    <td>${list[i].id}</td>
+                    <td>${list[i].createdTime || ''}<br>${list[i].createdDate || ''}</td>
+                    <td>${list[i].address || ''}</td>
+                    <td>${formatmoney(list[i].totalAmount || 0)}</td>
+                    <td>${formatmoney(list[i].shipCost || 0)}</td>
+                    <td>
+                        ${list[i].payType == 'MOMO'
+                        ? '<span class="dathanhtoan">Đã thanh toán</span>'
+                        : '<span class="chuathanhtoan">Thanh toán khi nhận hàng (COD)</span>'}
+                    </td>
+                    <td>${list[i].statusInvoice || ''}</td>
+                    <td class="sticky-col">
+                        <div class="act-group">
+                            <button onclick="loadDetailInvoice(${list[i].id})"
+                               data-bs-toggle="modal"
+                               data-bs-target="#modaldeail"
+                               class="btn-act btn-act-blue" data-tip="Xem chi tiết">
+                                <i class="fa fa-eye"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            }
+
+            document.getElementById("listinvoice").innerHTML = main;
+        })
+        .catch(error => {
+            console.error("Lỗi searchInvoice:", error);
+            toastr.error("Không tìm kiếm được hóa đơn");
+        });
+}

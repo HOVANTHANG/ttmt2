@@ -1,0 +1,28 @@
+/* Định dạng chung cho nhóm input để không bị vỡ bố cục khi hiện lỗi */
+.auth-input-group {
+    position: relative;
+    margin-bottom: 20px;
+    /* Tăng khoảng cách một chút để chứa dòng lỗi */
+}
+
+/* Thẻ hiển thị câu thông báo lỗi */
+.error-msg {
+    color: #e74c3c;
+    font-size: 12px;
+    margin-top: 5px;
+    display: block;
+    font-weight: 500;
+    min-height: 18px;
+    /* Giữ khoảng trống cố định để form không bị giật dòng khi lỗi hiện lên */
+}
+
+/* Style khi ô input bị gắn class lỗi */
+.auth-input-group.invalid input {
+    border-color: #e74c3c !important;
+    background-color: #fdf2f2;
+}
+
+/* Đổi màu icon sang đỏ khi có lỗi */
+.auth-input-group.invalid .input-icon {
+    color: #e74c3c !important;
+}

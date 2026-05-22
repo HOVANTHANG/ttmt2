@@ -1,0 +1,34 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-PhoneStoreApplication<phonestore>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.web.PhoneStoreApplication",
+            "projectName": "phonestore",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-PhoneStoreApplication<sellora>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.web.PhoneStoreApplication",
+            "projectName": "sellora",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-SelloraApplication<sellora>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.web.SelloraApplication",
+            "projectName": "sellora",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

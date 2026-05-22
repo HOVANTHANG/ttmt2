@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sản phẩm theo danh mục | Sellora</title>
+    <meta name="description" content="Khám phá sản phẩm theo danh mục tại Sellora - Hàng chính hãng, giá tốt nhất">
+    <link rel="shortcut icon" href="image/logo.ico">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/category-detail.css">
+    <script src="js/main.js"></script>
+
+</head>
+
+<body>
+    <div id="headerweb"></div>
+
+    <div class="contentweb cd-page">
+        <div class="container" id="cdContainer">
+
+            <div class="cd-breadcrumb">
+                <a href="index"><i class="fa-solid fa-house" style="font-size:11px"></i> Trang chủ</a>
+                <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
+                <span class="current" id="bdCurrent">Danh mục</span>
+            </div>
+
+            <div class="cd-wrap" id="cdWrap">
+
+                <div class="cd-sidebar-slot" id="cdSlot">
+                    <aside class="cd-sidebar" id="cdSidebar">
+                        <div class="cd-sidebar-hd">
+                            <i class="fa-solid fa-layer-group"></i>
+                            Tất Cả Danh Mục
+                        </div>
+                        <div id="sidebarContent">
+                            <div style="padding:20px 16px;color:#9ca3af;font-size:13px;">
+                                <i class="fa-solid fa-circle-notch fa-spin" style="margin-right:6px"></i>Đang tải...
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+
+                <div class="cd-main">
+
+                    <div class="cd-sort-bar">
+                        <span class="cd-sort-label">Sắp xếp theo</span>
+                        <button class="cd-sort-btn active" id="sortDefault" onclick="changeSort('default')">Phổ
+                            Biến</button>
+                        <button class="cd-sort-btn" id="sortNew" onclick="changeSort('id,desc')">Mới Nhất</button>
+                        <button class="cd-sort-btn" id="sortSold" onclick="changeSort('sold,desc')">Bán Chạy</button>
+                        <button class="cd-sort-btn" id="sortPrice" onclick="changeSort('price,asc')">Giá Thấp</button>
+                        <span class="cd-result-count" id="totalText"></span>
+                    </div>
+
+                    <div class="cd-grid" id="productGrid">
+                        <div class="cd-loading">
+                            <i class="fa-solid fa-circle-notch"></i>
+                            Đang tải sản phẩm...
+                        </div>
+                    </div>
+
+                    <div class="cd-pagination" id="cdPagination"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="footer"></div>
+
+    <script>
+        /* ══════════════════════════════════════
+            CONFIG
+        ══════════════════════════════════════ */
+        const BASE_URL = "http://localhost:8080";
+        const API_PRODUCTS_BY_CAT = BASE_URL + "/api/product/public/find-by-category";
+        const API_CATEGORY_ALL = BASE_URL + "/api/category/public/findAll";
+
+        let currentCategoryId = null;
+        let currentPage = 0;
+        const PAGE_SIZE = 20;
+        let totalPages = 0;
+        let currentSort = "default";
+        let allCategories = [];
+
+        /* ══════════════════════════════════════
+            INIT 
+        ══════════════════════════════════════ */
+        window.onload = async function () {
+            if (typeof loadMenu === "function") loadMenu();
+
+            currentCategoryId = getParam("id");
+            await loadAllCategories();
+            buildSidebar(currentCategoryId);
+            loadProducts(0);
+        };
+
+        /* ══════════════════════════════════════
+            CATEGORIES PROCESSING
+        ══════════════════════════════════════ */
+        async function loadAllCategories() {
+            try {
+                const res = await fetch(API_CATEGORY_ALL);
+                if (res.ok) allCategories = await res.json();
+            } catch (e) { console.error(e); }
+        }
+
+        function findById(id) {
+            return allCategories.find(c => Number(c.id) === Number(id));
+        }
+        function getChildren(parentId) {
+            return allCategories.filter(c => Number(c.parentId) === Number(parentId));
+        }
+
+        function buildSidebar(activeCatId) {
+            const box = document.getElementById("sidebarContent");
+            const activeCat = findById(activeCatId);
+            if (!activeCat) {
+                box.innerHTML = '<div style="padding:16px;color:#9ca3af;font-size:13px">Không tìm thấy danh mục</div>';
+                return;
+            }
+
+            let rootCat = activeCat;
+            while (rootCat.parentId) {
+                const par = findById(rootCat.parentId);
+                if (!par) break;
+                rootCat = par;
+            }
+
+            document.getElementById("bdCurrent").textContent = activeCat.name || "";
+            document.title = (activeCat.name || "Danh mục") + " | Sellora";
+
+            const children = getChildren(rootCat.id);
+            const isSelf = Number(activeCatId) === Number(rootCat.id);
+
+            let html = `
+                <div class="cd-cat-group">
+                    <div class="cd-cat-parent">${esc(rootCat.name)}</div>
+                    <ul style="list-style:none;margin:0;padding:0">
+                        <li class="cd-cat-item">
+                            <a href="category-detail?id=${rootCat.id}" class="${isSelf ? 'active' : ''}">
+                                <span class="dot"></span>Tất cả
+                            </a>
+                        </li>
+            `;
+
+            children.forEach(child => {
+                const active = Number(activeCatId) === Number(child.id);
+                html += `
+                    <li class="cd-cat-item">
+                        <a href="category-detail?id=${child.id}" class="${active ? 'active' : ''}">
+                            <span class="dot"></span>${esc(child.name)}
+                        </a>
+                    </li>
+                `;
+            });
+
+            html += `</ul></div>`;
+            box.innerHTML = html;
+        }
+
+        /* ══════════════════════════════════════
+            PRODUCTS PROCESSING
+        ══════════════════════════════════════ */
+        async function loadProducts(page) {
+            currentPage = page;
+            if (!currentCategoryId) return;
+
+            const grid = document.getElementById("productGrid");
+            grid.innerHTML = `
+                <div class="cd-loading">
+                    <i class="fa-solid fa-circle-notch"></i>
+                    Đang tải sản phẩm...
+                </div>`;
+
+            try {
+                const params = new URLSearchParams({
+                    categoryId: currentCategoryId,
+                    page, size: PAGE_SIZE
+                });
+                if (currentSort !== "default") params.set("sort", currentSort);
+
+                const res = await fetch(`${API_PRODUCTS_BY_CAT}?${params}`);
+                if (!res.ok) throw new Error();
+
+                const data = await res.json();
+                const products = data.content || [];
+                totalPages = data.totalPages || 0;
+                const total = data.totalElements || 0;
+
+                document.getElementById("totalText").textContent =
+                    total.toLocaleString("vi-VN") + " sản phẩm";
+
+                renderProducts(products);
+                renderPagination();
+                if (page > 0) window.scrollTo({ top: 0, behavior: "smooth" });
+
+            } catch (e) {
+                console.error(e);
+                grid.innerHTML = `
+                    <div class="cd-empty">
+                        <i class="fa-solid fa-box-open"></i>
+                        <strong>Không tải được sản phẩm</strong>
+                        <span>Vui lòng thử lại sau</span>
+                    </div>`;
+            }
+        }
+
+        function renderProducts(products) {
+            const grid = document.getElementById("productGrid");
+
+            if (!products.length) {
+                grid.innerHTML = `
+                    <div class="cd-empty">
+                        <i class="fa-solid fa-box-open"></i>
+                        <strong>Danh mục này chưa có sản phẩm</strong>
+                        <span>Hãy quay lại sau nhé!</span>
+                    </div>`;
+                return;
+            }
+
+            grid.innerHTML = products.map(p => {
+                const discount = (p.oldPrice && p.price && p.oldPrice > p.price)
+                    ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
+                const img = p.imageBanner || "image/product1.webp";
+
+                /* Đã fix lỗi onerror */
+                return `
+                    <div class="cd-card" onclick="location.href='detail?id=${p.id}'">
+                        ${discount > 0 ? `<div class="cd-badge">-${discount}%</div>` : ""}
+                        <div class="cd-img-wrap">
+                            <img src="${img}"
+                                 alt="${esc(p.name)}"
+                                 onerror="this.onerror=null; this.src='image/product1.webp'"
+                                 loading="lazy">
+                        </div>
+                        <div class="cd-body">
+                            <a class="cd-name" href="detail?id=${p.id}">${esc(p.name)}</a>
+                            <div class="cd-price-row">
+                                <span class="cd-price">${money(p.price)}</span>
+                                ${p.oldPrice && p.oldPrice > p.price
+                        ? `<span class="cd-oldprice">${money(p.oldPrice)}</span>` : ""}
+                            </div>
+                            ${p.sold ? `<div class="cd-sold">Đã bán ${p.sold.toLocaleString("vi-VN")}</div>` : ""}
+                        </div>
+                    </div>`;
+            }).join("");
+        }
+
+        /* ══════════════════════════════════════
+            PAGINATION
+        ══════════════════════════════════════ */
+        function renderPagination() {
+            const box = document.getElementById("cdPagination");
+            if (totalPages <= 1) { box.innerHTML = ""; return; }
+
+            const MAX = 5;
+            let start = Math.max(0, currentPage - Math.floor(MAX / 2));
+            let end = Math.min(totalPages - 1, start + MAX - 1);
+            if (end - start < MAX - 1) start = Math.max(0, end - MAX + 1);
+
+            let h = btn(`<i class="fa-solid fa-chevron-left"></i>`, currentPage - 1, currentPage === 0);
+            if (start > 0) { h += btn("1", 0); if (start > 1) h += `<span class="cd-page-btn" style="pointer-events:none;border:none;background:none">…</span>`; }
+            for (let i = start; i <= end; i++) h += btn(i + 1, i, false, i === currentPage);
+            if (end < totalPages - 1) { if (end < totalPages - 2) h += `<span class="cd-page-btn" style="pointer-events:none;border:none;background:none">…</span>`; h += btn(totalPages, totalPages - 1); }
+            h += btn(`<i class="fa-solid fa-chevron-right"></i>`, currentPage + 1, currentPage + 1 >= totalPages);
+
+            box.innerHTML = h;
+        }
+
+        function btn(label, page, disabled = false, active = false) {
+            return `<button class="cd-page-btn${active ? ' active' : ''}"
+                ${disabled ? 'disabled' : `onclick="loadProducts(${page})"`}>${label}</button>`;
+        }
+
+        /* ══════════════════════════════════════
+            SORT CONTROLLER
+        ══════════════════════════════════════ */
+        function changeSort(type) {
+            currentSort = type;
+            document.querySelectorAll(".cd-sort-btn").forEach(b => b.classList.remove("active"));
+            document.querySelectorAll(".cd-sort-btn").forEach(b => {
+                if (b.getAttribute("onclick").includes(`'${type}'`)) {
+                    b.classList.add("active");
+                }
+            });
+            loadProducts(0);
+        }
+
+        /* ══════════════════════════════════════
+            UTILS
+        ══════════════════════════════════════ */
+        function getParam(k) { return new URLSearchParams(location.search).get(k); }
+        function money(n) { return Number(n || 0).toLocaleString("vi-VN") + " ₫"; }
+        function esc(s) {
+            return s ? String(s)
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : "";
+        }
+    </script>
+</body>
+
+</html>
