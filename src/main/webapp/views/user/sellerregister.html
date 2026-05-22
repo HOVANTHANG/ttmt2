@@ -50,6 +50,56 @@
             loadMenu();
         };
     </script>
+
+    <style>
+        /* ── Field validation states ── */
+        .sr-input-error {
+            border-color: #ef4444 !important;
+            background: #fff5f5 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, .13) !important;
+        }
+
+        .sr-input-ok {
+            border-color: #10b981 !important;
+            background: #f0fdf4 !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, .10) !important;
+        }
+
+        .sr-field-error {
+            display: none !important;
+            align-items: center;
+            gap: 5px;
+            margin-top: 5px;
+            font-size: 12.5px;
+            color: #ef4444;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .sr-field-error.visible {
+            display: flex !important;
+        }
+
+        /* ── Upload status ── */
+        .sr-upload-status {
+            font-size: 12.5px;
+            font-weight: 600;
+            margin-top: 6px;
+            min-height: 18px;
+        }
+
+        .sr-upload-status.uploading {
+            color: #6366f1;
+        }
+
+        .sr-upload-status.ok {
+            color: #10b981;
+        }
+
+        .sr-upload-status.error {
+            color: #ef4444;
+        }
+    </style>
 </head>
 
 <body class="sr-page">
@@ -132,11 +182,13 @@
                     <div class="sr-row">
                         <div class="sr-form-group">
                             <label for="shopName">Tên shop <span class="req">*</span></label>
-                            <input type="text" id="shopName" class="sr-input" placeholder="VD: Cửa hàng ABC" required>
+                            <input type="text" id="shopName" class="sr-input" placeholder="VD: Cửa hàng ABC">
+                            <div class="sr-field-error" id="shopNameError" style="display:none"></div>
                         </div>
                         <div class="sr-form-group">
                             <label for="shopSlug">Slug shop <span class="req">*</span></label>
-                            <input type="text" id="shopSlug" class="sr-input" placeholder="VD: cua-hang-abc" required>
+                            <input type="text" id="shopSlug" class="sr-input" placeholder="VD: cua-hang-abc">
+                            <div class="sr-field-error" id="shopSlugError" style="display:none"></div>
                             <div class="sr-slug-hint">URL: sellora.com/shop/<strong
                                     id="slugPreview">slug-cua-ban</strong></div>
                         </div>
@@ -145,11 +197,13 @@
                     <div class="sr-row">
                         <div class="sr-form-group">
                             <label for="phone">Số điện thoại <span class="req">*</span></label>
-                            <input type="tel" id="phone" class="sr-input" placeholder="0912 345 678" required>
+                            <input type="tel" id="phone" class="sr-input" placeholder="0912 345 678">
+                            <div class="sr-field-error" id="phoneError" style="display:none"></div>
                         </div>
                         <div class="sr-form-group">
                             <label for="email">Email</label>
                             <input type="email" id="email" class="sr-input" placeholder="shop@email.com">
+                            <div class="sr-field-error" id="emailError" style="display:none"></div>
                         </div>
                     </div>
 
@@ -173,6 +227,7 @@
                                 <span>PNG, JPG tối đa 5MB. Khuyến nghị 200×200px</span>
                             </div>
                         </div>
+                        <div class="sr-upload-status" id="avatarUploadStatus"></div>
                     </div>
 
                     <button type="submit" class="sr-submit-btn" id="submitBtn">
@@ -199,9 +254,20 @@
     <script src="js/seller-register.js"></script>
 
     <script>
-        // Live slug preview
+        // Live slug preview khi gõ tên shop
+        document.getElementById('shopName').addEventListener('input', function () {
+            let slug = removeVietnameseTones(this.value)
+                .toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+            document.getElementById('shopSlug').value = slug;
+            document.getElementById('slugPreview').textContent = slug || 'slug-cua-ban';
+        });
+
         document.getElementById('shopSlug').addEventListener('input', function () {
-            var slug = this.value.trim().toLowerCase()
+            let slug = this.value.trim().toLowerCase()
                 .replace(/\s+/g, '-')
                 .replace(/[^a-z0-9-]/g, '');
             this.value = slug;
@@ -222,6 +288,8 @@
             };
             reader.readAsDataURL(file);
         });
+
+
     </script>
 </body>
 

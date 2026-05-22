@@ -13,6 +13,10 @@ public interface ShopRepository extends JpaRepository<Shop, Long> {
 
     boolean existsByShopSlug(String shopSlug);
 
+    boolean existsByPhone(String phone);
+
+    boolean existsByEmail(String email);
+
     boolean existsByOwnerId(Long ownerId);
 
     List<Shop> findByStatus(ShopStatus status);

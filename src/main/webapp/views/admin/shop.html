@@ -1,40 +1,175 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quản lý shop — Admin</title>
+
     <link href="css/styles.css" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"
-        crossorigin="anonymous"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.0/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css"
-        integrity="sha512-5A8nwdMOWrSz20fDsjczgUidUBR8liPYU+WymTZP1lmY9G6Oc7HlZv156XqnsgNUzTyMefFTcsFH/tnJE/+xBg=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
-        integrity="sha512-SfTiTlX6kk+qitfevl/7LibUOeJWlt9rbyDn92a1DqWOw9vWG2MFoays0sgObmWazO5BQPiFucnnEAjpAB+/Sw=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"
-        crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" />
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.css" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
-
-    <script src="https://cdn.datatables.net/1.13.2/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.2/js/dataTables.bootstrap5.min.js"></script>
-    <link href="https://cdn.datatables.net/1.13.2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.0/css/bootstrap.min.css"
-        rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.0.2/js/toastr.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
     <script src="js/menu.js"></script>
-    <script src="js/index.js"></script>
+
+    <style>
+        body { background: #f4f6f8; }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 28px 0 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .page-header h3 {
+            font-size: 22px;
+            font-weight: 800;
+            color: #111827;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .page-header h3 i { color: #0d9488; }
+
+        /* Filter bar */
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filter-bar .form-control, .filter-bar .form-select {
+            border-radius: 10px;
+            font-size: 13.5px;
+            border: 1.5px solid #e2e8f0;
+            padding: 7px 14px;
+            min-width: 140px;
+        }
+        .filter-bar .form-control:focus, .filter-bar .form-select:focus {
+            border-color: #0d9488;
+            box-shadow: 0 0 0 3px rgba(13,148,136,.12);
+        }
+
+        /* Table card */
+        .shop-card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px rgba(15,23,42,.08);
+            overflow: hidden;
+        }
+        .shop-table { margin: 0; }
+        .shop-table thead th {
+            background: #f8fafc;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: #64748b;
+            border-bottom: 1.5px solid #e2e8f0;
+            padding: 13px 16px;
+            white-space: nowrap;
+        }
+        .shop-table tbody td {
+            padding: 13px 16px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13.5px;
+            color: #1e293b;
+        }
+        .shop-table tbody tr:last-child td { border-bottom: none; }
+        .shop-table tbody tr:hover { background: #f8fafc; }
+
+        /* Avatar */
+        .shop-av-wrap {
+            width: 46px; height: 46px;
+            border-radius: 14px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0d9488, #065f46);
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid #e2e8f0;
+            flex-shrink: 0;
+        }
+        .shop-av-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .shop-av-initial { color: #fff; font-weight: 800; font-size: 18px; text-transform: uppercase; }
+
+        /* Status badges */
+        .badge-status {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 4px 12px; border-radius: 999px;
+            font-size: 12px; font-weight: 700;
+        }
+        .badge-approved { background: #dcfce7; color: #16a34a; }
+        .badge-pending  { background: #fff7ed; color: #ea580c; }
+        .badge-rejected { background: #fee2e2; color: #dc2626; }
+
+        /* Action buttons */
+        .btn-lock {
+            background: #fee2e2; color: #dc2626;
+            border: none; border-radius: 9px;
+            padding: 6px 14px; font-size: 12.5px; font-weight: 700;
+            cursor: pointer; transition: .2s;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-lock:hover { background: #dc2626; color: #fff; }
+
+        .btn-unlock {
+            background: #dcfce7; color: #16a34a;
+            border: none; border-radius: 9px;
+            padding: 6px 14px; font-size: 12.5px; font-weight: 700;
+            cursor: pointer; transition: .2s;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-unlock:hover { background: #16a34a; color: #fff; }
+
+        /* Stats pills */
+        .stat-pill {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #f1f5f9; border-radius: 8px;
+            padding: 3px 9px; font-size: 12px; color: #475569; font-weight: 600;
+        }
+
+        /* Summary cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        .summary-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 18px 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.06);
+            display: flex; align-items: center; gap: 14px;
+        }
+        .summary-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; flex-shrink: 0;
+        }
+        .summary-card .s-val { font-size: 22px; font-weight: 800; color: #111827; }
+        .summary-card .s-lbl { font-size: 12px; color: #64748b; font-weight: 600; }
+
+        /* Confirm modal */
+        #confirmShopModal .modal-content {
+            border: none; border-radius: 18px; overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,.18);
+        }
+        #confirmShopModal .modal-header { border: none; padding: 22px 24px 8px; }
+        #confirmShopModal .modal-footer { border: none; padding: 12px 24px 20px; gap: 8px; }
+
+        /* Search highlight */
+        .empty-state {
+            text-align: center; padding: 48px 20px; color: #94a3b8;
+        }
+        .empty-state i { font-size: 40px; margin-bottom: 12px; opacity: .4; }
+    </style>
 </head>
 
 <body class="sb-nav-fixed">
@@ -43,88 +178,263 @@
         <div id="layoutSidenav_nav"></div>
         <div id="layoutSidenav_content">
             <main class="container-fluid px-4">
-                <h3 class="mt-4 mb-3">Danh sách shop</h3>
 
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <i class="fa fa-shopping-bag"></i>
-                        Quản lý shop
+                <div class="page-header">
+                    <h3><i class="fas fa-store"></i> Quản lý cửa hàng</h3>
+                    <button class="btn btn-outline-primary btn-sm" onclick="loadShop()" style="border-radius:10px;font-weight:600;">
+                        <i class="fas fa-sync-alt"></i> Tải lại
+                    </button>
+                </div>
+
+                <!-- Summary cards -->
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <div class="summary-icon" style="background:#dcfce7;color:#16a34a;"><i class="fas fa-check-circle"></i></div>
+                        <div><div class="s-val" id="cntApproved">—</div><div class="s-lbl">Đang hoạt động</div></div>
                     </div>
+                    <div class="summary-card">
+                        <div class="summary-icon" style="background:#fff7ed;color:#ea580c;"><i class="fas fa-clock"></i></div>
+                        <div><div class="s-val" id="cntPending">—</div><div class="s-lbl">Chờ duyệt</div></div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon" style="background:#fee2e2;color:#dc2626;"><i class="fas fa-lock"></i></div>
+                        <div><div class="s-val" id="cntRejected">—</div><div class="s-lbl">Đã khóa / Từ chối</div></div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon" style="background:#ede9fe;color:#7c3aed;"><i class="fas fa-store"></i></div>
+                        <div><div class="s-val" id="cntTotal">—</div><div class="s-lbl">Tổng cửa hàng</div></div>
+                    </div>
+                </div>
 
-                    <div class="card-body">
-                        <table class="table table-bordered table-hover align-middle">
-                            <thead class="table-dark">
+                <!-- Filter bar -->
+                <div class="filter-bar mb-3">
+                    <input type="text" id="searchInput" class="form-control" placeholder="🔍 Tìm tên shop, slug..."
+                        oninput="filterTable()" style="max-width:260px;">
+                    <select id="statusFilter" class="form-select" onchange="filterTable()" style="max-width:180px;">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="APPROVED">✅ Đang hoạt động</option>
+                        <option value="PENDING">⏳ Chờ duyệt</option>
+                        <option value="REJECTED">🔒 Đã khóa</option>
+                    </select>
+                </div>
+
+                <!-- Table -->
+                <div class="shop-card">
+                    <div class="table-responsive">
+                        <table class="table shop-table align-middle">
+                            <thead>
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Avatar</th>
+                                    <th style="width:50px">ID</th>
+                                    <th style="width:56px">Ảnh</th>
                                     <th>Tên shop</th>
                                     <th>Slug</th>
                                     <th>SĐT</th>
-                                    <th>Email</th>
                                     <th>Trạng thái</th>
+                                    <th style="width:180px">Hành động</th>
                                 </tr>
                             </thead>
-
                             <tbody id="listShop">
-                                <tr>
-                                    <td colspan="7" class="text-center">Đang tải dữ liệu...</td>
-                                </tr>
+                                <tr><td colspan="7" class="text-center py-4 text-muted">Đang tải dữ liệu...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
+
             </main>
         </div>
     </div>
 
+    <!-- Confirm Modal -->
+    <div class="modal fade" id="confirmShopModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered" style="max-width:420px">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="d-flex align-items-center gap-3">
+                        <div id="confirmIcon" style="width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;"></div>
+                        <h5 class="modal-title fw-bold mb-0" id="confirmTitle"></h5>
+                    </div>
+                </div>
+                <div class="modal-body" id="confirmBody" style="color:#4b5563;font-size:15px;padding:8px 24px;"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-light" data-bs-dismiss="modal" style="border-radius:10px;font-weight:600;">Huỷ</button>
+                    <button class="btn" id="confirmOkBtn" style="border-radius:10px;font-weight:700;min-width:120px;"></button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-</body>
-<script>
-    window.onload = function () {
-        if (typeof loadMenu === "function") {
-            loadMenu();
+    <script>
+        const BASE = 'http://localhost:8080';
+        let allShops = [];
+
+        toastr.options = {
+            positionClass: 'toast-top-right',
+            timeOut: 3500,
+            closeButton: true,
+            progressBar: true,
+            newestOnTop: true
+        };
+
+        window.onload = function () {
+            if (typeof loadMenu === 'function') loadMenu();
+            loadShop();
+        };
+
+        function getToken() { return localStorage.getItem('token'); }
+
+        async function loadShop() {
+            const res = await fetch(BASE + '/api/admin/shop/all', {
+                headers: { 'Authorization': 'Bearer ' + getToken() }
+            });
+            if (!res.ok) { toastr.error('Không tải được danh sách shop', 'Lỗi'); return; }
+            allShops = await res.json();
+            updateSummary(allShops);
+            renderTable(allShops);
         }
-        loadShop();
-    };
 
-    async function loadShop() {
-        const token = localStorage.getItem("token");
+        function updateSummary(list) {
+            document.getElementById('cntTotal').textContent    = list.length;
+            document.getElementById('cntApproved').textContent = list.filter(s => s.status === 'APPROVED').length;
+            document.getElementById('cntPending').textContent  = list.filter(s => s.status === 'PENDING').length;
+            document.getElementById('cntRejected').textContent = list.filter(s => s.status === 'REJECTED').length;
+        }
 
-        const res = await fetch("http://localhost:8080/api/admin/shop/all", {
-            headers: {
-                "Authorization": "Bearer " + token
+        function filterTable() {
+            const kw     = document.getElementById('searchInput').value.trim().toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            const filtered = allShops.filter(s => {
+                const matchKw = !kw
+                    || (s.shopName  || '').toLowerCase().includes(kw)
+                    || (s.shopSlug || '').toLowerCase().includes(kw)
+                    || (s.phone    || '').includes(kw);
+                const matchSt = !status || s.status === status;
+                return matchKw && matchSt;
+            });
+            renderTable(filtered);
+        }
+
+        function renderTable(list) {
+            if (!list.length) {
+                document.getElementById('listShop').innerHTML =
+                    `<tr><td colspan="7"><div class="empty-state"><i class="fas fa-store-slash"></i><div>Không tìm thấy shop nào</div></div></td></tr>`;
+                return;
             }
-        });
 
-        if (!res.ok) {
-            alert("Không tải được danh sách shop");
-            return;
+            let html = '';
+            list.forEach(s => {
+                const initial = (s.shopName || 'S').charAt(0).toUpperCase();
+                const avatar  = s.avatar
+                    ? `<img src="${s.avatar}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:12px;">
+                       <span class="shop-av-initial" style="display:none">${initial}</span>`
+                    : `<span class="shop-av-initial">${initial}</span>`;
+
+                const statusBadge = {
+                    APPROVED: `<span class="badge-status badge-approved"><i class="fas fa-check-circle"></i> Hoạt động</span>`,
+                    PENDING:  `<span class="badge-status badge-pending"><i class="fas fa-clock"></i> Chờ duyệt</span>`,
+                    REJECTED: `<span class="badge-status badge-rejected"><i class="fas fa-lock"></i> Đã khóa</span>`
+                }[s.status] || `<span class="badge-status badge-pending">${s.status}</span>`;
+
+                const actionBtn = (s.status === 'APPROVED' || s.status === 'PENDING')
+                    ? `<button class="btn-lock" onclick="confirmAction(${s.id}, 'lock', '${escHtml(s.shopName)}')">
+                          <i class="fas fa-lock"></i> Khóa shop
+                       </button>`
+                    : `<button class="btn-unlock" onclick="confirmAction(${s.id}, 'unlock', '${escHtml(s.shopName)}')">
+                          <i class="fas fa-lock-open"></i> Mở khóa
+                       </button>`;
+
+                html += `
+                    <tr data-status="${s.status}">
+                        <td><span class="stat-pill">#${s.id}</span></td>
+                        <td>
+                            <div class="shop-av-wrap" style="position:relative;">
+                                ${avatar}
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight:700;color:#111827;">${escHtml(s.shopName || '')}</div>
+                            <div style="font-size:11.5px;color:#94a3b8;margin-top:2px;">${escHtml(s.email || '')}</div>
+                        </td>
+                        <td><code style="background:#f1f5f9;padding:2px 7px;border-radius:6px;font-size:12px;">${escHtml(s.shopSlug || '')}</code></td>
+                        <td>${escHtml(s.phone || '—')}</td>
+                        <td>${statusBadge}</td>
+                        <td>${actionBtn}</td>
+                    </tr>`;
+            });
+            document.getElementById('listShop').innerHTML = html;
         }
 
-        const list = await res.json();
-        let html = "";
+        // ── Confirm modal ──
+        function showConfirm({ title, body, okText, okClass, iconHtml, iconBg, onOk }) {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmBody').innerHTML    = body;
+            const iconEl = document.getElementById('confirmIcon');
+            iconEl.innerHTML    = iconHtml || '';
+            iconEl.style.background = iconBg || '#f1f5f9';
 
-        list.forEach(item => {
-            html += `
-                <tr>
-                    <td>${item.id}</td>
-                    <td>
-                        <img src="${item.avatar || '/image/logo.ico'}"
-                             onerror="this.src='/image/logo.ico'"
-                             style="width:52px;height:52px;border-radius:50%;object-fit:cover;">
-                    </td>
-                    <td>${item.shopName || ""}</td>
-                    <td>${item.shopSlug || ""}</td>
-                    <td>${item.phone || ""}</td>
-                    <td>${item.email || ""}</td>
-                    <td>${item.status || ""}</td>
-                </tr>
-            `;
-        });
+            const oldBtn = document.getElementById('confirmOkBtn');
+            const newBtn = oldBtn.cloneNode(true);
+            oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+            newBtn.textContent = okText;
+            newBtn.className   = 'btn ' + (okClass || 'btn-primary');
+            newBtn.style.cssText = 'border-radius:10px;font-weight:700;min-width:120px;';
+            newBtn.addEventListener('click', () => {
+                bootstrap.Modal.getInstance(document.getElementById('confirmShopModal')).hide();
+                if (typeof onOk === 'function') onOk();
+            });
 
-        document.getElementById("listShop").innerHTML =
-            html || `<tr><td colspan="7" class="text-center">Chưa có shop nào</td></tr>`;
-    }
-</script>
+            new bootstrap.Modal(document.getElementById('confirmShopModal')).show();
+        }
 
+        function confirmAction(id, action, shopName) {
+            const isLock = action === 'lock';
+            showConfirm({
+                title:   isLock ? 'Khóa cửa hàng' : 'Mở khóa cửa hàng',
+                body:    isLock
+                    ? `Bạn có chắc muốn <strong>khóa</strong> shop <em>"${shopName}"</em>?<br>
+                       <span style="color:#dc2626;font-size:13px;">⚠ Toàn bộ sản phẩm của shop sẽ bị ẩn khỏi sàn.</span>`
+                    : `Bạn có chắc muốn <strong>mở khóa</strong> shop <em>"${shopName}"</em>?<br>
+                       <span style="color:#16a34a;font-size:13px;">✅ Toàn bộ sản phẩm của shop sẽ được khôi phục.</span>`,
+                okText:  isLock ? '🔒 Xác nhận khóa' : '🔓 Xác nhận mở khóa',
+                okClass: isLock ? 'btn-danger' : 'btn-success',
+                iconHtml: isLock
+                    ? '<i class="fas fa-lock" style="color:#dc2626"></i>'
+                    : '<i class="fas fa-lock-open" style="color:#16a34a"></i>',
+                iconBg: isLock ? '#fee2e2' : '#dcfce7',
+                onOk: () => doAction(id, action)
+            });
+        }
+
+        async function doAction(id, action) {
+            const token = getToken();
+            try {
+                const res = await fetch(`${BASE}/api/admin/shop/${id}/${action}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (action === 'lock') {
+                        toastr.warning(data.message || 'Shop đã bị khóa!', '🔒 Đã khóa');
+                    } else {
+                        toastr.success(data.message || 'Shop đã được mở khóa!', '🔓 Đã mở khóa');
+                    }
+                    loadShop(); // refresh table
+                } else {
+                    const txt = await res.text();
+                    toastr.error(txt || 'Thao tác thất bại', 'Lỗi');
+                }
+            } catch (e) {
+                toastr.error('Không thể kết nối server', 'Lỗi');
+            }
+        }
+
+        function escHtml(s) {
+            return String(s || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+    </script>
+</body>
 </html>

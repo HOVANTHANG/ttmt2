@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/seller")
@@ -64,7 +65,7 @@ public class SellerAdminApi {
         shop.setStatus(ShopStatus.APPROVED);
         shopRepository.save(shop);
 
-        return ResponseEntity.ok("Đã duyệt shop");
+        return ResponseEntity.ok(Map.of("message", "Shop đã được duyệt thành công"));
     }
 
     @PostMapping("/reject/{id}")
@@ -72,10 +73,9 @@ public class SellerAdminApi {
         Shop shop = shopRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy shop"));
 
-        shop.setStatus(ShopStatus.REJECTED);
-        shopRepository.save(shop);
+        shopRepository.delete(shop);
 
-        return ResponseEntity.ok("Đã từ chối shop");
+        return ResponseEntity.ok(Map.of("message", "Shop đã bị từ chối"));
     }
 
     private ShopApprovalResponse mapShop(Shop shop) {

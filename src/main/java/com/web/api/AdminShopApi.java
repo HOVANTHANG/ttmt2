@@ -35,9 +35,44 @@ public class AdminShopApi {
         this.invoiceDetailRepository = invoiceDetailRepository;
     }
 
+    /** Lấy TẤT CẢ shop (bao gồm APPROVED, PENDING, REJECTED) */
     @GetMapping("/all")
     public ResponseEntity<?> findAllShop() {
-        return ResponseEntity.ok(shopRepository.findAllByStatus(ShopStatus.APPROVED));
+        return ResponseEntity.ok(shopRepository.findAll());
+    }
+
+    /** Khóa shop: status → REJECTED + ẩn toàn bộ sản phẩm */
+    @PostMapping("/{id}/lock")
+    public ResponseEntity<?> lockShop(@PathVariable Long id) {
+        Shop shop = shopRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy shop"));
+        shop.setStatus(ShopStatus.REJECTED);
+        shopRepository.save(shop);
+        // Ẩn tất cả sản phẩm của shop
+        List<Product> products = productRepository.findByShopId(id);
+        products.forEach(p -> {
+            p.setDeleted(true);
+            productRepository.save(p);
+        });
+        return ResponseEntity.ok(Map.of(
+                "message", "Đã khóa shop và ẩn " + products.size() + " sản phẩm"));
+    }
+
+    /** Mở khóa shop: status → APPROVED + khôi phục sản phẩm */
+    @PostMapping("/{id}/unlock")
+    public ResponseEntity<?> unlockShop(@PathVariable Long id) {
+        Shop shop = shopRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy shop"));
+        shop.setStatus(ShopStatus.APPROVED);
+        shopRepository.save(shop);
+        // Khôi phục tất cả sản phẩm về APPROVED
+        List<Product> products = productRepository.findByShopId(id);
+        products.forEach(p -> {
+            p.setDeleted(false);
+            productRepository.save(p);
+        });
+        return ResponseEntity.ok(Map.of(
+                "message", "Đã mở khóa shop và khôi phục " + products.size() + " sản phẩm"));
     }
 
     @GetMapping("/statistic")
@@ -46,27 +81,22 @@ public class AdminShopApi {
                 .stream()
                 .map(shop -> {
                     ShopStatisticResponse dto = new ShopStatisticResponse();
-
                     dto.setShopId(shop.getId());
                     dto.setShopName(shop.getShopName());
                     dto.setAvatar(shop.getAvatar());
                     dto.setStatus(shop.getStatus() != null ? shop.getStatus().name() : "");
-
                     dto.setTotalProduct(productRepository.countByShopId(shop.getId()));
                     dto.setTotalOrder(invoiceDetailRepository.countOrderByShop(shop.getId()));
                     dto.setRevenue(invoiceDetailRepository.revenueByShop(shop.getId()));
                     dto.setProfit(invoiceDetailRepository.profitByShop(shop.getId()));
-
                     return dto;
                 })
                 .toList();
-
         return ResponseEntity.ok(result);
     }
 
     // ===================== PRODUCT APPROVAL =====================
 
-    /** Lấy danh sách sản phẩm chờ duyệt (có hỗ trợ tìm kiếm) */
     @GetMapping("/product/pending")
     public ResponseEntity<?> getPendingProducts(
             @RequestParam(value = "keyword", required = false) String keyword,
@@ -75,50 +105,40 @@ public class AdminShopApi {
 
         Pageable pageable = PageRequest.of(page, size);
         Page<Product> result;
-
         if (keyword != null && !keyword.trim().isEmpty()) {
             result = productRepository.searchPending(keyword.trim(), pageable);
         } else {
             result = productRepository.findAllPending(pageable);
         }
-
         return ResponseEntity.ok(result);
     }
 
-    /** Đếm số sản phẩm đang chờ duyệt (dùng cho badge thông báo) */
     @GetMapping("/product/pending/count")
     public ResponseEntity<?> countPendingProducts() {
         Long count = productRepository.countPending();
         return ResponseEntity.ok(Map.of("count", count));
     }
 
-    /** Duyệt sản phẩm */
     @PostMapping("/product/{id}/approve")
     public ResponseEntity<?> approveProduct(@PathVariable Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
-
         product.setStatus(ProductStatus.APPROVED);
         product.setRejectedReason(null);
         productRepository.save(product);
-
         return ResponseEntity.ok(Map.of("message", "Sản phẩm đã được duyệt thành công"));
     }
 
-    /** Từ chối sản phẩm */
     @PostMapping("/product/{id}/reject")
     public ResponseEntity<?> rejectProduct(
             @PathVariable Long id,
             @RequestBody(required = false) Map<String, String> body) {
-
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
-
         String reason = (body != null) ? body.getOrDefault("reason", "") : "";
         product.setStatus(ProductStatus.REJECTED);
         product.setRejectedReason(reason);
         productRepository.save(product);
-
         return ResponseEntity.ok(Map.of("message", "Sản phẩm đã bị từ chối"));
     }
-}
+}
