@@ -42,51 +42,189 @@ async function authFetch(url, options = {}) {
 
 // ==================== LOAD DANH SÁCH ĐƠN HÀNG ====================
 
+const PAGE_SIZE = 5;
+var allInvoices   = [];
+var filteredInvoices = [];
+var currentPage   = 1;
+var currentFilter = 'ALL';
+
+const STATUS_MAP = {
+    DANG_CHO_XAC_NHAN : { label: 'Chờ xác nhận', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
+    DA_XAC_NHAN        : { label: 'Đã xác nhận',  color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe' },
+    DANG_GIAO          : { label: 'Đang giao',     color: '#8b5cf6', bg: '#f5f3ff', border: '#ddd6fe' },
+    DA_GIAO            : { label: 'Đã giao',       color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0' },
+    DA_NHAN            : { label: 'Hoàn thành',    color: '#0d9488', bg: '#f0fdfa', border: '#99f6e4' },
+    DA_HUY             : { label: 'Đã hủy',        color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
+    HUY                : { label: 'Đã hủy',        color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
+};
+
+function getStatusInfo(status) {
+    return STATUS_MAP[status] || { label: status || '—', color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' };
+}
+
 async function loadMyInvoice() {
     try {
         const response = await authFetch(`${BASE_URL}/api/invoice/user/find-by-user`);
+        if (!response.ok) throw new Error('Không tải được đơn hàng');
 
-        if (!response.ok) throw new Error("Không tải được đơn hàng");
+        allInvoices = await response.json() || [];
+        // Sắp xếp mới nhất lên đầu
+        allInvoices.sort((a, b) => b.id - a.id);
 
-        const list = await response.json();
+        document.getElementById('sldonhang').innerHTML = allInvoices.length + ' đơn hàng';
 
-        const main = (!list || list.length === 0)
-            ? `<tr><td colspan="8" class="text-center text-muted">Bạn chưa có đơn hàng nào</td></tr>`
-            : list.map(item => `
-                <tr class="invoice-row" onclick="openInvoiceDetail(${item.id})">
-                    <td>#${item.id}</td>
-                    <td class="floatr">${item.createdTime || ""}<br>${item.createdDate || ""}</td>
-                    <td>${item.address || ""}</td>
-                    <td class="floatr"><span class="yls">${formatmoney(item.totalAmount)}</span></td>
-                    <td class="floatr"><span class="yls">${formatmoney(item.shipCost)}</span></td>
-                    <td>
-                        ${item.payType === "MOMO"
-                    ? '<span class="dathanhtoan">Đã thanh toán</span>'
-                    : '<span class="chuathanhtoan">COD</span>'}
-                    </td>
-                    <td>${item.statusInvoice || ""}</td>
-                    <td>
-                        ${(["DANG_CHO_XAC_NHAN", "DA_XAC_NHAN"].includes(item.statusInvoice))
-                    ? `<button
-                            onclick="event.stopPropagation(); cancelInvoice(${item.id})"
-                            onmouseover="this.style.background='#ef4444';this.style.color='#fff'"
-                            onmouseout="this.style.background='transparent';this.style.color='#ef4444'"
-                            style="background:transparent;color:#ef4444;border:1.5px solid #ef4444;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;"
-                            title="Hủy đơn hàng">
-                          Hủy đơn
-                        </button>`
-                    : ""}
-                    </td>
-                </tr>
-            `).join("");
-
-        document.getElementById("listinvoice").innerHTML = main;
-        document.getElementById("sldonhang").innerHTML = (list ? list.length : 0) + " đơn hàng";
+        currentFilter = 'ALL';
+        currentPage   = 1;
+        applyFilter();
 
     } catch (e) {
-        console.error("Lỗi loadMyInvoice:", e);
-        toastr.error("Không tải được danh sách đơn hàng");
+        console.error('Lỗi loadMyInvoice:', e);
+        toastr.error('Không tải được danh sách đơn hàng');
     }
+}
+
+function filterOrders(status, btn) {
+    currentFilter = status;
+    currentPage   = 1;
+
+    // Reset tất cả tab về dạng inactive
+    document.querySelectorAll('[id^="tab-"]').forEach(el => {
+        el.style.background    = '#fff';
+        el.style.color         = '#64748b';
+        el.style.border        = '1.5px solid #e2e8f0';
+    });
+    // Active tab
+    if (btn) {
+        btn.style.background = 'linear-gradient(135deg,#0d9488,#065f46)';
+        btn.style.color      = '#fff';
+        btn.style.border     = 'none';
+    }
+    applyFilter();
+}
+
+function applyFilter() {
+    filteredInvoices = currentFilter === 'ALL'
+        ? allInvoices
+        : allInvoices.filter(iv => iv.statusInvoice === currentFilter);
+    renderPage();
+    renderPagination();
+}
+
+function renderPage() {
+    const container = document.getElementById('ordersContainer');
+    if (!container) return;
+
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const page  = filteredInvoices.slice(start, start + PAGE_SIZE);
+
+    if (filteredInvoices.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center;padding:60px 0;color:#94a3b8;">
+                <i class="fa-solid fa-box-open" style="font-size:52px;margin-bottom:16px;display:block;"></i>
+                <div style="font-size:15px;font-weight:600;">Không có đơn hàng nào</div>
+                <div style="font-size:13px;margin-top:6px;">Hãy mua sắm để có đơn hàng đầu tiên!</div>
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = page.map(item => {
+        const st   = getStatusInfo(item.statusInvoice);
+        const canCancel = ['DANG_CHO_XAC_NHAN','DA_XAC_NHAN'].includes(item.statusInvoice);
+        const payBadge  = item.payType === 'MOMO'
+            ? `<span style="background:#fff0f9;color:#ec4899;border:1.5px solid #fbcfe8;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">MoMo</span>`
+            : `<span style="background:#f0fdf4;color:#16a34a;border:1.5px solid #bbf7d0;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">COD</span>`;
+
+        return `
+        <div onclick="openInvoiceDetail(${item.id})"
+             style="background:#fff;border:1.5px solid #e8edf3;border-radius:16px;padding:18px 20px;cursor:pointer;
+                    transition:box-shadow .2s,border-color .2s;display:flex;align-items:center;gap:20px;flex-wrap:wrap;"
+             onmouseover="this.style.boxShadow='0 6px 24px rgba(13,148,136,.10)';this.style.borderColor='#99f6e4'"
+             onmouseout="this.style.boxShadow='none';this.style.borderColor='#e8edf3'">
+
+            <!-- ID + ngày -->
+            <div style="min-width:110px;">
+                <div style="font-size:18px;font-weight:800;color:#0d9488;">#${item.id}</div>
+                <div style="font-size:12px;color:#94a3b8;margin-top:3px;">${item.createdTime || ''}</div>
+                <div style="font-size:12px;color:#94a3b8;">${item.createdDate || ''}</div>
+            </div>
+
+            <!-- Trạng thái + thanh toán -->
+            <div style="flex:1;min-width:140px;">
+                <span style="display:inline-block;padding:5px 14px;border-radius:20px;font-size:12.5px;font-weight:700;
+                             background:${st.bg};color:${st.color};border:1.5px solid ${st.border};">
+                    ${st.label}
+                </span>
+                <div style="margin-top:8px;">${payBadge}</div>
+            </div>
+
+            <!-- Giá tiền -->
+            <div style="text-align:right;min-width:140px;">
+                <div style="font-size:17px;font-weight:800;color:#ef4444;">${formatmoney(item.totalAmount)}</div>
+                <div style="font-size:12px;color:#94a3b8;margin-top:2px;">Ship: ${formatmoney(item.shipCost)}</div>
+            </div>
+
+            <!-- Nút hành động -->
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;min-width:100px;"
+                 onclick="event.stopPropagation()">
+                <button onclick="openInvoiceDetail(${item.id})"
+                    style="border:1.5px solid #0d9488;background:#fff;color:#0d9488;border-radius:20px;
+                           padding:5px 16px;font-size:13px;font-weight:600;cursor:pointer;width:100%;font-family:inherit;
+                           transition:all .2s;"
+                    onmouseover="this.style.background='#0d9488';this.style.color='#fff'"
+                    onmouseout="this.style.background='#fff';this.style.color='#0d9488'">
+                    Xem chi tiết
+                </button>
+                ${canCancel ? `
+                <button onclick="cancelInvoice(${item.id})"
+                    style="border:1.5px solid #ef4444;background:#fff;color:#ef4444;border-radius:20px;
+                           padding:5px 16px;font-size:13px;font-weight:600;cursor:pointer;width:100%;font-family:inherit;
+                           transition:all .2s;"
+                    onmouseover="this.style.background='#ef4444';this.style.color='#fff'"
+                    onmouseout="this.style.background='#fff';this.style.color='#ef4444'">
+                    Hủy đơn
+                </button>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderPagination() {
+    const pag   = document.getElementById('ordersPagination');
+    if (!pag) return;
+    const total = Math.ceil(filteredInvoices.length / PAGE_SIZE);
+    if (total <= 1) { pag.innerHTML = ''; return; }
+
+    const btnStyle = (active) =>
+        `padding:6px 14px;border-radius:8px;border:1.5px solid ${active ? '#0d9488' : '#e2e8f0'};
+         background:${active ? '#0d9488' : '#fff'};color:${active ? '#fff' : '#64748b'};
+         font-weight:${active ? '700' : '500'};cursor:pointer;font-family:inherit;font-size:13.5px;transition:all .2s;`;
+
+    let html = `<button style="${btnStyle(false)}" onclick="goPage(${currentPage-1})"
+                    ${currentPage===1?'disabled style="opacity:.4;cursor:not-allowed"':''}>
+                    ‹ Trước
+                </button>`;
+
+    for (let i = 1; i <= total; i++) {
+        html += `<button style="${btnStyle(i===currentPage)}" onclick="goPage(${i})">${i}</button>`;
+    }
+
+    html += `<button style="${btnStyle(false)}" onclick="goPage(${currentPage+1})"
+                ${currentPage===total?'disabled style="opacity:.4;cursor:not-allowed"':''}>
+                Tiếp ›
+            </button>`;
+
+    pag.innerHTML = html;
+}
+
+function goPage(page) {
+    const total = Math.ceil(filteredInvoices.length / PAGE_SIZE);
+    if (page < 1 || page > total) return;
+    currentPage = page;
+    renderPage();
+    renderPagination();
+    // Scroll lên đầu danh sách
+    const c = document.getElementById('ordersContainer');
+    if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ==================== CHI TIẾT ĐƠN HÀNG ====================

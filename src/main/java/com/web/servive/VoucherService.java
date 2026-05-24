@@ -28,6 +28,13 @@ public interface VoucherService {
 
     public Optional<Voucher> findByCode(String code, Double amount);
 
+    /**
+     * Kiểm tra voucher có thuộc đúng shop không.
+     * shopId = null → bỏ qua kiểm tra shop (dùng cho invoice tổng hoặc admin).
+     * shopId != null → voucher phải thuộc shop đó, HOẶC là voucher toàn sàn (shop == null).
+     */
+    public Optional<Voucher> findByCode(String code, Double amount, Long shopId);
+
     // Seller-specific: tạo voucher gắn với shop của seller
     public Voucher createForSeller(Voucher voucher);
 

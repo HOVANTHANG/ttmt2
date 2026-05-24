@@ -100,20 +100,33 @@ public class VoucherServiceimp implements VoucherService {
 
     @Override
     public Optional<Voucher> findByCode(String code, Double amount) {
+        return findByCode(code, amount, null); // backward compat: không check shop
+    }
+
+    @Override
+    public Optional<Voucher> findByCode(String code, Double amount, Long shopId) {
         Optional<Voucher> ex = voucherRepository.findByCode(code);
-        if(ex.isEmpty()){
+        if (ex.isEmpty()) {
             throw new MessageException("Mã voucher không khả dụng");
         }
-        if(ex.get().getBlock() == true){
+        if (ex.get().getBlock() == true) {
             throw new MessageException("Mã voucher không thể sử dụng");
         }
         Date now = new Date(System.currentTimeMillis());
-        if(!((ex.get().getStartDate().before(now) || ex.get().getStartDate().equals(now))
-                && (ex.get().getEndDate().after(now) || ex.get().getEndDate().equals(now)))){
+        if (!((ex.get().getStartDate().before(now) || ex.get().getStartDate().equals(now))
+                && (ex.get().getEndDate().after(now) || ex.get().getEndDate().equals(now)))) {
             throw new MessageException("Mã voucher đã hết hạn");
         }
-        if(ex.get().getMinAmount() > amount){
-            throw new MessageException("Số tiền đơn hàng chưa đủ, hãy mua thêm "+(ex.get().getMinAmount() - amount)+" để được áp dụng voucher");
+        if (ex.get().getMinAmount() > amount) {
+            throw new MessageException("Số tiền đơn hàng chưa đủ điều kiện áp dụng voucher này");
+        }
+        // ── Kiểm tra shop ──
+        // Nếu voucher gắn với 1 shop cụ thể (shop != null), chỉ được dùng cho shop đó.
+        // Voucher toàn sàn (shop == null) thì ai cũng dùng được.
+        if (shopId != null && ex.get().getShop() != null) {
+            if (!ex.get().getShop().getId().equals(shopId)) {
+                throw new MessageException("Mã voucher này không áp dụng cho shop đã chọn");
+            }
         }
         return ex;
     }

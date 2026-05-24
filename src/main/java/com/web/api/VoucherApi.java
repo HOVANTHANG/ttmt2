@@ -70,8 +70,10 @@ public class VoucherApi {
     }
 
     @GetMapping("/public/findByCode")
-    public ResponseEntity<?> findById(@RequestParam("code") String code, @RequestParam("amount") Double amount) {
-        Optional<Voucher> result = voucherService.findByCode(code, amount);
+    public ResponseEntity<?> findById(@RequestParam("code") String code,
+            @RequestParam("amount") Double amount,
+            @RequestParam(value = "shopId", required = false) Long shopId) {
+        Optional<Voucher> result = voucherService.findByCode(code, amount, shopId);
         return new ResponseEntity<>(result.get(), HttpStatus.OK);
     }
 
@@ -83,13 +85,13 @@ public class VoucherApi {
 
     @PostMapping("/seller/update")
     public ResponseEntity<?> update1(@RequestBody Voucher voucher) {
-        Voucher result = voucherService.update(voucher);
+        Voucher result = voucherService.updateForSeller(voucher);
         return new ResponseEntity<>(result, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/seller/delete")
     public ResponseEntity<?> delete1(@RequestParam("id") Long id) {
-        voucherService.delete(id);
+        voucherService.deleteForSeller(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

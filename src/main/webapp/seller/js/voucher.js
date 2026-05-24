@@ -1,6 +1,8 @@
 var token = localStorage.getItem("token");
 var size = 10;
 async function loadVoucher(page, start, end) {
+
+
     var url = 'http://localhost:8080/api/voucher/seller/findAll-page?page=' + page + '&size=' + size;
     if (start != null && start != "" && end != null && end != "" && start != 'null' && end != 'null') {
         url += '&start=' + start + '&end=' + end
@@ -16,6 +18,10 @@ async function loadVoucher(page, start, end) {
     var list = result.content;
     var totalPage = result.totalPages;
     var main = '';
+
+    const tzoffset = (new Date()).getTimezoneOffset() * 60000;
+    const today = (new Date(Date.now() - tzoffset)).toISOString().slice(0, 10);
+
     for (i = 0; i < list.length; i++) {
         main += `<tr>
                     <td>${list[i].id}</td>
@@ -25,7 +31,7 @@ async function loadVoucher(page, start, end) {
                     <td>${formatmoney(list[i].discount)}</td>
                     <td>${list[i].startDate}</td>
                     <td>${list[i].endDate}</td>
-                    <td>${list[i].block == true ? '<span class="locked">Đã khóa</span>' : '<span class="actived">Đang hoạt động</span>'}</td>
+                    <td>${list[i].block == true || list[i].endDate <= today ? '<span class="locked">Đã khóa</span>' : '<span class="actived">Đang hoạt động</span>'}</td>
                     <td class="sticky-col">
                         <div class="act-group">
                             <button onclick="deleteVoucher(${list[i].id})" class="btn-act btn-act-red" data-tip="Xóa">

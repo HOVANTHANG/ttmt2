@@ -441,31 +441,44 @@
                                     <div class="account-content-header">
                                         <div>
                                             <h3><i class="fa-solid fa-bag-shopping"></i> Đơn hàng của tôi</h3>
-                                            <div class="header-subtitle">Nhấp vào dòng đơn hàng để xem chi tiết và đánh
-                                                giá</div>
+                                            <div class="header-subtitle">Nhấp vào đơn hàng để xem chi tiết và đánh giá</div>
                                         </div>
                                         <span class="header-badge" id="sldonhang">0 đơn hàng</span>
                                     </div>
 
-                                    <div class="account-content-body">
-                                        <div class="orders-table-wrapper">
-                                            <table class="orders-table table table-cart table-order"
-                                                id="my-orders-table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Mã đơn hàng</th>
-                                                        <th>Ngày mua</th>
-                                                        <th>Địa chỉ</th>
-                                                        <th>Giá trị</th>
-                                                        <th>Phí ship</th>
-                                                        <th>Thanh toán</th>
-                                                        <th>Vận chuyển</th>
-                                                        <th>Hủy</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="listinvoice"></tbody>
-                                            </table>
+                                    <!-- Status filter tabs -->
+                                    <div style="padding:0 20px;border-bottom:1px solid #f1f5f9;background:#fafcfe;overflow-x:auto;white-space:nowrap;">
+                                        <div style="display:inline-flex;gap:4px;padding:10px 0;">
+                                            <button id="tab-ALL" onclick="filterOrders('ALL',this)"
+                                                style="padding:7px 16px;border-radius:20px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#0d9488,#065f46);color:#fff;transition:all .2s;">
+                                                Tất cả
+                                            </button>
+                                            <button id="tab-DANG_CHO_XAC_NHAN" onclick="filterOrders('DANG_CHO_XAC_NHAN',this)"
+                                                style="padding:7px 16px;border-radius:20px;border:1.5px solid #e2e8f0;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:#64748b;transition:all .2s;">
+                                                Chờ xác nhận
+                                            </button>
+                                            <button id="tab-DA_XAC_NHAN" onclick="filterOrders('DA_XAC_NHAN',this)"
+                                                style="padding:7px 16px;border-radius:20px;border:1.5px solid #e2e8f0;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:#64748b;transition:all .2s;">
+                                                Đã xác nhận
+                                            </button>
+                                            <button id="tab-DANG_GIAO" onclick="filterOrders('DANG_GIAO',this)"
+                                                style="padding:7px 16px;border-radius:20px;border:1.5px solid #e2e8f0;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:#64748b;transition:all .2s;">
+                                                Đang giao
+                                            </button>
+                                            <button id="tab-DA_NHAN" onclick="filterOrders('DA_NHAN',this)"
+                                                style="padding:7px 16px;border-radius:20px;border:1.5px solid #e2e8f0;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:#64748b;transition:all .2s;">
+                                                Hoàn thành
+                                            </button>
+                                            <button id="tab-DA_HUY" onclick="filterOrders('DA_HUY',this)"
+                                                style="padding:7px 16px;border-radius:20px;border:1.5px solid #e2e8f0;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:#64748b;transition:all .2s;">
+                                                Đã hủy
+                                            </button>
                                         </div>
+                                    </div>
+
+                                    <div class="account-content-body">
+                                        <div id="ordersContainer" style="padding:16px 8px;display:flex;flex-direction:column;gap:12px;min-height:200px;"></div>
+                                        <div id="ordersPagination" style="display:flex;justify-content:center;align-items:center;gap:8px;padding:16px 0;"></div>
                                     </div>
                                 </div>
                             </div>

@@ -47,20 +47,30 @@ public class ChatApi {
     @GetMapping("/user/current-info")
     public ResponseEntity<?> currentUserInfo() {
         User u = userUtils.getUserWithAuthority();
+        if (u == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Vui lòng đăng nhập"));
+        }
+        String fullname = u.getFullname() != null ? u.getFullname() : u.getUsername();
         return ResponseEntity.ok(Map.of(
-                "id", u.getId(),
+                "id",       u.getId(),
                 "username", u.getUsername(),
-                "fullname", u.getFullname() != null ? u.getFullname() : u.getUsername()
+                "fullname", fullname
         ));
     }
 
     @GetMapping("/seller/current-info")
     public ResponseEntity<?> currentSellerInfo() {
         User u = userUtils.getUserWithAuthority();
+        if (u == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Vui lòng đăng nhập"));
+        }
+        String fullname = u.getFullname() != null ? u.getFullname() : u.getUsername();
         return ResponseEntity.ok(Map.of(
-                "id", u.getId(),
+                "id",       u.getId(),
                 "username", u.getUsername(),
-                "fullname", u.getFullname() != null ? u.getFullname() : u.getUsername()
+                "fullname", fullname
         ));
     }
 

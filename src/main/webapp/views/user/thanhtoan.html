@@ -732,58 +732,28 @@
 
                 </div>
 
-                <!-- ===== RIGHT: Summary ===== -->
+                <!-- ===== RIGHT: Multi-shop Summary ===== -->
                 <div class="ck-summary">
-                    <div class="ck-card">
-                        <div class="ck-card-header">
-                            <h2>
-                                <i class="fa-solid fa-bag-shopping" style="color:#0d9488"></i>
-                                Đơn hàng
-                                (<span id="slcartcheckout">0</span> sản phẩm)
-                            </h2>
-                        </div>
 
-                        <!-- Product list -->
-                        <div id="listproductcheck" class="ck-prod-list">
-                            <!-- JS rendered -->
-                        </div>
+                    <!-- Header -->
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                        <i class="fa-solid fa-bag-shopping" style="color:#0d9488;font-size:16px;"></i>
+                        <h3 style="font-size:15px;font-weight:800;color:#111827;margin:0;">
+                            Đơn hàng (<span id="slcartcheckout">0</span>&nbsp;sản phẩm)
+                        </h3>
+                    </div>
 
-                        <!-- Voucher -->
-                        <div class="ck-voucher">
-                            <div class="ck-voucher-row">
-                                <input id="codevoucher" class="ck-vou-input" placeholder="Nhập mã giảm giá...">
-                                <button onclick="loadVoucher()" class="ck-vou-btn">
-                                    <i class="fa-solid fa-tag"></i> Áp dụng
-                                </button>
-                            </div>
-                            <div class="ck-vou-success" id="blockmess">
-                                <i class="fa-solid fa-circle-check"></i> Mã giảm giá đã được áp dụng!
-                            </div>
-                            <div class="ck-vou-error" id="blockmessErr">
-                                <i class="fa-solid fa-circle-xmark"></i>
-                                <span id="messerr">Mã giảm giá không khả dụng</span>
-                            </div>
-                        </div>
+                    <!-- Shop blocks (rendered by checkout.js) -->
+                    <div id="shopsContainer"></div>
 
-                        <!-- Totals -->
-                        <div class="ck-totals">
-                            <div class="ck-total-row">
-                                <span class="lbl">Tạm tính</span>
-                                <span class="val" id="totalAmount">—</span>
-                            </div>
-                            <div class="ck-total-row">
-                                <span class="lbl">Phí vận chuyển</span>
-                                <span class="val" id="phiship" style="color:#059669">Miễn phí</span>
-                            </div>
-                            <div class="ck-total-row">
-                                <span class="lbl">Giảm giá</span>
-                                <span class="val" id="moneyDiscount">—</span>
-                            </div>
-                        </div>
-
+                    <!-- Grand total + Submit -->
+                    <div class="ck-card" style="margin-top:4px;">
                         <div class="ck-grand-row">
-                            <span class="ck-grand-label">Tổng thanh toán</span>
-                            <span class="ck-grand-value" id="totalfi">—</span>
+                            <span class="ck-grand-label">
+                                <i class="fa-solid fa-calculator" style="color:#0d9488;margin-right:6px;"></i>
+                                Tổng thanh toán
+                            </span>
+                            <span class="ck-grand-value" id="grandTotal">—</span>
                         </div>
 
                         <div class="ck-submit-wrap" style="padding-top:16px">
@@ -791,7 +761,8 @@
                                 <i class="fa-solid fa-lock"></i> Đặt hàng ngay
                             </button>
                         </div>
-                        <div style="text-align:center; padding: 0 22px 4px">
+
+                        <div style="text-align:center;padding:0 22px 4px">
                             <a href="giohang" class="ck-back-link">
                                 <i class="fa-solid fa-arrow-left"></i> Quay lại giỏ hàng
                             </a>
@@ -809,6 +780,7 @@
                             </div>
                         </div>
                     </div>
+
                 </div>
 
             </div>

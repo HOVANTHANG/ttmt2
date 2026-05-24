@@ -1,6 +1,5 @@
 package com.web.repository;
 
-import com.web.entity.Blog;
 import com.web.entity.Cart;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -25,4 +24,9 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
 
     @Query("select count(c.id) from Cart c where c.user.id = ?1")
     Long countCart(Long userId);
+
+    /** Lấy cart items của 1 shop cụ thể (dùng cho multi-shop checkout) */
+    @Query("select c from Cart c where c.user.id = ?1 and c.productVariant.product.shop.id = ?2")
+    List<Cart> findByUserAndShopId(Long userId, Long shopId);
+
 }

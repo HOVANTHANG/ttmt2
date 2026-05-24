@@ -1,563 +1,587 @@
+/**
+ * checkout.js — Multi-shop checkout
+ * Mỗi shop có voucher riêng, phí ship riêng, tạm tính riêng.
+ * Tổng thanh toán = Σ(subtotal + ship - discount) của tất cả shop.
+ */
+
 var token = localStorage.getItem("token");
 var exceptionCode = 417;
 
-var total = 0;           // Tạm tính (chưa gồm ship)
-var phiShip = 0;         // Phí vận chuyển hiện tại
-var discountVou = 0;     // Số tiền giảm từ voucher
-var voucherId = null;
-var voucherCode = null;
-var soluongsp = 0;       // Tổng số lượng sản phẩm (dùng tính cân nặng)
+// shopMap[shopId] = { subtotal, ship, discount, qty, voucherCode }
+var shopMap = {};
+
+// ─── Cache địa chỉ GHN để không gọi lại nhiều lần ───
+var _ghnCache = null; // { tinh, huyen, xa }
 
 // ==================== UTILITIES ====================
 
-/**
- * Kiểm tra user đã đăng nhập
- */
 async function checkroleUser() {
-    var token = localStorage.getItem("token");
-    var url = 'http://localhost:8080/api/user/check-role-user';
-
     try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: new Headers({
-                'Authorization': 'Bearer ' + token
-            })
+        const res = await fetch('http://localhost:8080/api/user/check-role-user', {
+            headers: { 'Authorization': 'Bearer ' + token }
         });
-
-        if (response.status > 300) {
-            window.location.replace('login');
-        }
-    } catch (error) {
-        console.error("Lỗi checkroleUser:", error);
+        if (res.status > 300) window.location.replace('login');
+    } catch (e) {
         window.location.replace('login');
     }
 }
 
-/**
- * Format tiền VNĐ
- */
 function formatmoneyCheck(money) {
-    const VND = new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND'
-    });
-    return VND.format(Number(money || 0));
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(money || 0));
 }
 
-/**
- * Lấy tên biến thể để hiển thị
- */
 function getVariantDisplayName(variant) {
     if (!variant) return "Mặc định";
-
-    const tier1 = variant.tier1value || "";
-    const tier2 = variant.tier2value || "";
-
-    if (tier1 && tier2) return `${tier1} / ${tier2}`;
-    if (tier1) return tier1;
-    if (tier2) return tier2;
+    const t1 = variant.tier1value || "", t2 = variant.tier2value || "";
+    if (t1 && t2) return `${t1} / ${t2}`;
+    if (t1) return t1;
+    if (t2) return t2;
     return "Mặc định";
 }
 
-/**
- * Ảnh hiển thị của item checkout
- */
 function getCheckoutImage(product, variant) {
-    if (variant && variant.image && variant.image.trim() !== "") {
-        return variant.image;
-    }
-    if (product && product.imageBanner && product.imageBanner.trim() !== "") {
-        return product.imageBanner;
-    }
+    if (variant?.image?.trim()) return variant.image;
+    if (product?.imageBanner?.trim()) return product.imageBanner;
     return "image/product1.webp";
 }
 
-// ==================== TÍNH TỔNG ====================
+// ==================== GRAND TOTAL ====================
 
-/**
- * Cập nhật hiển thị tổng tiền cuối cùng
- * Công thức: Tạm tính + Phí ship - Giảm giá voucher
- */
-function capNhatTongTien() {
-    var tongCuoi = Number(total) + Number(phiShip) - Number(discountVou);
-    if (tongCuoi < 0) tongCuoi = 0;
-
-    document.getElementById("totalAmount").innerHTML = formatmoneyCheck(total);
-    document.getElementById("moneyDiscount").innerHTML = formatmoneyCheck(discountVou);
-    document.getElementById("totalfi").innerHTML = formatmoneyCheck(tongCuoi);
+function updateGrandTotal() {
+    let grandTotal = 0, totalQty = 0;
+    Object.values(shopMap).forEach(s => {
+        grandTotal += Math.max(0, (s.subtotal || 0) + (s.ship || 0) - (s.discount || 0));
+        totalQty += (s.qty || 0);
+    });
+    const elG = document.getElementById("grandTotal");
+    if (elG) elG.textContent = formatmoneyCheck(grandTotal);
+    const elQ = document.getElementById("slcartcheckout");
+    if (elQ) elQ.textContent = totalQty;
 }
 
-// ==================== CART ====================
+// ==================== PER-SHOP UI ====================
 
-/**
- * Load cart cho trang thanh toán
- */
+function updateShopUI(sid) {
+    const s = shopMap[String(sid)];
+    if (!s) return;
+
+    const get = id => document.getElementById(id);
+    const shopTotal = Math.max(0, (s.subtotal || 0) + (s.ship || 0) - (s.discount || 0));
+
+    if (get(`sub_${sid}`)) get(`sub_${sid}`).textContent = formatmoneyCheck(s.subtotal);
+
+    if (get(`ship_${sid}`)) {
+        const el = get(`ship_${sid}`);
+        if (s.ship === null || s.ship === undefined) {
+            el.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tính...';
+            el.style.color = '#94a3b8';
+        } else if (s.ship === 0) {
+            el.textContent = 'Miễn phí';
+            el.style.color = '#059669';
+        } else {
+            el.textContent = formatmoneyCheck(s.ship);
+            el.style.color = '#1e293b';
+        }
+    }
+
+    if (get(`disc_${sid}`)) {
+        get(`disc_${sid}`).textContent = s.discount > 0 ? '- ' + formatmoneyCheck(s.discount) : '—';
+    }
+
+    if (get(`shopTotal_${sid}`)) {
+        get(`shopTotal_${sid}`).textContent = formatmoneyCheck(shopTotal);
+    }
+
+    updateGrandTotal();
+}
+
+// ==================== LOAD CART ====================
+
 async function loadCartCheckOut() {
-    if (token == null) {
-        window.location.replace("login");
+    if (!token) { window.location.replace("login"); return; }
+
+    // Kiểm tra cart trống
+    const resCount = await fetch('http://localhost:8080/api/cart/user/count-cart', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const count = Number(await resCount.text());
+    if (count === 0) {
+        alert("Bạn chưa có sản phẩm nào trong giỏ hàng!");
+        window.location.replace("giohang");
         return;
     }
 
-    try {
-        // Kiểm tra số lượng cart
-        var urlCount = 'http://localhost:8080/api/cart/user/count-cart';
-        const resCount = await fetch(urlCount, {
-            method: 'GET',
-            headers: new Headers({ 'Authorization': 'Bearer ' + token })
-        });
+    // Lấy danh sách cart
+    const res = await fetch('http://localhost:8080/api/cart/user/my-cart', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) { toastr.error("Không tải được giỏ hàng"); return; }
 
-        var count = await resCount.text();
-        if (Number(count) === 0) {
-            alert("Bạn chưa có sản phẩm nào trong giỏ hàng!");
-            window.location.replace("giohang");
-            return;
+    const list = await res.json();
+
+    // ── Nhóm theo shop ──
+    const byShop = {}; // shopId → { shopName, avatar, items[] }
+    list.forEach(item => {
+        const product = item.product || {};
+        const shop    = product.shop  || {};
+        const sid     = String(shop.id || 0);
+
+        if (!byShop[sid]) {
+            byShop[sid] = {
+                shopId:   sid,
+                shopName: shop.shopName || shop.name || ("Shop #" + sid),
+                avatar:   shop.avatar  || "",
+                items:    []
+            };
         }
+        byShop[sid].items.push(item);
+    });
 
-        // Load danh sách cart
-        var url = 'http://localhost:8080/api/cart/user/my-cart';
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: new Headers({ 'Authorization': 'Bearer ' + token })
-        });
+    // ── Build HTML ──
+    shopMap = {};
+    let allHtml = "";
 
-        if (!response.ok) throw new Error("Không tải được giỏ hàng checkout");
+    Object.values(byShop).forEach(shopData => {
+        const sid = String(shopData.shopId);
+        let subtotal = 0, totalQty = 0;
+        let itemsHtml = "";
 
-        var list = await response.json();
-        var main = '';
-        total = 0;
-        soluongsp = 0;
-
-        for (let i = 0; i < list.length; i++) {
-            const item = list[i];
+        shopData.items.forEach(item => {
             const product = item.product || {};
             const variant = item.productVariant || {};
+            const qty   = Number(item.quantity || 0);
+            const price = Number(variant.price  || product.price || 0);
+            const img   = getCheckoutImage(product, variant);
+            const vName = getVariantDisplayName(variant);
+            subtotal  += qty * price;
+            totalQty  += qty;
 
-            const quantity = Number(item.quantity || 0);
-            const price = Number(variant.price || product.price || 0);
-            const image = getCheckoutImage(product, variant);
-            const variantName = getVariantDisplayName(variant);
-
-            soluongsp += quantity;
-            total += quantity * price;
-
-            main += `
-                <div class="row mb-3 align-items-center">
-                    <div class="col-lg-2 col-md-3 col-sm-3 col-3 colimgcheck">
-                        <div style="position: relative;">
-                            <img src="${image}" class="procheckout" onerror="this.src='image/product1.webp'">
-                            <span class="slpro">${quantity}</span>
-                        </div>
-                    </div>
-                    <div class="col-lg-7 col-md-6 col-sm-6 col-6">
-                        <span class="namecheck">${product.name || ""}</span>
-                        <span class="colorcheck">${variantName}</span>
-                    </div>
-                    <div class="col-lg-3 col-md-3 col-sm-3 col-3 pricecheck">
-                        <span>${formatmoneyCheck(quantity * price)}</span>
-                    </div>
+            itemsHtml += `
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #e2e8f0;">
+                <div style="position:relative;flex-shrink:0;">
+                    <img src="${img}" style="width:54px;height:54px;border-radius:8px;object-fit:contain;padding:3px;background:#f8fafc;border:1px solid #e2e8f0;" onerror="this.src='image/product1.webp'">
+                    <span style="position:absolute;top:-6px;right:-6px;background:#475569;color:#fff;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;">${qty}</span>
                 </div>
-            `;
-        }
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:600;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${product.name || ''}">${product.name || ''}</div>
+                    <div style="font-size:11.5px;color:#64748b;margin-top:3px;">${vName}</div>
+                </div>
+                <div style="font-size:13px;font-weight:700;color:#1e293b;white-space:nowrap;">${formatmoneyCheck(qty * price)}</div>
+            </div>`;
+        });
 
-        document.getElementById("listproductcheck").innerHTML = main;
-        capNhatTongTien();
+        // Khởi tạo shopMap entry, ship=null (chưa tính)
+        shopMap[sid] = { subtotal, ship: null, discount: 0, qty: totalQty, voucherCode: null };
 
-    } catch (error) {
-        console.error("Lỗi loadCartCheckOut:", error);
-        toastr.error("Không tải được giỏ hàng thanh toán");
-    }
+        const initial   = (shopData.shopName || "S")[0].toUpperCase();
+        const avatarHtml = shopData.avatar
+            ? `<img src="${shopData.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+            : `<span style="color:#fff;font-weight:800;font-size:15px;">${initial}</span>`;
+
+        allHtml += `
+        <div style="background:#fff;border-radius:14px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:16px;overflow:hidden;">
+
+            <!-- HEADER SHOP -->
+            <div style="padding:14px 18px;border-bottom:1px solid #e2e8f0;background:#f8fafc;display:flex;align-items:center;gap:10px;">
+                <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#065f46);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">
+                    ${avatarHtml}
+                </div>
+                <span style="font-size:14px;font-weight:700;color:#0f172a;">${shopData.shopName}</span>
+                <span style="margin-left:auto;font-size:11px;color:#94a3b8;">${totalQty}&nbsp;sản phẩm</span>
+            </div>
+
+            <!-- PRODUCTS -->
+            <div>${itemsHtml}</div>
+
+            <!-- VOUCHER -->
+            <div style="padding:14px 18px;border-top:1px solid #e2e8f0;background:#fafbfc;">
+                <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">
+                    <i class="fa-solid fa-tag" style="color:#0d9488;margin-right:4px;"></i>Mã giảm giá shop này
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <input id="voucher_${sid}"
+                        placeholder="Nhập mã voucher..."
+                        style="flex:1;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:inherit;color:#1e293b;outline:none;background:#fff;"
+                        onkeydown="if(event.key==='Enter') applyVoucher('${sid}')">
+                    <button onclick="applyVoucher('${sid}')"
+                        style="padding:9px 16px;background:linear-gradient(135deg,#0d9488,#065f46);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;">
+                        Áp dụng
+                    </button>
+                </div>
+                <div id="vouOk_${sid}" style="display:none;margin-top:7px;font-size:12px;color:#059669;font-weight:600;align-items:center;gap:6px;">
+                    <i class="fa-solid fa-circle-check"></i> <span id="vouOkTxt_${sid}"></span>
+                </div>
+                <div id="vouErr_${sid}" style="display:none;margin-top:7px;font-size:12px;color:#ef4444;font-weight:600;align-items:center;gap:6px;">
+                    <i class="fa-solid fa-circle-xmark"></i> <span id="vouErrTxt_${sid}"></span>
+                </div>
+            </div>
+
+            <!-- PER-SHOP TOTALS -->
+            <div style="padding:14px 18px;background:#fff;border-top:1px solid #e2e8f0;">
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:5px 0;border-bottom:1px dashed #e2e8f0;">
+                    <span style="color:#64748b;">Tạm tính</span>
+                    <span style="font-weight:600;color:#1e293b;" id="sub_${sid}">${formatmoneyCheck(subtotal)}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:5px 0;border-bottom:1px dashed #e2e8f0;">
+                    <span style="color:#64748b;">Phí vận chuyển</span>
+                    <span style="font-weight:600;color:#94a3b8;" id="ship_${sid}">
+                        <i class="fa fa-spinner fa-spin"></i> Đang tính...
+                    </span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:5px 0;border-bottom:1px dashed #e2e8f0;">
+                    <span style="color:#64748b;">Giảm giá voucher</span>
+                    <span style="font-weight:600;color:#059669;" id="disc_${sid}">—</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 0;border-top:2px solid #e2e8f0;margin-top:4px;">
+                    <span style="font-size:13px;font-weight:600;color:#64748b;">Tổng shop này</span>
+                    <span style="font-size:15px;font-weight:800;color:#ef4444;" id="shopTotal_${sid}">—</span>
+                </div>
+            </div>
+
+        </div>`;
+    });
+
+    document.getElementById("shopsContainer").innerHTML = allHtml;
+    updateGrandTotal();
 }
 
 // ==================== PHÍ VẬN CHUYỂN ====================
 
-/**
- * Lấy thông tin tỉnh/thành phố từ GHN theo tên
- * @param {string} tenTinh - Tên tỉnh/thành phố
- * @returns {Object|null} - Đối tượng tỉnh từ GHN hoặc null nếu không tìm thấy
- */
 async function layTinhShip(tenTinh) {
-    try {
-        const res = await fetch('http://localhost:8080/api/shipping/public/province', {});
-        const data = await res.json();
-        const provinces = data.data || [];
-
-        // Tìm kiếm linh hoạt: tên tỉnh chứa hoặc bằng tên GHN
-        const found = provinces.find(p =>
-            tenTinh.toLowerCase().includes(p.ProvinceName.toLowerCase()) ||
-            p.ProvinceName.toLowerCase().includes(tenTinh.toLowerCase())
-        );
-
-        if (!found) console.warn(`[Ship] Không tìm thấy tỉnh: "${tenTinh}"`);
-        return found || null;
-    } catch (error) {
-        console.error("[Ship] Lỗi lấy danh sách tỉnh:", error);
-        return null;
-    }
+    const res  = await fetch('http://localhost:8080/api/shipping/public/province');
+    const data = await res.json();
+    return (data.data || []).find(p =>
+        tenTinh.toLowerCase().includes(p.ProvinceName.toLowerCase()) ||
+        p.ProvinceName.toLowerCase().includes(tenTinh.toLowerCase())
+    ) || null;
 }
 
-/**
- * Lấy thông tin quận/huyện từ GHN theo tên
- * @param {string} tenHuyen - Tên quận/huyện
- * @param {number} provinceId - ProvinceID từ GHN
- * @returns {Object|null}
- */
 async function layHuyenShip(tenHuyen, provinceId) {
-    try {
-        const res = await fetch(`http://localhost:8080/api/shipping/public/district?provinceId=${provinceId}`, {});
-        const data = await res.json();
-        const districts = data.data || [];
-
-        const found = districts.find(d =>
-            tenHuyen.toLowerCase().includes(d.DistrictName.toLowerCase()) ||
-            d.DistrictName.toLowerCase().includes(tenHuyen.toLowerCase())
-        );
-
-        if (!found) console.warn(`[Ship] Không tìm thấy huyện: "${tenHuyen}"`);
-        return found || null;
-    } catch (error) {
-        console.error("[Ship] Lỗi lấy danh sách huyện:", error);
-        return null;
-    }
+    const res  = await fetch(`http://localhost:8080/api/shipping/public/district?provinceId=${provinceId}`);
+    const data = await res.json();
+    return (data.data || []).find(d =>
+        tenHuyen.toLowerCase().includes(d.DistrictName.toLowerCase()) ||
+        d.DistrictName.toLowerCase().includes(tenHuyen.toLowerCase())
+    ) || null;
 }
 
-/**
- * Lấy thông tin xã/phường từ GHN theo tên
- * @param {string} tenXa - Tên xã/phường
- * @param {number} districtId - DistrictID từ GHN
- * @returns {Object|null}
- */
 async function layXaShip(tenXa, districtId) {
-    try {
-        const res = await fetch(`http://localhost:8080/api/shipping/public/wards?districtId=${districtId}`, {});
-        const data = await res.json();
-        const wards = data.data || [];
+    const res  = await fetch(`http://localhost:8080/api/shipping/public/wards?districtId=${districtId}`);
+    const data = await res.json();
+    return (data.data || []).find(w =>
+        tenXa.toLowerCase().includes(w.WardName.toLowerCase()) ||
+        w.WardName.toLowerCase().includes(tenXa.toLowerCase())
+    ) || null;
+}
 
-        const found = wards.find(w =>
-            tenXa.toLowerCase().includes(w.WardName.toLowerCase()) ||
-            w.WardName.toLowerCase().includes(tenXa.toLowerCase())
-        );
-
-        if (!found) console.warn(`[Ship] Không tìm thấy xã: "${tenXa}"`);
-        return found || null;
-    } catch (error) {
-        console.error("[Ship] Lỗi lấy danh sách xã:", error);
-        return null;
-    }
+async function tinhPhiGHN(districtId, wardCode, qty) {
+    const weight  = Math.max(100, qty * 500); // gram, ~500g/sản phẩm
+    const res     = await fetch(`/api/shipping/tinh-phi?toDistrictId=${districtId}&toWardCode=${wardCode}&weight=${weight}`);
+    const data    = await res.json();
+    return Number(data?.data?.total || 30000);
 }
 
 /**
- * Tính phí vận chuyển dựa trên địa chỉ giao hàng
- * Gọi GHN API tuần tự: Tỉnh → Huyện → Xã → Tính phí
- *
- * @param {Object} address - Đối tượng địa chỉ user (có wards, districts, province)
- * @returns {number} - Phí vận chuyển (VNĐ), trả 0 nếu lỗi
- */
-async function tinhPhiVanChuyen(address) {
-    // Hiển thị trạng thái đang tính
-    var elPhiShip = document.getElementById("phiship");
-    if (elPhiShip) elPhiShip.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tính...';
-
-    try {
-        var tenTinh = address.wards.districts.province.name;
-        var tenHuyen = address.wards.districts.name;
-        var tenXa = address.wards.name;
-
-        // Bước 1: Lấy ProvinceID
-        var tinh = await layTinhShip(tenTinh);
-        if (!tinh) {
-            throw new Error(`Không tìm thấy tỉnh "${tenTinh}" trong hệ thống GHN`);
-        }
-
-        // Bước 2: Lấy DistrictID
-        var huyen = await layHuyenShip(tenHuyen, tinh.ProvinceID);
-        if (!huyen) {
-            throw new Error(`Không tìm thấy huyện "${tenHuyen}" trong hệ thống GHN`);
-        }
-
-        // Bước 3: Lấy WardCode
-        var xa = await layXaShip(tenXa, huyen.DistrictID);
-        if (!xa) {
-            throw new Error(`Không tìm thấy xã "${tenXa}" trong hệ thống GHN`);
-        }
-
-        // Bước 4: Tính phí - cân nặng ước tính: mỗi sản phẩm ~0.5kg (min 100g)
-        var weight = Math.max(100, Math.ceil(soluongsp * 500)); // đơn vị gram
-        var urlPhi = `/api/shipping/tinh-phi?toDistrictId=${huyen.DistrictID}&toWardCode=${xa.WardCode}&weight=${weight}`;
-
-        const resPhi = await fetch(urlPhi, {});
-        if (!resPhi.ok) {
-            throw new Error(`GHN API trả lỗi: ${resPhi.status}`);
-        }
-
-        const dataPhi = await resPhi.json();
-        var phi = Number(dataPhi?.data?.total || 0);
-
-        console.log(`[Ship] Phí vận chuyển đến ${tenXa}, ${tenHuyen}, ${tenTinh}: ${phi.toLocaleString('vi-VN')}đ`);
-        return phi;
-
-    } catch (error) {
-        console.error("[Ship] Lỗi tính phí vận chuyển:", error);
-        toastr.warning("Không tính được phí vận chuyển, áp dụng phí mặc định 30.000đ");
-        return 30000; // Phí mặc định khi lỗi
-    }
-}
-
-/**
- * Cập nhật phí vận chuyển khi user chọn địa chỉ
- * Được gọi từ addressuser.js khi địa chỉ thay đổi
- *
- * @param {Object} address - Đối tượng địa chỉ đã chọn
+ * Gọi bởi addressuser.js khi user chọn địa chỉ
  */
 async function capNhatPhiShip(address) {
     if (!address) return;
 
-    // Tính phí mới
-    var phiMoi = await tinhPhiVanChuyen(address);
+    // Hiển thị spinner cho tất cả shop
+    Object.keys(shopMap).forEach(sid => {
+        const el = document.getElementById(`ship_${sid}`);
+        if (el) el.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tính...';
+    });
 
-    // Cập nhật biến toàn cục
-    phiShip = phiMoi;
+    // Tra cứu GHN một lần duy nhất
+    try {
+        const tenTinh  = address.wards.districts.province.name;
+        const tenHuyen = address.wards.districts.name;
+        const tenXa    = address.wards.name;
 
-    // Hiển thị lên UI
-    var elPhiShip = document.getElementById("phiship");
-    if (elPhiShip) {
-        elPhiShip.innerHTML = formatmoneyCheck(phiShip);
+        const tinh  = await layTinhShip(tenTinh);
+        if (!tinh)  throw new Error("Không tìm thấy tỉnh: " + tenTinh);
+
+        const huyen = await layHuyenShip(tenHuyen, tinh.ProvinceID);
+        if (!huyen) throw new Error("Không tìm thấy huyện: " + tenHuyen);
+
+        const xa    = await layXaShip(tenXa, huyen.DistrictID);
+        if (!xa)    throw new Error("Không tìm thấy xã: " + tenXa);
+
+        _ghnCache = { districtId: huyen.DistrictID, wardCode: xa.WardCode };
+
+        // Tính phí riêng từng shop theo số lượng
+        for (const sid of Object.keys(shopMap)) {
+            const phi = await tinhPhiGHN(huyen.DistrictID, xa.WardCode, shopMap[sid].qty);
+            shopMap[sid].ship = phi;
+            updateShopUI(sid);
+        }
+
+    } catch (e) {
+        console.warn("[Ship]", e.message);
+        toastr.warning("Không tính được phí vận chuyển, áp dụng phí mặc định 30.000đ");
+        Object.keys(shopMap).forEach(sid => {
+            shopMap[sid].ship = 30000;
+            updateShopUI(sid);
+        });
     }
-
-    // Cập nhật tổng tiền
-    capNhatTongTien();
 }
 
 // ==================== VOUCHER ====================
 
-/**
- * Áp mã giảm giá
- */
-async function loadVoucher() {
-    var code = document.getElementById("codevoucher").value.trim();
+async function applyVoucher(sid) {
+    sid = String(sid);
+    const inputEl  = document.getElementById(`voucher_${sid}`);
+    const okEl     = document.getElementById(`vouOk_${sid}`);
+    const errEl    = document.getElementById(`vouErr_${sid}`);
+    const okTxtEl  = document.getElementById(`vouOkTxt_${sid}`);
+    const errTxtEl = document.getElementById(`vouErrTxt_${sid}`);
 
-    // Không gọi API nếu ô voucher trống
+    const code = inputEl?.value?.trim() || "";
+    if (okEl)  okEl.style.display  = 'none';
+    if (errEl) errEl.style.display = 'none';
+
+    // Xóa voucher nếu ô trống
     if (!code) {
-        document.getElementById("blockmessErr").style.display = 'none';
-        document.getElementById("blockmess").style.display = 'none';
-        voucherCode = null;
-        voucherId = null;
-        discountVou = 0;
-        capNhatTongTien();
+        shopMap[sid].discount    = 0;
+        shopMap[sid].voucherCode = null;
+        updateShopUI(sid);
         return;
     }
 
+    const s = shopMap[sid];
+    const amount = (s.subtotal || 0) + (s.ship || 0);
+
     try {
-        var url = 'http://localhost:8080/api/voucher/public/findByCode?code='
-            + code + '&amount=' + (total + phiShip);
+        const res    = await fetch(`http://localhost:8080/api/voucher/public/findByCode?code=${code}&amount=${amount}&shopId=${sid}`);
 
-        const response = await fetch(url, {});
-        var result = await response.json();
+        const result = await res.json();
 
-        if (response.status == exceptionCode) {
-            var mess = result.defaultMessage;
-            document.getElementById("messerr").innerHTML = mess;
-            document.getElementById("blockmessErr").style.display = 'block';
-            document.getElementById("blockmess").style.display = 'none';
-
-            voucherCode = null;
-            voucherId = null;
-            discountVou = 0;
-            capNhatTongTien();
-            return;
+        if (res.status === exceptionCode) {
+            if (errEl)    { errEl.style.display = 'flex'; }
+            if (errTxtEl) errTxtEl.textContent = result.defaultMessage || "Mã không hợp lệ hoặc chưa đủ điều kiện";
+            s.discount    = 0;
+            s.voucherCode = null;
+        } else if (res.ok) {
+            if (okEl)    { okEl.style.display = 'flex'; }
+            if (okTxtEl) okTxtEl.textContent = `Giảm ${formatmoneyCheck(result.discount)}`;
+            s.discount    = result.discount || 0;
+            s.voucherCode = result.code;
         }
-
-        if (response.status < 300) {
-            voucherId = result.id;
-            voucherCode = result.code;
-            discountVou = result.discount || 0;
-
-            document.getElementById("blockmessErr").style.display = 'none';
-            document.getElementById("blockmess").style.display = 'block';
-            capNhatTongTien();
-        }
-    } catch (error) {
-        console.error("Lỗi loadVoucher:", error);
+        updateShopUI(sid);
+    } catch (e) {
         toastr.error("Không kiểm tra được mã giảm giá");
     }
 }
 
 // ==================== CHECKOUT ====================
 
-/**
- * Chọn phương thức checkout
- */
 function checkout() {
-    var con = confirm("Xác nhận đặt hàng!");
-    if (con == false) return;
+    const sids = Object.keys(shopMap);
+    if (sids.length === 0) { toastr.warning("Giỏ hàng trống!"); return; }
 
-    var paytype = $('input[name=paytype]:checked').val();
+    const addressId = document.getElementById("sodiachi")?.value;
+    if (!addressId) { toastr.warning("Vui lòng chọn địa chỉ giao hàng!"); return; }
 
-    if (paytype == "momo") requestPayMentMomo();
-    if (paytype == "cod") paymentCod();
+    // Kiểm tra ship đã tính chưa
+    const shipChuaTinh = sids.some(sid => shopMap[sid].ship === null);
+    if (shipChuaTinh) { toastr.warning("Vui lòng chọn địa chỉ để tính phí vận chuyển!"); return; }
+
+    const paytype = document.querySelector('input[name=paytype]:checked')?.value;
+
+    const confirmed = confirm(`Xác nhận đặt ${sids.length} đơn hàng?`);
+    if (!confirmed) return;
+
+    if (paytype === "momo") requestPayMentMomo();
+    else paymentCod();
 }
 
-/**
- * Tạo link thanh toán MoMo
- */
-async function requestPayMentMomo() {
-    try {
-        var ghichu = document.getElementById("ghichudonhang").value;
-        // Chuẩn hóa: nếu không có voucher thì lưu chuỗi rỗng thay vì "null"
-        var maVoucher = voucherCode || "";
+// ─── COD — Tạo 1 invoice per shop ───
+async function paymentCod() {
+    const sids      = Object.keys(shopMap);
+    const addressId = document.getElementById("sodiachi").value;
+    const note      = document.getElementById("ghichudonhang")?.value || "";
 
-        window.localStorage.setItem('ghichudonhang', ghichu);
-        window.localStorage.setItem('voucherCode', maVoucher);
-        window.localStorage.setItem('shipCost', phiShip);
-        window.localStorage.setItem('sodiachi', document.getElementById("sodiachi").value);
+    const btn = document.getElementById("btnDatHang");
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...'; }
 
-        var returnurl = 'http://localhost:8080/thanhcong';
-        var urlinit = 'http://localhost:8080/api/urlpayment';
+    let successCount = 0;
+    const errors = [];
 
-        var paymentDto = {
-            "content": "Sellora - Thanh toán đơn hàng",
-            "returnUrl": returnurl,
-            "notifyUrl": returnurl,
-            "codeVoucher": maVoucher,   // "" khi không dùng voucher
-            "shipCost": phiShip
+    for (const sid of sids) {
+        const s = shopMap[sid];
+        const body = {
+            payType:       "COD",
+            userAddressId: Number(addressId),
+            voucherCode:   s.voucherCode || "",
+            note:          note,
+            shipCost:      s.ship || 0,
+            shopId:        Number(sid)
         };
 
-        const res = await fetch(urlinit, {
+        try {
+            const res = await fetch('http://localhost:8080/api/invoice/user/create', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+
+            if (res.status < 300) {
+                successCount++;
+            } else {
+                const r = await res.json().catch(() => ({}));
+                errors.push(r.defaultMessage || `Lỗi đặt đơn hàng shop #${sid}`);
+            }
+        } catch (e) {
+            errors.push(`Không kết nối được server (shop #${sid})`);
+        }
+    }
+
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-lock"></i> Đặt hàng ngay'; }
+
+    if (successCount > 0 && errors.length === 0) {
+        swal({ title: "Thành công!", text: `Đặt ${successCount} đơn hàng thành công!`, type: "success" },
+            () => window.location.replace("taikhoan#invoice"));
+    } else if (successCount > 0) {
+        toastr.warning(`${successCount} đơn thành công, ${errors.length} đơn thất bại: ${errors.join('; ')}`);
+        setTimeout(() => window.location.replace("taikhoan#invoice"), 3000);
+    } else {
+        toastr.error("Đặt hàng thất bại: " + errors.join('; '));
+    }
+}
+
+// ─── MoMo — 1 link với grand total, lưu state vào localStorage ───
+async function requestPayMentMomo() {
+    const addressId = document.getElementById("sodiachi").value;
+    const note      = document.getElementById("ghichudonhang")?.value || "";
+
+    // Tính grand total
+    let grandTotal = 0;
+    Object.values(shopMap).forEach(s => {
+        grandTotal += Math.max(0, (s.subtotal || 0) + (s.ship || 0) - (s.discount || 0));
+    });
+
+    // Lưu state
+    localStorage.setItem('multiShopData', JSON.stringify(shopMap));
+    localStorage.setItem('ghichudonhang', note);
+    localStorage.setItem('sodiachi', addressId);
+
+    try {
+        const res = await fetch('http://localhost:8080/api/urlpayment', {
             method: 'POST',
-            headers: new Headers({
-                'Authorization': 'Bearer ' + token,
-                'Content-Type': 'application/json'
-            }),
-            body: JSON.stringify(paymentDto)
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                content:     "Sellora - Thanh toán đơn hàng",
+                returnUrl:   'http://localhost:8080/thanhcong',
+                notifyUrl:   'http://localhost:8080/thanhcong',
+                codeVoucher: "",
+                totalAmount: grandTotal   // gửi grand total thực tế, server dùng trực tiếp
+            })
         });
 
-        var result = await res.json();
-
+        const result = await res.json();
         if (res.status < 300) {
             window.open(result.url, '_blank');
+        } else {
+            toastr.warning(result.defaultMessage || "Không tạo được link MoMo");
         }
-
-        if (res.status == exceptionCode) {
-            toastr.warning(result.defaultMessage);
-        }
-    } catch (error) {
-        console.error("Lỗi requestPayMentMomo:", error);
+    } catch (e) {
         toastr.error("Không tạo được link thanh toán MoMo");
     }
 }
 
-/**
- * Callback thanh toán MoMo thành công
- */
+// ─── MoMo callback — tạo invoice từng shop từ localStorage ───
 async function paymentMomo() {
     try {
-        var uls = new URL(document.URL);
-        var orderId = uls.searchParams.get("orderId");
-        var requestId = uls.searchParams.get("requestId");
-        var note = window.localStorage.getItem("ghichudonhang");
+        const uls       = new URL(document.URL);
+        const orderId   = uls.searchParams.get("orderId");
+        const requestId = uls.searchParams.get("requestId");
+        const note      = localStorage.getItem("ghichudonhang") || "";
+        const addressId = localStorage.getItem("sodiachi");
+        const raw       = localStorage.getItem("multiShopData");
 
-        // Lấy từ localStorage — đã được chuẩn hóa thành "" khi không có voucher
-        var savedVoucher = window.localStorage.getItem("voucherCode") || "";
-
-        var orderDto = {
-            "payType": "MOMO",
-            "userAddressId": window.localStorage.getItem("sodiachi"),
-            "voucherCode": savedVoucher,
-            "note": note,
-            "requestIdMomo": requestId,
-            "orderIdMomo": orderId,
-            "shipCost": window.localStorage.getItem("shipCost")
-        };
-
-        var url = 'http://localhost:8080/api/invoice/user/create';
-        var token = localStorage.getItem("token");
-
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: new Headers({
-                'Authorization': 'Bearer ' + token,
-                'Content-Type': 'application/json'
-            }),
-            body: JSON.stringify(orderDto)
-        });
-
-        const raw = await res.text();
-        let result = null;
-
-        try {
-            result = raw ? JSON.parse(raw) : null;
-        } catch (e) {
-            result = null;
-        }
-
-        if (res.status < 300) {
-            document.getElementById("thanhcong").style.display = 'block';
-            document.getElementById("thatbai").style.display = 'none';
-            toastr.success("Thanh toán MoMo thành công");
+        if (!raw) {
+            // Fallback: single invoice (backward compat)
+            await _paymentMomoSingle(orderId, requestId, note, addressId);
             return;
         }
 
-        document.getElementById("thatbai").style.display = 'block';
-        document.getElementById("thanhcong").style.display = 'none';
-        document.getElementById("errormess").innerHTML =
-            result?.defaultMessage || (res.status == exceptionCode ? "Thanh toán thất bại" : `Có lỗi xảy ra, mã lỗi: ${res.status}`);
+        const shops = JSON.parse(raw);
+        const sids  = Object.keys(shops);
+        let successCount = 0;
 
-    } catch (error) {
-        console.error("Lỗi paymentMomo:", error);
-        document.getElementById("thatbai").style.display = 'block';
-        document.getElementById("thanhcong").style.display = 'none';
-        document.getElementById("errormess").innerHTML = "Không thể kết nối tới server";
-        toastr.error("Thanh toán MoMo thất bại");
+        for (const sid of sids) {
+            const s = shops[sid];
+            const body = {
+                payType:       "MOMO",
+                userAddressId: Number(addressId),
+                voucherCode:   s.voucherCode || "",
+                note:          note,
+                shipCost:      s.ship || 0,
+                shopId:        Number(sid),
+                requestIdMomo: requestId,
+                orderIdMomo:   orderId
+            };
+
+            try {
+                const res = await fetch('http://localhost:8080/api/invoice/user/create', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                if (res.status < 300) successCount++;
+            } catch (e) { /* continue */ }
+        }
+
+        localStorage.removeItem('multiShopData');
+
+        const okEl   = document.getElementById("thanhcong");
+        const failEl = document.getElementById("thatbai");
+        if (successCount > 0) {
+            if (okEl)   okEl.style.display   = 'block';
+            if (failEl) failEl.style.display = 'none';
+            toastr.success("Thanh toán MoMo thành công!");
+        } else {
+            if (failEl) failEl.style.display = 'block';
+            if (okEl)   okEl.style.display   = 'none';
+        }
+
+    } catch (e) {
+        console.error(e);
+        const failEl = document.getElementById("thatbai");
+        if (failEl) failEl.style.display = 'block';
     }
 }
 
-/**
- * Thanh toán COD
- */
-async function paymentCod() {
-    try {
-        var note = document.getElementById("ghichudonhang").value;
-        // Chuẩn hóa: nếu không có voucher thì gửi chuỗi rỗng thay vì null
-        var maVoucher = voucherCode || "";
+async function _paymentMomoSingle(orderId, requestId, note, addressId) {
+    const body = {
+        payType:       "MOMO",
+        userAddressId: addressId,
+        voucherCode:   localStorage.getItem("voucherCode") || "",
+        note:          note,
+        requestIdMomo: requestId,
+        orderIdMomo:   orderId,
+        shipCost:      localStorage.getItem("shipCost") || 0
+    };
 
-        var orderDto = {
-            "payType": "COD",
-            "userAddressId": document.getElementById("sodiachi").value,
-            "voucherCode": maVoucher,
-            "note": note,
-            "shipCost": phiShip
-        };
+    const res    = await fetch('http://localhost:8080/api/invoice/user/create', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
 
-        var url = 'http://localhost:8080/api/invoice/user/create';
-        var token = localStorage.getItem("token");
-
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: new Headers({
-                'Authorization': 'Bearer ' + token,
-                'Content-Type': 'application/json'
-            }),
-            body: JSON.stringify(orderDto)
-        });
-
-        if (res.status < 300) {
-            swal({
-                title: "Thông báo",
-                text: "Đặt hàng thành công!",
-                type: "success"
-            }, function () {
-                window.location.replace("taikhoan#invoice");
-            });
-        } else {
-            try {
-                const result = await res.json();
-                toastr.error(result.defaultMessage || "Đặt hàng thất bại");
-            } catch (e) {
-                toastr.error("Đặt hàng thất bại");
-            }
-        }
-    } catch (error) {
-        console.error("Lỗi paymentCod:", error);
-        toastr.error("Không thể đặt hàng");
+    const okEl   = document.getElementById("thanhcong");
+    const failEl = document.getElementById("thatbai");
+    if (res.status < 300) {
+        if (okEl)   okEl.style.display   = 'block';
+        if (failEl) failEl.style.display = 'none';
+    } else {
+        const result = await res.json().catch(() => ({}));
+        if (failEl) failEl.style.display = 'block';
+        const errEl = document.getElementById("errormess");
+        if (errEl)  errEl.textContent = result?.defaultMessage || "Thanh toán thất bại";
     }
 }

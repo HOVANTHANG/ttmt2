@@ -1,14 +1,8 @@
 package com.web.dto.request;
 
-import com.web.entity.UserAddress;
 import com.web.enums.PayType;
 import lombok.Getter;
 import lombok.Setter;
-
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @Setter
@@ -27,5 +21,12 @@ public class InvoiceRequest {
     private Double shipCost;
 
     private String note;
+
+    /**
+     * ID của shop cần tạo invoice.
+     * Khi có giá trị: chỉ lấy cart items của shop này và xóa cart của shop này sau khi tạo.
+     * Khi null: lấy toàn bộ cart (backward compatible với flow cũ).
+     */
+    private Long shopId;
 
 }

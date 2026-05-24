@@ -90,25 +90,29 @@ public class InvoiceServiceImp implements InvoiceService {
                 throw new MessageException("orderid and requestid require");
             }
 
-            if (historyPayRepository
+            // Nếu HistoryPay đã tồn tại → đây là invoice thứ 2+ trong cùng giao dịch MoMo
+            // (trường hợp multi-shop). Bỏ qua check trùng, chỉ xác minh lần đầu.
+            boolean alreadyRecorded = historyPayRepository
                     .findByOrderIdAndRequestId(invoiceRequest.getOrderIdMomo(), invoiceRequest.getRequestIdMomo())
-                    .isPresent()) {
-                throw new MessageException("Đơn hàng đã được thanh toán");
-            }
+                    .isPresent();
 
-            try {
-                Environment environment = Environment.selectEnv("dev");
-                QueryStatusTransactionResponse res = QueryTransactionStatus.process(
-                        environment,
-                        invoiceRequest.getOrderIdMomo(),
-                        invoiceRequest.getRequestIdMomo());
+            if (!alreadyRecorded) {
+                // Xác minh thanh toán với MoMo server (chỉ lần đầu)
+                try {
+                    Environment environment = Environment.selectEnv("dev");
+                    QueryStatusTransactionResponse res = QueryTransactionStatus.process(
+                            environment,
+                            invoiceRequest.getOrderIdMomo(),
+                            invoiceRequest.getRequestIdMomo());
 
-                if (res.getResultCode() != 0) {
+                    if (res.getResultCode() != 0) {
+                        throw new MessageException("Đơn hàng chưa được thanh toán");
+                    }
+                } catch (MessageException me) {
+                    throw me;
+                } catch (Exception e) {
                     throw new MessageException("Đơn hàng chưa được thanh toán");
                 }
-
-            } catch (Exception e) {
-                throw new MessageException("Đơn hàng chưa được thanh toán");
             }
         }
 
@@ -120,15 +124,36 @@ public class InvoiceServiceImp implements InvoiceService {
         UserAddress address = userAddressRepository.findById(invoiceRequest.getUserAddressId())
                 .orElseThrow(() -> new MessageException("user address not found"));
 
-        if (!address.getUser().getId().equals(userUtils.getUserWithAuthority().getId())) {
+        User currentUser = userUtils.getUserWithAuthority();
+
+        if (!address.getUser().getId().equals(currentUser.getId())) {
             throw new MessageException("access denied");
         }
 
-        // ================= TOTAL =================
-        Double totalAmount = cartService.totalAmountCart();
-        totalAmount += invoiceRequest.getShipCost();
+        // ================= CART (lọc theo shopId nếu có) =================
+        Long shopId = invoiceRequest.getShopId();
 
-        // ================= CREATE INVOICE =================
+        List<Cart> carts = (shopId != null)
+                ? cartRepository.findByUserAndShopId(currentUser.getId(), shopId)
+                : cartRepository.findByUser(currentUser.getId());
+
+        if (carts.isEmpty()) {
+            throw new MessageException("Giỏ hàng trống hoặc không có sản phẩm của shop này");
+        }
+
+        // ================= TÍNH TOTAL (chỉ cho các cart được chọn) =================
+        double totalAmount = carts.stream().mapToDouble(c -> {
+            ProductVariant v = c.getProductVariant();
+            double price = (v != null && v.getPrice() != null) ? v.getPrice() : 0;
+            int qty = (c.getQuantity() != null) ? c.getQuantity() : 0;
+            return price * qty;
+        }).sum();
+
+        if (invoiceRequest.getShipCost() != null) {
+            totalAmount += invoiceRequest.getShipCost();
+        }
+
+        // ================= TẠO INVOICE =================
         Invoice invoice = new Invoice();
         invoice.setShipCost(invoiceRequest.getShipCost());
         invoice.setCreatedDate(new Date(System.currentTimeMillis()));
@@ -148,7 +173,7 @@ public class InvoiceServiceImp implements InvoiceService {
 
         // ================= VOUCHER =================
         if (invoiceRequest.getVoucherCode() != null && !invoiceRequest.getVoucherCode().isEmpty()) {
-            Optional<Voucher> voucher = voucherService.findByCode(invoiceRequest.getVoucherCode(), totalAmount);
+            Optional<Voucher> voucher = voucherService.findByCode(invoiceRequest.getVoucherCode(), totalAmount, shopId);
             if (voucher.isPresent()) {
                 totalAmount -= voucher.get().getDiscount();
                 invoice.setVoucher(voucher.get());
@@ -158,62 +183,60 @@ public class InvoiceServiceImp implements InvoiceService {
         invoice.setTotalAmount(totalAmount);
         Invoice savedInvoice = invoiceRepository.save(invoice);
 
-        // ================= CART =================
-        List<Cart> carts = cartRepository.findByUser(userUtils.getUserWithAuthority().getId());
-
+        // ================= CART ITEMS → INVOICE DETAILS =================
         for (Cart c : carts) {
 
             ProductVariant variant = c.getProductVariant();
+            if (variant == null) throw new MessageException("Không tìm thấy biến thể sản phẩm");
+            if (variant.getProduct() == null) throw new MessageException("Không tìm thấy sản phẩm");
 
-            if (variant == null) {
-                throw new MessageException("Không tìm thấy biến thể sản phẩm");
-            }
+            int cartQty    = (c.getQuantity()        != null) ? c.getQuantity()        : 0;
+            int currentQty = (variant.getQuantity()  != null) ? variant.getQuantity()  : 0;
 
-            if (variant.getProduct() == null) {
-                throw new MessageException("Không tìm thấy sản phẩm");
-            }
-
-            Integer cartQty = c.getQuantity() == null ? 0 : c.getQuantity();
-            Integer currentQty = variant.getQuantity() == null ? 0 : variant.getQuantity();
-
-            // check tồn kho
             if (currentQty < cartQty) {
-                throw new MessageException(
-                        "Sản phẩm " + variant.getProduct().getName() + " không đủ hàng");
+                throw new MessageException("Sản phẩm \"" + variant.getProduct().getName() + "\" không đủ hàng");
             }
 
-            // tạo detail
             InvoiceDetail detail = new InvoiceDetail();
             detail.setInvoice(savedInvoice);
             detail.setPrice(variant.getPrice());
             detail.setImportPrice(variant.getImportPrice());
             detail.setQuantity(cartQty);
             detail.setProductVariant(variant);
-
             invoiceDetailRepository.save(detail);
 
-            // trừ kho
             variant.setQuantity(currentQty - cartQty);
             productVariantRepository.save(variant);
-
-            // KHÔNG tăng sold ở đây
-            // sold chỉ tăng khi đơn chuyển sang DA_NHAN
         }
 
         // ================= MOMO SAVE =================
+        // Chỉ lưu HistoryPay 1 lần cho cùng 1 giao dịch MoMo
+        // (invoice thứ 2+ trong multi-shop bỏ qua bước này)
         if (invoiceRequest.getPayType().equals(PayType.MOMO)) {
-            HistoryPay hp = new HistoryPay();
-            hp.setInvoice(savedInvoice);
-            hp.setRequestId(invoiceRequest.getRequestIdMomo());
-            hp.setOrderId(invoiceRequest.getOrderIdMomo());
-            hp.setCreatedTime(new Time(System.currentTimeMillis()));
-            hp.setCreatedDate(new Date(System.currentTimeMillis()));
-            hp.setTotalAmount(totalAmount);
-            historyPayRepository.save(hp);
+            boolean historyExists = historyPayRepository
+                    .findByOrderIdAndRequestId(invoiceRequest.getOrderIdMomo(), invoiceRequest.getRequestIdMomo())
+                    .isPresent();
+
+            if (!historyExists) {
+                HistoryPay hp = new HistoryPay();
+                hp.setInvoice(savedInvoice);
+                hp.setRequestId(invoiceRequest.getRequestIdMomo());
+                hp.setOrderId(invoiceRequest.getOrderIdMomo());
+                hp.setCreatedTime(new Time(System.currentTimeMillis()));
+                hp.setCreatedDate(new Date(System.currentTimeMillis()));
+                hp.setTotalAmount(totalAmount);
+                historyPayRepository.save(hp);
+            }
         }
 
-        // ================= CLEAR CART =================
-        cartService.removeCart();
+        // ================= XÓA CART =================
+        // Nếu có shopId: xóa đúng các cart item đã fetch (tránh lỗi MySQL DELETE+JOIN)
+        // Nếu không: xóa toàn bộ
+        if (shopId != null) {
+            cartRepository.deleteAll(carts);   // deleteAll(Iterable) → DELETE by ID, không dùng JOIN
+        } else {
+            cartService.removeCart();
+        }
 
         // ================= RESPONSE =================
         InvoiceResponse res = new InvoiceResponse();

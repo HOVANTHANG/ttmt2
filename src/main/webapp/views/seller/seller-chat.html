@@ -352,8 +352,18 @@
 
         /* Init */
         window.onload = async function () {
+            // Kiểm tra token trước khi gọi API
+            if (!token || token === "null") {
+                alert("Vui lòng đăng nhập để sử dụng tính năng chat!");
+                window.location.href = "/login";
+                return;
+            }
             const info = await apiFetch("/api/chat/seller/current-info");
-            if (!info) { alert("Vui long dang nhap"); return; }
+            if (!info) {
+                alert("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại!");
+                window.location.href = "/login";
+                return;
+            }
             myId = info.id;
             console.log("[Seller Chat] myId =", myId);
             connectStomp();

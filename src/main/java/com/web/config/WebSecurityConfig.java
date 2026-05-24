@@ -61,13 +61,15 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .headers()
                 .and()
                 .authorizeRequests()
-                .antMatchers("/api/*/user/**").hasAuthority(Contains.ROLE_USER)
+                .antMatchers("/api/*/user/**")
+                .hasAnyAuthority(Contains.ROLE_USER, Contains.ROLE_SELLER, Contains.ROLE_ADMIN)
                 .antMatchers("/api/admin/check-role-admin").hasAuthority(Contains.ROLE_ADMIN)
                 .antMatchers("/api/*/employee/**").hasAuthority(Contains.ROLE_EMPLOYEE)
                 .antMatchers("/api/*/admin/**").hasAnyAuthority(Contains.ROLE_ADMIN, Contains.ROLE_SELLER)
                 .antMatchers("/api/*/seller/**").hasAnyAuthority(Contains.ROLE_ADMIN, Contains.ROLE_SELLER)
                 .antMatchers("/api/admin/check-role-admin").hasAuthority(Contains.ROLE_ADMIN)
                 .antMatchers("/api/*/public/**").permitAll()
+
                 .and()
                 .apply(securityConfigurerAdapter());
     }

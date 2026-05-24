@@ -52,9 +52,6 @@ function loadMenu() {
             </a>
             <span class="topbar-divider"></span>
 
-            ${bh}
-            
-
             ${dn}
           
 
