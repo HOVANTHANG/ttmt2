@@ -39,7 +39,7 @@
     <script src="js/addressuser.js"></script>
     <script src="js/banner.js"></script>
     <script src="js/user.js"></script>
-    <script src="js/guarantee.js"></script>
+    <!--<script src="js/guarantee.js"></script>-->
     <script src="js/invoice.js"></script>
 
     <style>
@@ -441,19 +441,22 @@
                                     <div class="account-content-header">
                                         <div>
                                             <h3><i class="fa-solid fa-bag-shopping"></i> Đơn hàng của tôi</h3>
-                                            <div class="header-subtitle">Nhấp vào đơn hàng để xem chi tiết và đánh giá</div>
+                                            <div class="header-subtitle">Nhấp vào đơn hàng để xem chi tiết và đánh giá
+                                            </div>
                                         </div>
                                         <span class="header-badge" id="sldonhang">0 đơn hàng</span>
                                     </div>
 
                                     <!-- Status filter tabs -->
-                                    <div style="padding:0 20px;border-bottom:1px solid #f1f5f9;background:#fafcfe;overflow-x:auto;white-space:nowrap;">
+                                    <div
+                                        style="padding:0 20px;border-bottom:1px solid #f1f5f9;background:#fafcfe;overflow-x:auto;white-space:nowrap;">
                                         <div style="display:inline-flex;gap:4px;padding:10px 0;">
                                             <button id="tab-ALL" onclick="filterOrders('ALL',this)"
                                                 style="padding:7px 16px;border-radius:20px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,#0d9488,#065f46);color:#fff;transition:all .2s;">
                                                 Tất cả
                                             </button>
-                                            <button id="tab-DANG_CHO_XAC_NHAN" onclick="filterOrders('DANG_CHO_XAC_NHAN',this)"
+                                            <button id="tab-DANG_CHO_XAC_NHAN"
+                                                onclick="filterOrders('DANG_CHO_XAC_NHAN',this)"
                                                 style="padding:7px 16px;border-radius:20px;border:1.5px solid #e2e8f0;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:#64748b;transition:all .2s;">
                                                 Chờ xác nhận
                                             </button>
@@ -477,8 +480,12 @@
                                     </div>
 
                                     <div class="account-content-body">
-                                        <div id="ordersContainer" style="padding:16px 8px;display:flex;flex-direction:column;gap:12px;min-height:200px;"></div>
-                                        <div id="ordersPagination" style="display:flex;justify-content:center;align-items:center;gap:8px;padding:16px 0;"></div>
+                                        <div id="ordersContainer"
+                                            style="padding:16px 8px;display:flex;flex-direction:column;gap:12px;min-height:200px;">
+                                        </div>
+                                        <div id="ordersPagination"
+                                            style="display:flex;justify-content:center;align-items:center;gap:8px;padding:16px 0;">
+                                        </div>
                                     </div>
                                 </div>
                             </div>

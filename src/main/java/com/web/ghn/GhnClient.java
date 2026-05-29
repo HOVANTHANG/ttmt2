@@ -26,16 +26,16 @@ public class GhnClient {
         this.restTemplate = restTemplate;
     }
 
-    public Map<String, Object> calculateShippingFee(Integer weight ,Integer toDistrictId, String toWardCode) {
+    public Map<String, Object> calculateShippingFee(Integer weight, Integer toDistrictId, String toWardCode,
+            Integer fromDistrictId, String fromWardCode) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Token", apiKey);
         headers.set("shopId", shopId);
         headers.set("Content-Type", "application/json");
 
         Map<String, Object> shippingData = new HashMap<>();
-        // nam từ liêm - hà nội
-        shippingData.put("from_district_id", 3440);
-        shippingData.put("from_ward_code", "13010");
+        shippingData.put("from_district_id", fromDistrictId != null ? fromDistrictId : 3440);
+        shippingData.put("from_ward_code", fromWardCode != null ? fromWardCode : "21005");
         shippingData.put("to_district_id", toDistrictId);
         shippingData.put("to_ward_code", toWardCode);
         shippingData.put("weight", weight);
@@ -47,12 +47,10 @@ public class GhnClient {
                 "https://online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee",
                 HttpMethod.POST,
                 request,
-                Map.class
-        );
+                Map.class);
         System.out.println(response.toString());
         return response.getBody();
     }
-
 
     public Map<String, Object> getProvince() {
         HttpHeaders headers = new HttpHeaders();
@@ -65,11 +63,9 @@ public class GhnClient {
                 "https://online-gateway.ghn.vn/shiip/public-api/master-data/province",
                 HttpMethod.POST,
                 request,
-                Map.class
-        );
+                Map.class);
         return response.getBody();
     }
-
 
     public Map<String, Object> getDistrict(Integer provinceId) {
         HttpHeaders headers = new HttpHeaders();
@@ -77,14 +73,13 @@ public class GhnClient {
         headers.set("Content-Type", "application/json");
         Map<String, Object> data = new HashMap<>();
         data.put("province_id", provinceId);
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(data,headers);
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(data, headers);
 
         ResponseEntity<Map> response = restTemplate.exchange(
                 "https://online-gateway.ghn.vn/shiip/public-api/master-data/district",
                 HttpMethod.POST,
                 request,
-                Map.class
-        );
+                Map.class);
         return response.getBody();
     }
 
@@ -94,14 +89,13 @@ public class GhnClient {
         headers.set("Content-Type", "application/json");
         Map<String, Object> data = new HashMap<>();
         data.put("district_id", districtId);
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(data,headers);
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(data, headers);
 
         ResponseEntity<Map> response = restTemplate.exchange(
                 "https://online-gateway.ghn.vn/shiip/public-api/master-data/ward?district_id",
                 HttpMethod.POST,
                 request,
-                Map.class
-        );
+                Map.class);
         return response.getBody();
     }
 }

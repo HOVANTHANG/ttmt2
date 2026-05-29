@@ -123,15 +123,15 @@ async function loadCartCheckOut() {
     const byShop = {}; // shopId → { shopName, avatar, items[] }
     list.forEach(item => {
         const product = item.product || {};
-        const shop    = product.shop  || {};
-        const sid     = String(shop.id || 0);
+        const shop = product.shop || {};
+        const sid = String(shop.id || 0);
 
         if (!byShop[sid]) {
             byShop[sid] = {
-                shopId:   sid,
+                shopId: sid,
                 shopName: shop.shopName || shop.name || ("Shop #" + sid),
-                avatar:   shop.avatar  || "",
-                items:    []
+                avatar: shop.avatar || "",
+                items: []
             };
         }
         byShop[sid].items.push(item);
@@ -149,12 +149,12 @@ async function loadCartCheckOut() {
         shopData.items.forEach(item => {
             const product = item.product || {};
             const variant = item.productVariant || {};
-            const qty   = Number(item.quantity || 0);
-            const price = Number(variant.price  || product.price || 0);
-            const img   = getCheckoutImage(product, variant);
+            const qty = Number(item.quantity || 0);
+            const price = Number(variant.price || product.price || 0);
+            const img = getCheckoutImage(product, variant);
             const vName = getVariantDisplayName(variant);
-            subtotal  += qty * price;
-            totalQty  += qty;
+            subtotal += qty * price;
+            totalQty += qty;
 
             itemsHtml += `
             <div style="display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #e2e8f0;">
@@ -173,7 +173,7 @@ async function loadCartCheckOut() {
         // Khởi tạo shopMap entry, ship=null (chưa tính)
         shopMap[sid] = { subtotal, ship: null, discount: 0, qty: totalQty, voucherCode: null };
 
-        const initial   = (shopData.shopName || "S")[0].toUpperCase();
+        const initial = (shopData.shopName || "S")[0].toUpperCase();
         const avatarHtml = shopData.avatar
             ? `<img src="${shopData.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
             : `<span style="color:#fff;font-weight:800;font-size:15px;">${initial}</span>`;
@@ -247,37 +247,89 @@ async function loadCartCheckOut() {
 
 // ==================== PHÍ VẬN CHUYỂN ====================
 
+/** Xóa prefix hành chính để chuẩn hóa tên trước khi so sánh */
+function normAddr(s) {
+    if (!s) return "";
+    return s.toLowerCase()
+        .replace(/^(tỉnh|thành phố|tp\.|tp |quận|huyện|thị xã|tx\.|phường|xã|thị trấn|tt\.)\s+/i, "")
+        .trim();
+}
+
+/** So sánh 2 tên địa chỉ: thử full name trước, rồi normalized name */
+function addrMatch(a, b) {
+    const al = a.toLowerCase(), bl = b.toLowerCase();
+    if (al.includes(bl) || bl.includes(al)) return true;
+    const an = normAddr(a), bn = normAddr(b);
+    return an.includes(bn) || bn.includes(an);
+}
+
 async function layTinhShip(tenTinh) {
-    const res  = await fetch('http://localhost:8080/api/shipping/public/province');
+    const res = await fetch('http://localhost:8080/api/shipping/public/province');
     const data = await res.json();
-    return (data.data || []).find(p =>
-        tenTinh.toLowerCase().includes(p.ProvinceName.toLowerCase()) ||
-        p.ProvinceName.toLowerCase().includes(tenTinh.toLowerCase())
-    ) || null;
+    return (data.data || []).find(p => addrMatch(tenTinh, p.ProvinceName)) || null;
 }
 
 async function layHuyenShip(tenHuyen, provinceId) {
-    const res  = await fetch(`http://localhost:8080/api/shipping/public/district?provinceId=${provinceId}`);
+    const res = await fetch(`http://localhost:8080/api/shipping/public/district?provinceId=${provinceId}`);
     const data = await res.json();
-    return (data.data || []).find(d =>
-        tenHuyen.toLowerCase().includes(d.DistrictName.toLowerCase()) ||
-        d.DistrictName.toLowerCase().includes(tenHuyen.toLowerCase())
-    ) || null;
+    return (data.data || []).find(d => addrMatch(tenHuyen, d.DistrictName)) || null;
 }
 
 async function layXaShip(tenXa, districtId) {
-    const res  = await fetch(`http://localhost:8080/api/shipping/public/wards?districtId=${districtId}`);
+    const res = await fetch(`http://localhost:8080/api/shipping/public/wards?districtId=${districtId}`);
     const data = await res.json();
-    return (data.data || []).find(w =>
-        tenXa.toLowerCase().includes(w.WardName.toLowerCase()) ||
-        w.WardName.toLowerCase().includes(tenXa.toLowerCase())
-    ) || null;
+    return (data.data || []).find(w => addrMatch(tenXa, w.WardName)) || null;
 }
 
-async function tinhPhiGHN(districtId, wardCode, qty) {
-    const weight  = Math.max(100, qty * 500); // gram, ~500g/sản phẩm
-    const res     = await fetch(`/api/shipping/tinh-phi?toDistrictId=${districtId}&toWardCode=${wardCode}&weight=${weight}`);
-    const data    = await res.json();
+/**
+ * Lấy GHN from-codes từ địa chỉ mặc định của shop.
+ * Gọi endpoint /api/shop-address/public/primary trả về { provinceName, districtName, wardName }.
+ */
+async function getShopFromGHN(shopId) {
+    try {
+        const res = await fetch(`/api/shop-address/public/primary?shopId=${shopId}`);
+        if (!res.ok) {
+            console.warn(`[Ship] Shop ${shopId} chưa có địa chỉ (${res.status})`);
+            return null;
+        }
+
+        const addr = await res.json();
+        // Response: { provinceName, districtName, wardName }
+        const tenTinh = addr?.provinceName;
+        const tenHuyen = addr?.districtName;
+        const tenXa = addr?.wardName;
+
+        console.log(`[Ship] Shop ${shopId} → tỉnh: "${tenTinh}", huyện: "${tenHuyen}", xã: "${tenXa}"`);
+
+        if (!tenTinh || !tenHuyen || !tenXa) {
+            console.warn(`[Ship] Shop ${shopId} thiếu tên địa chỉ`);
+            return null;
+        }
+
+        const tinh = await layTinhShip(tenTinh);
+        if (!tinh) { console.warn(`[Ship] Không match tỉnh GHN: "${tenTinh}"`); return null; }
+
+        const huyen = await layHuyenShip(tenHuyen, tinh.ProvinceID);
+        if (!huyen) { console.warn(`[Ship] Không match huyện GHN: "${tenHuyen}"`); return null; }
+
+        const xa = await layXaShip(tenXa, huyen.DistrictID);
+        if (!xa) { console.warn(`[Ship] Không match xã GHN: "${tenXa}"`); return null; }
+
+        console.log(`[Ship] Shop ${shopId} GHN from → districtId: ${huyen.DistrictID}, wardCode: ${xa.WardCode}`);
+        return { districtId: huyen.DistrictID, wardCode: xa.WardCode };
+
+    } catch (e) {
+        console.warn(`[Ship] Lỗi getShopFromGHN(${shopId}):`, e.message);
+        return null;
+    }
+}
+
+async function tinhPhiGHN(fromDistrictId, fromWardCode, toDistrictId, toWardCode, qty) {
+    const weight = Math.max(100, qty * 5000); // gram, ~500g/sản phẩm
+    let url = `/api/shipping/tinh-phi?toDistrictId=${toDistrictId}&toWardCode=${toWardCode}&weight=${weight}`;
+    if (fromDistrictId) url += `&fromDistrictId=${fromDistrictId}&fromWardCode=${fromWardCode}`;
+    const res = await fetch(url);
+    const data = await res.json();
     return Number(data?.data?.total || 30000);
 }
 
@@ -293,37 +345,52 @@ async function capNhatPhiShip(address) {
         if (el) el.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tính...';
     });
 
-    // Tra cứu GHN một lần duy nhất
+    // Tra cứu GHN to-address một lần duy nhất
+    let toGHN = null;
     try {
-        const tenTinh  = address.wards.districts.province.name;
+        const tenTinh = address.wards.districts.province.name;
         const tenHuyen = address.wards.districts.name;
-        const tenXa    = address.wards.name;
+        const tenXa = address.wards.name;
 
-        const tinh  = await layTinhShip(tenTinh);
-        if (!tinh)  throw new Error("Không tìm thấy tỉnh: " + tenTinh);
+        const tinh = await layTinhShip(tenTinh);
+        if (!tinh) throw new Error("Không tìm thấy tỉnh: " + tenTinh);
 
         const huyen = await layHuyenShip(tenHuyen, tinh.ProvinceID);
         if (!huyen) throw new Error("Không tìm thấy huyện: " + tenHuyen);
 
-        const xa    = await layXaShip(tenXa, huyen.DistrictID);
-        if (!xa)    throw new Error("Không tìm thấy xã: " + tenXa);
+        const xa = await layXaShip(tenXa, huyen.DistrictID);
+        if (!xa) throw new Error("Không tìm thấy xã: " + tenXa);
 
-        _ghnCache = { districtId: huyen.DistrictID, wardCode: xa.WardCode };
-
-        // Tính phí riêng từng shop theo số lượng
-        for (const sid of Object.keys(shopMap)) {
-            const phi = await tinhPhiGHN(huyen.DistrictID, xa.WardCode, shopMap[sid].qty);
-            shopMap[sid].ship = phi;
-            updateShopUI(sid);
-        }
+        toGHN = { districtId: huyen.DistrictID, wardCode: xa.WardCode };
+        _ghnCache = toGHN;
 
     } catch (e) {
-        console.warn("[Ship]", e.message);
+        console.warn("[Ship] Không tìm được địa chỉ user:", e.message);
         toastr.warning("Không tính được phí vận chuyển, áp dụng phí mặc định 30.000đ");
         Object.keys(shopMap).forEach(sid => {
             shopMap[sid].ship = 30000;
             updateShopUI(sid);
         });
+        return;
+    }
+
+    // Tính phí riêng từng shop (from = địa chỉ shop, to = địa chỉ user)
+    for (const sid of Object.keys(shopMap)) {
+        try {
+            const from = await getShopFromGHN(sid);
+            const phi = await tinhPhiGHN(
+                from?.districtId || null,
+                from?.wardCode || null,
+                toGHN.districtId,
+                toGHN.wardCode,
+                shopMap[sid].qty
+            );
+            shopMap[sid].ship = phi;
+        } catch (e) {
+            console.warn(`[Ship] Lỗi tính phí shop ${sid}:`, e.message);
+            shopMap[sid].ship = 30000;
+        }
+        updateShopUI(sid);
     }
 }
 
@@ -331,19 +398,19 @@ async function capNhatPhiShip(address) {
 
 async function applyVoucher(sid) {
     sid = String(sid);
-    const inputEl  = document.getElementById(`voucher_${sid}`);
-    const okEl     = document.getElementById(`vouOk_${sid}`);
-    const errEl    = document.getElementById(`vouErr_${sid}`);
-    const okTxtEl  = document.getElementById(`vouOkTxt_${sid}`);
+    const inputEl = document.getElementById(`voucher_${sid}`);
+    const okEl = document.getElementById(`vouOk_${sid}`);
+    const errEl = document.getElementById(`vouErr_${sid}`);
+    const okTxtEl = document.getElementById(`vouOkTxt_${sid}`);
     const errTxtEl = document.getElementById(`vouErrTxt_${sid}`);
 
     const code = inputEl?.value?.trim() || "";
-    if (okEl)  okEl.style.display  = 'none';
+    if (okEl) okEl.style.display = 'none';
     if (errEl) errEl.style.display = 'none';
 
     // Xóa voucher nếu ô trống
     if (!code) {
-        shopMap[sid].discount    = 0;
+        shopMap[sid].discount = 0;
         shopMap[sid].voucherCode = null;
         updateShopUI(sid);
         return;
@@ -353,19 +420,19 @@ async function applyVoucher(sid) {
     const amount = (s.subtotal || 0) + (s.ship || 0);
 
     try {
-        const res    = await fetch(`http://localhost:8080/api/voucher/public/findByCode?code=${code}&amount=${amount}&shopId=${sid}`);
+        const res = await fetch(`http://localhost:8080/api/voucher/public/findByCode?code=${code}&amount=${amount}&shopId=${sid}`);
 
         const result = await res.json();
 
         if (res.status === exceptionCode) {
-            if (errEl)    { errEl.style.display = 'flex'; }
+            if (errEl) { errEl.style.display = 'flex'; }
             if (errTxtEl) errTxtEl.textContent = result.defaultMessage || "Mã không hợp lệ hoặc chưa đủ điều kiện";
-            s.discount    = 0;
+            s.discount = 0;
             s.voucherCode = null;
         } else if (res.ok) {
-            if (okEl)    { okEl.style.display = 'flex'; }
+            if (okEl) { okEl.style.display = 'flex'; }
             if (okTxtEl) okTxtEl.textContent = `Giảm ${formatmoneyCheck(result.discount)}`;
-            s.discount    = result.discount || 0;
+            s.discount = result.discount || 0;
             s.voucherCode = result.code;
         }
         updateShopUI(sid);
@@ -398,9 +465,9 @@ function checkout() {
 
 // ─── COD — Tạo 1 invoice per shop ───
 async function paymentCod() {
-    const sids      = Object.keys(shopMap);
+    const sids = Object.keys(shopMap);
     const addressId = document.getElementById("sodiachi").value;
-    const note      = document.getElementById("ghichudonhang")?.value || "";
+    const note = document.getElementById("ghichudonhang")?.value || "";
 
     const btn = document.getElementById("btnDatHang");
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...'; }
@@ -411,12 +478,12 @@ async function paymentCod() {
     for (const sid of sids) {
         const s = shopMap[sid];
         const body = {
-            payType:       "COD",
+            payType: "COD",
             userAddressId: Number(addressId),
-            voucherCode:   s.voucherCode || "",
-            note:          note,
-            shipCost:      s.ship || 0,
-            shopId:        Number(sid)
+            voucherCode: s.voucherCode || "",
+            note: note,
+            shipCost: s.ship || 0,
+            shopId: Number(sid)
         };
 
         try {
@@ -456,7 +523,7 @@ async function paymentCod() {
 // ─── MoMo — 1 link với grand total, lưu state vào localStorage ───
 async function requestPayMentMomo() {
     const addressId = document.getElementById("sodiachi").value;
-    const note      = document.getElementById("ghichudonhang")?.value || "";
+    const note = document.getElementById("ghichudonhang")?.value || "";
 
     // Tính grand total
     let grandTotal = 0;
@@ -474,9 +541,9 @@ async function requestPayMentMomo() {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                content:     "Sellora - Thanh toán đơn hàng",
-                returnUrl:   'http://localhost:8080/thanhcong',
-                notifyUrl:   'http://localhost:8080/thanhcong',
+                content: "Sellora - Thanh toán đơn hàng",
+                returnUrl: 'http://localhost:8080/thanhcong',
+                notifyUrl: 'http://localhost:8080/thanhcong',
                 codeVoucher: "",
                 totalAmount: grandTotal   // gửi grand total thực tế, server dùng trực tiếp
             })
@@ -496,12 +563,12 @@ async function requestPayMentMomo() {
 // ─── MoMo callback — tạo invoice từng shop từ localStorage ───
 async function paymentMomo() {
     try {
-        const uls       = new URL(document.URL);
-        const orderId   = uls.searchParams.get("orderId");
+        const uls = new URL(document.URL);
+        const orderId = uls.searchParams.get("orderId");
         const requestId = uls.searchParams.get("requestId");
-        const note      = localStorage.getItem("ghichudonhang") || "";
+        const note = localStorage.getItem("ghichudonhang") || "";
         const addressId = localStorage.getItem("sodiachi");
-        const raw       = localStorage.getItem("multiShopData");
+        const raw = localStorage.getItem("multiShopData");
 
         if (!raw) {
             // Fallback: single invoice (backward compat)
@@ -510,20 +577,20 @@ async function paymentMomo() {
         }
 
         const shops = JSON.parse(raw);
-        const sids  = Object.keys(shops);
+        const sids = Object.keys(shops);
         let successCount = 0;
 
         for (const sid of sids) {
             const s = shops[sid];
             const body = {
-                payType:       "MOMO",
+                payType: "MOMO",
                 userAddressId: Number(addressId),
-                voucherCode:   s.voucherCode || "",
-                note:          note,
-                shipCost:      s.ship || 0,
-                shopId:        Number(sid),
+                voucherCode: s.voucherCode || "",
+                note: note,
+                shipCost: s.ship || 0,
+                shopId: Number(sid),
                 requestIdMomo: requestId,
-                orderIdMomo:   orderId
+                orderIdMomo: orderId
             };
 
             try {
@@ -538,15 +605,15 @@ async function paymentMomo() {
 
         localStorage.removeItem('multiShopData');
 
-        const okEl   = document.getElementById("thanhcong");
+        const okEl = document.getElementById("thanhcong");
         const failEl = document.getElementById("thatbai");
         if (successCount > 0) {
-            if (okEl)   okEl.style.display   = 'block';
+            if (okEl) okEl.style.display = 'block';
             if (failEl) failEl.style.display = 'none';
             toastr.success("Thanh toán MoMo thành công!");
         } else {
             if (failEl) failEl.style.display = 'block';
-            if (okEl)   okEl.style.display   = 'none';
+            if (okEl) okEl.style.display = 'none';
         }
 
     } catch (e) {
@@ -558,30 +625,30 @@ async function paymentMomo() {
 
 async function _paymentMomoSingle(orderId, requestId, note, addressId) {
     const body = {
-        payType:       "MOMO",
+        payType: "MOMO",
         userAddressId: addressId,
-        voucherCode:   localStorage.getItem("voucherCode") || "",
-        note:          note,
+        voucherCode: localStorage.getItem("voucherCode") || "",
+        note: note,
         requestIdMomo: requestId,
-        orderIdMomo:   orderId,
-        shipCost:      localStorage.getItem("shipCost") || 0
+        orderIdMomo: orderId,
+        shipCost: localStorage.getItem("shipCost") || 0
     };
 
-    const res    = await fetch('http://localhost:8080/api/invoice/user/create', {
+    const res = await fetch('http://localhost:8080/api/invoice/user/create', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
     });
 
-    const okEl   = document.getElementById("thanhcong");
+    const okEl = document.getElementById("thanhcong");
     const failEl = document.getElementById("thatbai");
     if (res.status < 300) {
-        if (okEl)   okEl.style.display   = 'block';
+        if (okEl) okEl.style.display = 'block';
         if (failEl) failEl.style.display = 'none';
     } else {
         const result = await res.json().catch(() => ({}));
         if (failEl) failEl.style.display = 'block';
         const errEl = document.getElementById("errormess");
-        if (errEl)  errEl.textContent = result?.defaultMessage || "Thanh toán thất bại";
+        if (errEl) errEl.textContent = result?.defaultMessage || "Thanh toán thất bại";
     }
 }

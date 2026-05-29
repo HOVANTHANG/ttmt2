@@ -48,6 +48,7 @@ public class Product {
     private Long reviewCount = 0L;
 
     private Boolean deleted = false;
+    private Boolean locked = false;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")

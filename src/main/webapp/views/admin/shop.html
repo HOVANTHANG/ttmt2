@@ -169,6 +169,106 @@
             text-align: center; padding: 48px 20px; color: #94a3b8;
         }
         .empty-state i { font-size: 40px; margin-bottom: 12px; opacity: .4; }
+
+        /* Pagination */
+        .pagination-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 14px 18px;
+            border-top: 1px solid #f1f5f9;
+            background: #fff;
+            border-radius: 0 0 18px 18px;
+        }
+        .pagination-info {
+            font-size: 13px; color: #64748b; font-weight: 600;
+        }
+        .pagination-info span { color: #0d9488; font-weight: 700; }
+        .pg-nav {
+            display: flex; align-items: center; gap: 4px;
+        }
+        .pg-btn {
+            min-width: 34px; height: 34px;
+            display: inline-flex; align-items: center; justify-content: center;
+            border-radius: 9px; border: 1.5px solid #e2e8f0;
+            background: #fff; color: #374151; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: .18s; padding: 0 8px;
+            text-decoration: none;
+        }
+        .pg-btn:hover:not(:disabled) { background: #f1f5f9; border-color: #0d9488; color: #0d9488; }
+        .pg-btn.active { background: #0d9488; border-color: #0d9488; color: #fff; cursor: default; }
+        .pg-btn:disabled { opacity: .38; cursor: not-allowed; }
+        .pg-btn.pg-dots { border: none; background: none; cursor: default; color: #94a3b8; }
+        .per-page-wrap {
+            display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748b; font-weight: 600;
+        }
+        .per-page-wrap select {
+            border: 1.5px solid #e2e8f0; border-radius: 8px;
+            padding: 4px 8px; font-size: 13px; color: #1e293b; font-weight: 600;
+            background: #fff; cursor: pointer;
+        }
+        .per-page-wrap select:focus { outline: none; border-color: #0d9488; }
+
+        /* Detail button */
+        .btn-detail {
+            background: #ede9fe; color: #7c3aed;
+            border: none; border-radius: 9px;
+            padding: 6px 14px; font-size: 12.5px; font-weight: 700;
+            cursor: pointer; transition: .2s;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-detail:hover { background: #7c3aed; color: #fff; }
+
+        /* Detail modal */
+        #shopDetailModal .modal-content {
+            border: none; border-radius: 20px; overflow: hidden;
+            box-shadow: 0 24px 60px rgba(0,0,0,.18);
+        }
+        #shopDetailModal .modal-header {
+            border: none;
+            background: linear-gradient(135deg, #0d9488 0%, #065f46 100%);
+            padding: 22px 28px;
+        }
+        #shopDetailModal .modal-footer { border: none; padding: 14px 24px 22px; }
+        .detail-avatar-lg {
+            width: 90px; height: 90px; border-radius: 20px;
+            overflow: hidden; flex-shrink: 0;
+            border: 3px solid rgba(255,255,255,.35);
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,.15);
+        }
+        .detail-avatar-lg img { width: 100%; height: 100%; object-fit: cover; }
+        .detail-avatar-initial { font-size: 36px; font-weight: 800; color: #fff; text-transform: uppercase; }
+        .detail-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px 20px;
+            padding: 20px 24px;
+        }
+        .detail-info-item label {
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .5px; color: #94a3b8; display: block; margin-bottom: 4px;
+        }
+        .detail-info-item .val {
+            font-size: 14px; font-weight: 600; color: #1e293b;
+        }
+        .detail-info-item.full { grid-column: 1 / -1; }
+        .detail-desc-box {
+            background: #f8fafc; border-radius: 12px;
+            padding: 12px 16px; font-size: 13.5px; color: #475569;
+            line-height: 1.6; min-height: 52px;
+        }
+        .detail-stat-row {
+            display: flex; gap: 12px; padding: 0 24px 18px;
+        }
+        .detail-stat-chip {
+            flex: 1; background: #f1f5f9; border-radius: 12px;
+            padding: 12px 14px; text-align: center;
+        }
+        .detail-stat-chip .sv { font-size: 20px; font-weight: 800; color: #0f172a; }
+        .detail-stat-chip .sl { font-size: 11px; color: #64748b; font-weight: 600; margin-top: 2px; }
     </style>
 </head>
 
@@ -230,13 +330,28 @@
                                     <th>Slug</th>
                                     <th>SĐT</th>
                                     <th>Trạng thái</th>
-                                    <th style="width:180px">Hành động</th>
+                                    <th style="width:240px">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody id="listShop">
                                 <tr><td colspan="7" class="text-center py-4 text-muted">Đang tải dữ liệu...</td></tr>
                             </tbody>
                         </table>
+                        <!-- Pagination bar -->
+                        <div class="pagination-bar" id="paginationBar" style="display:none">
+                            <div class="pagination-info" id="pageInfo"></div>
+                            <div class="pg-nav" id="pgNav"></div>
+                            <div class="per-page-wrap">
+                                Hiển thị:
+                                <select id="perPageSelect" onchange="onPerPageChange()">
+                                    <option value="5">5</option>
+                                    <option value="10" selected>10</option>
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                </select>
+                                / trang
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -263,9 +378,81 @@
         </div>
     </div>
 
+    <!-- Shop Detail Modal -->
+    <div class="modal fade" id="shopDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered" style="max-width:560px">
+            <div class="modal-content">
+                <!-- Header with gradient -->
+                <div class="modal-header">
+                    <div class="d-flex align-items-center gap-4 w-100">
+                        <div class="detail-avatar-lg" id="detailAvatarWrap"></div>
+                        <div style="flex:1;min-width:0">
+                            <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:4px;">Chi tiết cửa hàng</div>
+                            <div id="detailShopName" style="font-size:20px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+                            <div id="detailStatusBadge" style="margin-top:6px;"></div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                </div>
+
+                <!-- Stat chips -->
+                <div class="detail-stat-row" style="padding-top:18px;">
+                    <div class="detail-stat-chip">
+                        <div class="sv" id="detailAvgStar">—</div>
+                        <div class="sl">⭐ Đánh giá TB</div>
+                    </div>
+                    <div class="detail-stat-chip">
+                        <div class="sv" id="detailReviewCount">—</div>
+                        <div class="sl">💬 Lượt đánh giá</div>
+                    </div>
+                    <div class="detail-stat-chip">
+                        <div class="sv" id="detailTotalSold">—</div>
+                        <div class="sl">📦 Đã bán</div>
+                    </div>
+                    <div class="detail-stat-chip">
+                        <div class="sv" id="detailCommission">—</div>
+                        <div class="sl">💰 Hoa hồng (%)</div>
+                    </div>
+                </div>
+
+                <!-- Info grid -->
+                <div class="detail-info-grid">
+                    <div class="detail-info-item">
+                        <label><i class="fas fa-fingerprint" style="color:#0d9488"></i> Shop ID</label>
+                        <div class="val" id="detailId">—</div>
+                    </div>
+                    <div class="detail-info-item">
+                        <label><i class="fas fa-link" style="color:#0d9488"></i> Slug</label>
+                        <div class="val"><code id="detailSlug" style="background:#f1f5f9;padding:2px 8px;border-radius:6px;font-size:12.5px;">—</code></div>
+                    </div>
+                    <div class="detail-info-item">
+                        <label><i class="fas fa-phone" style="color:#0d9488"></i> Số điện thoại</label>
+                        <div class="val" id="detailPhone">—</div>
+                    </div>
+                    <div class="detail-info-item">
+                        <label><i class="fas fa-envelope" style="color:#0d9488"></i> Email</label>
+                        <div class="val" id="detailEmail" style="word-break:break-all;">—</div>
+                    </div>
+                    <div class="detail-info-item full">
+                        <label><i class="fas fa-align-left" style="color:#0d9488"></i> Mô tả cửa hàng</label>
+                        <div class="detail-desc-box" id="detailDescription">Chưa có mô tả.</div>
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="justify-content:flex-end;">
+                    <button class="btn btn-light" data-bs-dismiss="modal" style="border-radius:10px;font-weight:600;">Đóng</button>
+                    <button class="btn" id="detailActionBtn" style="border-radius:10px;font-weight:700;min-width:130px;"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const BASE = 'http://localhost:8080';
         let allShops = [];
+        let filteredShops = [];
+        let currentPage = 1;
+        let perPage = 10;
 
         toastr.options = {
             positionClass: 'toast-top-right',
@@ -289,7 +476,9 @@
             if (!res.ok) { toastr.error('Không tải được danh sách shop', 'Lỗi'); return; }
             allShops = await res.json();
             updateSummary(allShops);
-            renderTable(allShops);
+            filteredShops = allShops;
+            currentPage = 1;
+            renderTable();
         }
 
         function updateSummary(list) {
@@ -302,7 +491,7 @@
         function filterTable() {
             const kw     = document.getElementById('searchInput').value.trim().toLowerCase();
             const status = document.getElementById('statusFilter').value;
-            const filtered = allShops.filter(s => {
+            filteredShops = allShops.filter(s => {
                 const matchKw = !kw
                     || (s.shopName  || '').toLowerCase().includes(kw)
                     || (s.shopSlug || '').toLowerCase().includes(kw)
@@ -310,18 +499,52 @@
                 const matchSt = !status || s.status === status;
                 return matchKw && matchSt;
             });
-            renderTable(filtered);
+            currentPage = 1;
+            renderTable();
         }
 
-        function renderTable(list) {
+        function onPerPageChange() {
+            perPage = parseInt(document.getElementById('perPageSelect').value);
+            currentPage = 1;
+            renderTable();
+        }
+
+        function goPage(p) {
+            const total = Math.ceil(filteredShops.length / perPage);
+            if (p < 1 || p > total) return;
+            currentPage = p;
+            renderTable();
+        }
+
+        function renderTable() {
+            const list = filteredShops;
+            const totalPages = Math.max(1, Math.ceil(list.length / perPage));
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            // pagination bar visibility
+            const bar = document.getElementById('paginationBar');
+            bar.style.display = list.length ? 'flex' : 'none';
+
             if (!list.length) {
                 document.getElementById('listShop').innerHTML =
                     `<tr><td colspan="7"><div class="empty-state"><i class="fas fa-store-slash"></i><div>Không tìm thấy shop nào</div></div></td></tr>`;
+                renderPagination(0, 0);
                 return;
             }
 
+            // slice for current page
+            const start = (currentPage - 1) * perPage;
+            const end   = Math.min(start + perPage, list.length);
+            const pageList = list.slice(start, end);
+
+            // update info
+            document.getElementById('pageInfo').innerHTML =
+                `Hiển thị <span>${start + 1}–${end}</span> / <span>${list.length}</span> cửa hàng`;
+
+            renderPagination(totalPages, currentPage);
+
             let html = '';
-            list.forEach(s => {
+            pageList.forEach(s => {
                 const initial = (s.shopName || 'S').charAt(0).toUpperCase();
                 const avatar  = s.avatar
                     ? `<img src="${s.avatar}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:12px;">
@@ -357,10 +580,61 @@
                         <td><code style="background:#f1f5f9;padding:2px 7px;border-radius:6px;font-size:12px;">${escHtml(s.shopSlug || '')}</code></td>
                         <td>${escHtml(s.phone || '—')}</td>
                         <td>${statusBadge}</td>
-                        <td>${actionBtn}</td>
+                        <td style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                            <button class="btn-detail" onclick="showDetail(${s.id})">
+                                <i class="fas fa-eye"></i> Chi tiết
+                            </button>
+                            ${actionBtn}
+                        </td>
                     </tr>`;
             });
             document.getElementById('listShop').innerHTML = html;
+        }
+
+        function renderPagination(totalPages, cur) {
+            const nav = document.getElementById('pgNav');
+            if (totalPages <= 1) { nav.innerHTML = ''; return; }
+
+            let btns = '';
+
+            // Prev
+            btns += `<button class="pg-btn" onclick="goPage(${cur-1})" ${cur===1?'disabled':''}>
+                        <i class="fas fa-chevron-left" style="font-size:11px"></i>
+                     </button>`;
+
+            // Page numbers with ellipsis
+            const pages = buildPageRange(cur, totalPages);
+            pages.forEach(p => {
+                if (p === '...') {
+                    btns += `<span class="pg-btn pg-dots">…</span>`;
+                } else {
+                    btns += `<button class="pg-btn ${p===cur?'active':''}" onclick="goPage(${p})">${p}</button>`;
+                }
+            });
+
+            // Next
+            btns += `<button class="pg-btn" onclick="goPage(${cur+1})" ${cur===totalPages?'disabled':''}>
+                        <i class="fas fa-chevron-right" style="font-size:11px"></i>
+                     </button>`;
+
+            nav.innerHTML = btns;
+        }
+
+        function buildPageRange(cur, total) {
+            if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
+            const pages = [];
+            if (cur <= 4) {
+                for (let i = 1; i <= 5; i++) pages.push(i);
+                pages.push('...'); pages.push(total);
+            } else if (cur >= total - 3) {
+                pages.push(1); pages.push('...');
+                for (let i = total - 4; i <= total; i++) pages.push(i);
+            } else {
+                pages.push(1); pages.push('...');
+                for (let i = cur - 1; i <= cur + 1; i++) pages.push(i);
+                pages.push('...'); pages.push(total);
+            }
+            return pages;
         }
 
         // ── Confirm modal ──
@@ -426,6 +700,61 @@
             } catch (e) {
                 toastr.error('Không thể kết nối server', 'Lỗi');
             }
+        }
+
+        // ── Shop Detail Modal ──
+        function showDetail(id) {
+            const s = allShops.find(x => x.id === id);
+            if (!s) return;
+
+            // Avatar
+            const initial = (s.shopName || 'S').charAt(0).toUpperCase();
+            const wrap = document.getElementById('detailAvatarWrap');
+            if (s.avatar) {
+                wrap.innerHTML = `<img src="${s.avatar}" onerror="this.parentNode.innerHTML='<span class=detail-avatar-initial>${initial}</span>'" style="width:100%;height:100%;object-fit:cover;">`;
+            } else {
+                wrap.innerHTML = `<span class="detail-avatar-initial">${initial}</span>`;
+            }
+
+            // Header
+            document.getElementById('detailShopName').textContent = s.shopName || '—';
+            const statusMap = {
+                APPROVED: `<span class="badge-status badge-approved" style="font-size:11px;"><i class="fas fa-check-circle"></i> Đang hoạt động</span>`,
+                PENDING:  `<span class="badge-status badge-pending"  style="font-size:11px;"><i class="fas fa-clock"></i> Chờ duyệt</span>`,
+                REJECTED: `<span class="badge-status badge-rejected" style="font-size:11px;"><i class="fas fa-lock"></i> Đã khóa</span>`
+            };
+            document.getElementById('detailStatusBadge').innerHTML = statusMap[s.status] || s.status;
+
+            // Stats
+            const star = (s.avgStar != null) ? parseFloat(s.avgStar).toFixed(1) : '—';
+            document.getElementById('detailAvgStar').textContent    = star;
+            document.getElementById('detailReviewCount').textContent = s.reviewCount  ?? '—';
+            document.getElementById('detailTotalSold').textContent   = s.totalSold    ?? '—';
+            document.getElementById('detailCommission').textContent  = (s.commissionRate != null) ? s.commissionRate + '%' : '—';
+
+            // Info
+            document.getElementById('detailId').textContent    = '#' + s.id;
+            document.getElementById('detailSlug').textContent  = s.shopSlug || '—';
+            document.getElementById('detailPhone').textContent = s.phone    || '—';
+            document.getElementById('detailEmail').textContent = s.email    || '—';
+            document.getElementById('detailDescription').textContent = s.description || 'Chưa có mô tả.';
+
+            // Action button in modal footer
+            const isLocked = s.status === 'REJECTED';
+            const btn = document.getElementById('detailActionBtn');
+            btn.className = 'btn ' + (isLocked ? 'btn-success' : 'btn-danger');
+            btn.innerHTML = isLocked
+                ? '<i class="fas fa-lock-open"></i> Mở khóa shop'
+                : '<i class="fas fa-lock"></i> Khóa shop';
+            // Remove old listener then add new one
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            newBtn.addEventListener('click', () => {
+                bootstrap.Modal.getInstance(document.getElementById('shopDetailModal')).hide();
+                confirmAction(s.id, isLocked ? 'unlock' : 'lock', s.shopName);
+            });
+
+            new bootstrap.Modal(document.getElementById('shopDetailModal')).show();
         }
 
         function escHtml(s) {

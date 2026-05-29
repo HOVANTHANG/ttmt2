@@ -43,19 +43,19 @@ async function authFetch(url, options = {}) {
 // ==================== LOAD DANH SÁCH ĐƠN HÀNG ====================
 
 const PAGE_SIZE = 5;
-var allInvoices   = [];
+var allInvoices = [];
 var filteredInvoices = [];
-var currentPage   = 1;
+var currentPage = 1;
 var currentFilter = 'ALL';
 
 const STATUS_MAP = {
-    DANG_CHO_XAC_NHAN : { label: 'Chờ xác nhận', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
-    DA_XAC_NHAN        : { label: 'Đã xác nhận',  color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe' },
-    DANG_GIAO          : { label: 'Đang giao',     color: '#8b5cf6', bg: '#f5f3ff', border: '#ddd6fe' },
-    DA_GIAO            : { label: 'Đã giao',       color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0' },
-    DA_NHAN            : { label: 'Hoàn thành',    color: '#0d9488', bg: '#f0fdfa', border: '#99f6e4' },
-    DA_HUY             : { label: 'Đã hủy',        color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
-    HUY                : { label: 'Đã hủy',        color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
+    DANG_CHO_XAC_NHAN: { label: 'Chờ xác nhận', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
+    DA_XAC_NHAN: { label: 'Đã xác nhận', color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe' },
+    DANG_GIAO: { label: 'Đang giao', color: '#8b5cf6', bg: '#f5f3ff', border: '#ddd6fe' },
+    DA_GIAO: { label: 'Đã giao', color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0' },
+    DA_NHAN: { label: 'Hoàn thành', color: '#0d9488', bg: '#f0fdfa', border: '#99f6e4' },
+    DA_HUY: { label: 'Đã hủy', color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
+    HUY: { label: 'Đã hủy', color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
 };
 
 function getStatusInfo(status) {
@@ -74,7 +74,7 @@ async function loadMyInvoice() {
         document.getElementById('sldonhang').innerHTML = allInvoices.length + ' đơn hàng';
 
         currentFilter = 'ALL';
-        currentPage   = 1;
+        currentPage = 1;
         applyFilter();
 
     } catch (e) {
@@ -85,19 +85,19 @@ async function loadMyInvoice() {
 
 function filterOrders(status, btn) {
     currentFilter = status;
-    currentPage   = 1;
+    currentPage = 1;
 
     // Reset tất cả tab về dạng inactive
     document.querySelectorAll('[id^="tab-"]').forEach(el => {
-        el.style.background    = '#fff';
-        el.style.color         = '#64748b';
-        el.style.border        = '1.5px solid #e2e8f0';
+        el.style.background = '#fff';
+        el.style.color = '#64748b';
+        el.style.border = '1.5px solid #e2e8f0';
     });
     // Active tab
     if (btn) {
         btn.style.background = 'linear-gradient(135deg,#0d9488,#065f46)';
-        btn.style.color      = '#fff';
-        btn.style.border     = 'none';
+        btn.style.color = '#fff';
+        btn.style.border = 'none';
     }
     applyFilter();
 }
@@ -115,7 +115,7 @@ function renderPage() {
     if (!container) return;
 
     const start = (currentPage - 1) * PAGE_SIZE;
-    const page  = filteredInvoices.slice(start, start + PAGE_SIZE);
+    const page = filteredInvoices.slice(start, start + PAGE_SIZE);
 
     if (filteredInvoices.length === 0) {
         container.innerHTML = `
@@ -128,9 +128,9 @@ function renderPage() {
     }
 
     container.innerHTML = page.map(item => {
-        const st   = getStatusInfo(item.statusInvoice);
-        const canCancel = ['DANG_CHO_XAC_NHAN','DA_XAC_NHAN'].includes(item.statusInvoice);
-        const payBadge  = item.payType === 'MOMO'
+        const st = getStatusInfo(item.statusInvoice);
+        const canCancel = ['DANG_CHO_XAC_NHAN', 'DA_XAC_NHAN'].includes(item.statusInvoice);
+        const payBadge = item.payType === 'MOMO'
             ? `<span style="background:#fff0f9;color:#ec4899;border:1.5px solid #fbcfe8;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">MoMo</span>`
             : `<span style="background:#f0fdf4;color:#16a34a;border:1.5px solid #bbf7d0;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">COD</span>`;
 
@@ -189,7 +189,7 @@ function renderPage() {
 }
 
 function renderPagination() {
-    const pag   = document.getElementById('ordersPagination');
+    const pag = document.getElementById('ordersPagination');
     if (!pag) return;
     const total = Math.ceil(filteredInvoices.length / PAGE_SIZE);
     if (total <= 1) { pag.innerHTML = ''; return; }
@@ -199,17 +199,17 @@ function renderPagination() {
          background:${active ? '#0d9488' : '#fff'};color:${active ? '#fff' : '#64748b'};
          font-weight:${active ? '700' : '500'};cursor:pointer;font-family:inherit;font-size:13.5px;transition:all .2s;`;
 
-    let html = `<button style="${btnStyle(false)}" onclick="goPage(${currentPage-1})"
-                    ${currentPage===1?'disabled style="opacity:.4;cursor:not-allowed"':''}>
+    let html = `<button style="${btnStyle(false)}" onclick="goPage(${currentPage - 1})"
+                    ${currentPage === 1 ? 'disabled style="opacity:.4;cursor:not-allowed"' : ''}>
                     ‹ Trước
                 </button>`;
 
     for (let i = 1; i <= total; i++) {
-        html += `<button style="${btnStyle(i===currentPage)}" onclick="goPage(${i})">${i}</button>`;
+        html += `<button style="${btnStyle(i === currentPage)}" onclick="goPage(${i})">${i}</button>`;
     }
 
-    html += `<button style="${btnStyle(false)}" onclick="goPage(${currentPage+1})"
-                ${currentPage===total?'disabled style="opacity:.4;cursor:not-allowed"':''}>
+    html += `<button style="${btnStyle(false)}" onclick="goPage(${currentPage + 1})"
+                ${currentPage === total ? 'disabled style="opacity:.4;cursor:not-allowed"' : ''}>
                 Tiếp ›
             </button>`;
 
@@ -319,8 +319,6 @@ function renderInvoiceDetail(invoice, list) {
                                     onclick="openProductReview(${item.id})">
                                 Đánh giá sản phẩm
                             </button>` : ""}
-                        <button class="btn btn-sm btn-outline-primary mt-2"
-                                onclick="openModalMoTa(${item.id})">Bảo hành</button>
                     </div>
                     <div class="text-end"><b>${formatmoney(price * quantity)}</b></div>
                 </div>`;

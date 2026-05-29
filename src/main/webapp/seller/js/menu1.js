@@ -28,13 +28,14 @@ $(document).ready(function () {
             <a class="nav-link ${active('/seller/voucher')}" href="/seller/voucher">
                 <div class="sb-nav-link-icon"><i class="fas fa-tags"></i></div>Voucher
             </a>
+            <a class="nav-link ${active('/seller/diachi')}" href="/seller/diachi">
+                <div class="sb-nav-link-icon"><i class="fas fa-map-marker-alt"></i></div>Địa chỉ kho
+            </a>
             <div class="sb-sidenav-menu-heading">Hỗ trợ</div>
             <a class="nav-link ${active('/seller/seller-chat')}" href="/seller/seller-chat">
                 <div class="sb-nav-link-icon"><i class="fas fa-comments"></i></div>Tin nhắn
             </a>
-            <a class="nav-link ${active('/seller/baohanh')}" href="/seller/baohanh">
-                <div class="sb-nav-link-icon"><i class="fas fa-shield-alt"></i></div>Bảo hành
-            </a>
+        
             <a onclick="dangXuat()" class="nav-link" href="#">
                 <div class="sb-nav-link-icon"><i class="fas fa-sign-out-alt"></i></div>Đăng xuất
             </a>`;
@@ -171,15 +172,15 @@ $(document).ready(function () {
         if (!t) return;
         fetch("http://localhost:8080/api/seller/my-shop", {
             headers: { "Authorization": "Bearer " + t }
-        }).then(function(r){ return r.ok ? r.json() : null; })
-          .then(function(d){
-              if (d && d.shopName) {
-                  var el = document.getElementById("topbarShopName");
-                  if (el) el.textContent = d.shopName;
-                  var sid = document.getElementById("shopNameSidebar");
-                  if (sid) sid.textContent = d.shopName;
-              }
-          }).catch(function(){});
+        }).then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                if (d && d.shopName) {
+                    var el = document.getElementById("topbarShopName");
+                    if (el) el.textContent = d.shopName;
+                    var sid = document.getElementById("shopNameSidebar");
+                    if (sid) sid.textContent = d.shopName;
+                }
+            }).catch(function () { });
     }
 
     function injectShopModal() {
@@ -370,7 +371,7 @@ $(document).ready(function () {
         document.body.appendChild(div);
 
         // Close on backdrop click
-        document.getElementById("__shopInfoModal").addEventListener("click", function(e){
+        document.getElementById("__shopInfoModal").addEventListener("click", function (e) {
             if (e.target === this) closeShopModal();
         });
     }
@@ -404,21 +405,21 @@ function fetchShopInfo() {
     if (!t) return;
     fetch("http://localhost:8080/api/seller/my-shop", {
         headers: { "Authorization": "Bearer " + t }
-    }).then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(d){
-          if (!d) return;
-          window._shopData = d;
-          renderShopView(d);
-          // sync topbar and sidebar labels
-          var el = document.getElementById("topbarShopName");
-          if (el) el.textContent = d.shopName || "";
-          var sid = document.getElementById("shopNameSidebar");
-          if (sid) sid.textContent = d.shopName || "";
-          var sn = document.getElementById("shopName");
-          if (sn) sn.textContent = d.shopName || "";
-          var sn2 = document.getElementById("shopNameSide");
-          if (sn2) sn2.textContent = d.shopName || "";
-      }).catch(function(e){ console.error(e); });
+    }).then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+            if (!d) return;
+            window._shopData = d;
+            renderShopView(d);
+            // sync topbar and sidebar labels
+            var el = document.getElementById("topbarShopName");
+            if (el) el.textContent = d.shopName || "";
+            var sid = document.getElementById("shopNameSidebar");
+            if (sid) sid.textContent = d.shopName || "";
+            var sn = document.getElementById("shopName");
+            if (sn) sn.textContent = d.shopName || "";
+            var sn2 = document.getElementById("shopNameSide");
+            if (sn2) sn2.textContent = d.shopName || "";
+        }).catch(function (e) { console.error(e); });
 }
 
 function renderShopView(d) {
@@ -494,7 +495,7 @@ function onAvatarFileChange(input) {
 
     // Show local preview immediately
     var reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = function (e) {
         var preview = document.getElementById("__se_avatar_preview");
         if (preview) preview.innerHTML = '<img src="' + e.target.result + '" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:block;">';
     };
@@ -514,16 +515,16 @@ function onAvatarFileChange(input) {
         method: "POST",
         headers: t ? { "Authorization": "Bearer " + t } : {},
         body: formData
-    }).then(function(r) {
+    }).then(function (r) {
         if (!r.ok) throw new Error("Upload th\u1ea5t b\u1ea1i");
         return r.text();
-    }).then(function(url) {
+    }).then(function (url) {
         // Store the Cloudinary URL in hidden input
         setVal("__se_avatar", url.replace(/^"|"$/g, ""));
         if (uploading) uploading.classList.remove("show");
         if (hint) hint.textContent = "\u2705 T\u1ea3i l\u00ean th\u00e0nh c\u00f4ng!";
         if (hint) hint.style.color = "#16a34a";
-    }).catch(function(err) {
+    }).catch(function (err) {
         console.error(err);
         if (uploading) uploading.classList.remove("show");
         if (hint) { hint.textContent = "\u274c T\u1ea3i l\u00ean th\u1ea5t b\u1ea1i, vui l\u00f2ng th\u1eed l\u1ea1i."; hint.style.color = "#dc2626"; }
@@ -564,7 +565,7 @@ function saveShopInfo() {
         method: "PUT",
         headers: { "Authorization": "Bearer " + t, "Content-Type": "application/json" },
         body: JSON.stringify(body)
-    }).then(function(r){
+    }).then(function (r) {
         if (r.ok) {
             // Refresh cached shop data
             window._shopData = Object.assign(window._shopData || {}, body);
@@ -582,9 +583,9 @@ function saveShopInfo() {
             switchShopTab("view");
             showToast("Cập nhật thành công!", "success");
         } else {
-            r.text().then(function(msg){ alert("Lỗi: " + msg); });
+            r.text().then(function (msg) { alert("Lỗi: " + msg); });
         }
-    }).catch(function(e){ alert("Lỗi kết nối server!"); });
+    }).catch(function (e) { alert("Lỗi kết nối server!"); });
 }
 
 

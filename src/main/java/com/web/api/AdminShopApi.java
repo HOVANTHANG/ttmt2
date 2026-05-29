@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,38 +42,36 @@ public class AdminShopApi {
         return ResponseEntity.ok(shopRepository.findAll());
     }
 
-    /** Khóa shop: status → REJECTED + ẩn toàn bộ sản phẩm */
+    /** Khóa shop: status → REJECTED + lock toàn bộ sản phẩm của shop */
+    @Transactional
     @PostMapping("/{id}/lock")
     public ResponseEntity<?> lockShop(@PathVariable Long id) {
         Shop shop = shopRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy shop"));
         shop.setStatus(ShopStatus.REJECTED);
         shopRepository.save(shop);
-        // Ẩn tất cả sản phẩm của shop
-        List<Product> products = productRepository.findByShopId(id);
-        products.forEach(p -> {
-            p.setDeleted(true);
-            productRepository.save(p);
-        });
+        // Khóa tất cả sản phẩm của shop (dùng locked, KHÔNG đụng vào deleted)
+        long count = productRepository.lockAllByShopId(id);
         return ResponseEntity.ok(Map.of(
-                "message", "Đã khóa shop và ẩn " + products.size() + " sản phẩm"));
+                "message", "Đã khóa shop và khóa " + count + " sản phẩm"));
     }
 
-    /** Mở khóa shop: status → APPROVED + khôi phục sản phẩm */
+    /**
+     * Mở khóa shop: status → APPROVED + unlock sản phẩm (chỉ những sp bị locked vì
+     * shop)
+     */
+    @Transactional
     @PostMapping("/{id}/unlock")
     public ResponseEntity<?> unlockShop(@PathVariable Long id) {
         Shop shop = shopRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy shop"));
         shop.setStatus(ShopStatus.APPROVED);
         shopRepository.save(shop);
-        // Khôi phục tất cả sản phẩm về APPROVED
-        List<Product> products = productRepository.findByShopId(id);
-        products.forEach(p -> {
-            p.setDeleted(false);
-            productRepository.save(p);
-        });
+        // Mở khóa sản phẩm (chỉ reset locked=false, sản phẩm deleted thật vẫn giữ
+        // nguyên)
+        long count = productRepository.unlockAllByShopId(id);
         return ResponseEntity.ok(Map.of(
-                "message", "Đã mở khóa shop và khôi phục " + products.size() + " sản phẩm"));
+                "message", "Đã mở khóa shop và khôi phục " + count + " sản phẩm"));
     }
 
     @GetMapping("/statistic")

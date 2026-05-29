@@ -72,10 +72,6 @@ $(document).ready(function () {
                 <div class="sb-nav-link-icon"><i class="fa fa-shopping-cart iconmenu"></i></div>
                 Đơn hàng
             </a>
-            <a class="nav-link" href="/admin/baohanh">
-                <div class="sb-nav-link-icon"><i class="fas fa-list iconmenu"></i></div>
-                Bảo hành
-            </a>
             <a onclick="dangXuat()" class="nav-link" href="#">
                 <div class="sb-nav-link-icon"><i class="fas fa-sign-out-alt iconmenu"></i></div>
                 Đăng xuất

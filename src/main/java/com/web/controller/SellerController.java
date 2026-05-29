@@ -63,4 +63,9 @@ public class SellerController {
         return "seller/baohanh";
     }
 
+    @RequestMapping(value = { "/diachi" }, method = RequestMethod.GET)
+    public String diachi() {
+        return "seller/diachi";
+    }
+
 }

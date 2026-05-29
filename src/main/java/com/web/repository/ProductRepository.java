@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import org.springframework.data.repository.query.Param;
@@ -18,348 +19,372 @@ import java.util.List;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-        @Query("select p from Product p left join p.tradeMark tm where " +
+    @Query("select p from Product p left join p.tradeMark tm where " +
 
-                        "(p.name like ?1 or p.category.name like ?1 or tm.name like ?1 or p.code like ?1) " +
+            "(p.name like ?1 or p.category.name like ?1 or tm.name like ?1 or p.code like ?1) " +
 
-                        "and p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED")
+            "and p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.locked <> true")
 
-        Page<Product> findByParam(String s, Pageable pageable);
+    Page<Product> findByParam(String s, Pageable pageable);
 
-        @Query("select p from Product p left join p.tradeMark tm where " +
+    @Query("select p from Product p left join p.tradeMark tm where " +
 
-                        "(p.name like ?1 or p.category.name like ?1 or tm.name like ?1 or p.code like ?1) " +
+            "(p.name like ?1 or p.category.name like ?1 or tm.name like ?1 or p.code like ?1) " +
 
-                        "and p.category.id = ?2 and p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED")
+            "and p.category.id = ?2 and p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.locked <> true")
 
-        Page<Product> findByParamAndCate(String s, Long categoryId, Pageable pageable);
+    Page<Product> findByParamAndCate(String s, Long categoryId, Pageable pageable);
 
-        @Query("select p from Product p left join p.tradeMark tm where " +
+    @Query("select p from Product p left join p.tradeMark tm where " +
 
-                        "(p.name like ?1 or p.category.name like ?1 or tm.name like ?1 or p.code like ?1) " +
+            "(p.name like ?1 or p.category.name like ?1 or tm.name like ?1 or p.code like ?1) " +
 
-                        "and tm.id = ?2 and p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED")
+            "and tm.id = ?2 and p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.locked <> true")
 
-        Page<Product> findByParamAndTrademark(String s, Long trademarkId, Pageable pageable);
+    Page<Product> findByParamAndTrademark(String s, Long trademarkId, Pageable pageable);
 
-        @Query("select p from Product p left join p.tradeMark tm where " +
+    @Query("select p from Product p left join p.tradeMark tm where " +
 
-                        "(p.name like ?1 or p.category.name like ?1 or tm.name like ?1 or p.code like ?1) " +
+            "(p.name like ?1 or p.category.name like ?1 or tm.name like ?1 or p.code like ?1) " +
 
-                        "and tm.id = ?2 and p.category.id = ?3 and p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED")
+            "and tm.id = ?2 and p.category.id = ?3 and p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.locked <> true")
 
-        Page<Product> findByParamAndTrademarkAndCate(String s, Long trademarkId, Long categoryId, Pageable pageable);
+    Page<Product> findByParamAndTrademarkAndCate(String s, Long trademarkId, Long categoryId, Pageable pageable);
 
-        @Query("select p from Product p where p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED order by p.createdDate desc, p.createdTime desc")
+    @Query("select p from Product p where p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.locked <> true order by p.createdDate desc, p.createdTime desc")
 
-        Page<Product> newProduct(Pageable pageable);
+    Page<Product> newProduct(Pageable pageable);
 
-        @Query("select p from Product p where p.deleted <> true and p.category.id = ?1 and p.status = com.web.enums.ProductStatus.APPROVED")
+    @Query("select p from Product p where p.deleted <> true and p.category.id = ?1 and p.status = com.web.enums.ProductStatus.APPROVED and p.locked <> true")
 
-        Page<Product> findByCategoryId(Long categoryId, Pageable pageable);
+    Page<Product> findByCategoryId(Long categoryId, Pageable pageable);
 
-        @Query("select p from Product p where p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED order by p.sold desc")
+    @Query("select p from Product p where p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.locked <> true order by p.sold desc")
 
-        Page<Product> bestSaler(Pageable pageable);
+    Page<Product> bestSaler(Pageable pageable);
 
-        @Query("select p from Product p where p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.category.categoryType = ?1 order by p.sold desc")
+    @Query("select p from Product p where p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.category.categoryType = ?1 and p.locked <> true order by p.sold desc")
 
-        Page<Product> bestSalerByCategory(CategoryType categoryType, Pageable pageable);
+    Page<Product> bestSalerByCategory(CategoryType categoryType, Pageable pageable);
 
-        @Query("select p from Product p where p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.tradeMark.id = ?1 and p.id <> ?2")
+    @Query("select p from Product p where p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.tradeMark.id = ?1 and p.id <> ?2 and p.locked <> true")
 
-        Page<Product> sanPhamLienQuanByTrademark(Long idTrademark, Long idproduct, Pageable pageable);
+    Page<Product> sanPhamLienQuanByTrademark(Long idTrademark, Long idproduct, Pageable pageable);
 
-        @Query("select p from Product p where p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.category.id = ?1 and p.id <> ?2")
+    @Query("select p from Product p where p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.category.id = ?1 and p.id <> ?2 and p.locked <> true")
 
-        Page<Product> sanPhamLienQuanCate(Long idcategory, Long idproduct, Pageable pageable);
+    Page<Product> sanPhamLienQuanCate(Long idcategory, Long idproduct, Pageable pageable);
 
-        @Query("select p from Product p where p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.name like ?1 and p.price >= ?2 and p.price <= ?3")
+    @Query("select p from Product p where p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.locked <> true and p.name like ?1 and p.price >= ?2 and p.price <= ?3")
 
-        Page<Product> locSanPham(String search, Double small, Double large, Pageable pageable);
+    Page<Product> locSanPham(String search, Double small, Double large, Pageable pageable);
 
-        @Query("select p from Product p where p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.name like ?1 and p.price >= ?2 and p.price <= ?3 and p.category.id = ?4")
+    @Query("select p from Product p where p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.locked <> true and p.name like ?1 and p.price >= ?2 and p.price <= ?3 and p.category.id = ?4")
 
-        Page<Product> locSanPham(String search, Double small, Double large, Long idcategory, Pageable pageable);
+    Page<Product> locSanPham(String search, Double small, Double large, Long idcategory, Pageable pageable);
 
-        @Query("select p from Product p where p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.name like ?1 and p.price >= ?2 and p.price <= ?3 and p.tradeMark.name = ?4")
+    @Query("select p from Product p where p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.locked <> true and p.name like ?1 and p.price >= ?2 and p.price <= ?3 and p.tradeMark.name = ?4")
 
-        Page<Product> locSanPham(String search, Double small, Double large, String trademark, Pageable pageable);
+    Page<Product> locSanPham(String search, Double small, Double large, String trademark, Pageable pageable);
 
-        @Query("select p from Product p where p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.name like ?1 and p.price >= ?2 and p.price <= ?3 "
+    @Query("select p from Product p where p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED and p.locked <> true and p.name like ?1 and p.price >= ?2 and p.price <= ?3 "
 
-                        +
+            +
 
-                        "and p.tradeMark.name = ?4 and p.category.id = ?5")
+            "and p.tradeMark.name = ?4 and p.category.id = ?5")
 
-        Page<Product> locSanPham(String search, Double small, Double large, String trademark, Long idCategory,
+    Page<Product> locSanPham(String search, Double small, Double large, String trademark, Long idCategory,
 
-                        Pageable pageable);
+            Pageable pageable);
 
-        @Query(value = "select * from product p " +
-                        "where p.deleted = false and p.status = 'APPROVED' order by p.sold desc limit 10", nativeQuery = true)
+    @Query(value = "select * from product p " +
+            "where p.deleted = false and p.status = 'APPROVED' and p.locked = false order by p.sold desc limit 10", nativeQuery = true)
 
-        List<Product> findTop10Selling();
+    List<Product> findTop10Selling();
 
-        @Query("select count(p) from Product p where p.shop.id = ?1 and p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED")
+    @Query("select count(p) from Product p where p.shop.id = ?1 and p.deleted <> true and p.status = com.web.enums.ProductStatus.APPROVED")
 
-        Long countByShopIdAndDeletedFalse(Long shopId);
+    Long countByShopIdAndDeletedFalse(Long shopId);
 
-        @Query(value = "select * from product p " +
-                        "where p.shop_id = ?1 and p.deleted = false and p.status = 'APPROVED' " +
-                        "order by p.sold desc limit 10", nativeQuery = true)
-        List<Product> findTopSellingByShop(Long shopId);
+    @Query(value = "select * from product p " +
+            "where p.shop_id = ?1 and p.deleted = false and p.status = 'APPROVED' and p.locked = false " +
+            "order by p.sold desc limit 10", nativeQuery = true)
+    List<Product> findTopSellingByShop(Long shopId);
 
-        @Query("select p from Product p left join p.tradeMark tm where p.deleted <> true  and p.shop.id = ?1 "
-                        +
+    @Query("select p from Product p left join p.tradeMark tm where p.deleted <> true and p.status = 'APPROVED' and p.locked = false  and p.shop.id = ?1 "
+            +
 
-                        "and (p.name like ?2 or p.category.name like ?2 or tm.name like ?2 or p.code like ?2)")
+            "and (p.name like ?2 or p.category.name like ?2 or tm.name like ?2 or p.code like ?2)")
 
-        Page<Product> findByShop(Long shopId, String search, Pageable pageable);
+    Page<Product> findByShop(Long shopId, String search, Pageable pageable);
 
-        @Query("select p from Product p left join p.tradeMark tm where p.deleted <> true  and p.shop.id = ?1 "
-                        +
+    @Query("select p from Product p left join p.tradeMark tm where p.deleted <> true and p.status = 'APPROVED' and p.locked = false  and p.shop.id = ?1 "
+            +
 
-                        "and (p.name like ?2 or p.category.name like ?2 or tm.name like ?2 or p.code like ?2) "
+            "and (p.name like ?2 or p.category.name like ?2 or tm.name like ?2 or p.code like ?2) "
 
-                        + "and p.category.id = ?3")
+            + "and p.category.id = ?3")
 
-        Page<Product> findByShopAndCategory(Long shopId, String search, Long categoryId, Pageable pageable);
+    Page<Product> findByShopAndCategory(Long shopId, String search, Long categoryId, Pageable pageable);
 
-        @Query("select p from Product p left join p.tradeMark tm where p.deleted <> true  and p.shop.id = ?1 "
-                        +
+    @Query("select p from Product p left join p.tradeMark tm where p.deleted <> true and p.status = 'APPROVED' and p.locked = false  and p.shop.id = ?1 "
+            +
 
-                        "and (p.name like ?2 or p.category.name like ?2 or tm.name like ?2 or p.code like ?2) "
+            "and (p.name like ?2 or p.category.name like ?2 or tm.name like ?2 or p.code like ?2) "
 
-                        +
+            +
 
-                        "and tm.id = ?3")
+            "and tm.id = ?3")
 
-        Page<Product> findByShopAndTrademark(Long shopId, String search, Long trademarkId, Pageable pageable);
+    Page<Product> findByShopAndTrademark(Long shopId, String search, Long trademarkId, Pageable pageable);
 
-        @Query("select p from Product p left join p.tradeMark tm where p.deleted <> true  and p.shop.id = ?1 "
-                        +
+    @Query("select p from Product p left join p.tradeMark tm where p.deleted <> true and p.status = 'APPROVED' and p.locked = false  and p.shop.id = ?1 "
+            +
 
-                        "and (p.name like ?2 or p.category.name like ?2 or tm.name like ?2 or p.code like ?2) "
+            "and (p.name like ?2 or p.category.name like ?2 or tm.name like ?2 or p.code like ?2) "
 
-                        +
+            +
 
-                        "and p.category.id = ?3 and tm.id = ?4")
+            "and p.category.id = ?3 and tm.id = ?4")
 
-        Page<Product> findByShopAndCategoryAndTrademark(Long shopId, String search, Long categoryId, Long trademarkId,
+    Page<Product> findByShopAndCategoryAndTrademark(Long shopId, String search, Long categoryId, Long trademarkId,
 
-                        Pageable pageable);
+            Pageable pageable);
 
-        /** Trang shop công khai – chỉ hiện sản phẩm APPROVED */
+    /** Trang shop công khai – chỉ hiện sản phẩm APPROVED */
 
-        @Query("select p from Product p where p.shop.id = ?1 and p.deleted = false ")
+    @Query("select p from Product p where p.shop.id = ?1 and p.deleted = false and p.status = com.web.enums.ProductStatus.APPROVED and p.locked = false")
 
-        Page<Product> findByShopIdAndDeletedFalse(Long shopId, Pageable pageable);
+    Page<Product> findByShopIdAndDeletedFalse(Long shopId, Pageable pageable);
 
-        Page<Product> findByCategoryIdAndDeletedFalse(Long categoryId, Pageable pageable);
+    Page<Product> findByCategoryIdAndDeletedFalse(Long categoryId, Pageable pageable);
 
-        /**
-         * 
-         * Tìm sản phẩm theo danh mục CHA hoặc danh mục CON của nó.
-         * 
-         * LEFT JOIN để không loại sản phẩm có category không có parent.
-         * 
-         */
+    /**
+     * 
+     * Tìm sản phẩm theo danh mục CHA hoặc danh mục CON của nó.
+     * 
+     * LEFT JOIN để không loại sản phẩm có category không có parent.
+     * 
+     */
 
-        @Query(value = """
+    @Query(value = """
 
-                            select distinct p
+                select distinct p
 
-                            from Product p
+                from Product p
 
-                            join fetch p.category c
+                join fetch p.category c
 
-                            left join fetch c.parent parent
+                left join fetch c.parent parent
 
-                            join fetch p.shop s
+                join fetch p.shop s
 
-                            where p.deleted = false
+                where p.deleted = false
 
-                            and s.status = com.web.enums.ShopStatus.APPROVED
+                and s.status = com.web.enums.ShopStatus.APPROVED
 
-                            and p.status = com.web.enums.ProductStatus.APPROVED
+                and p.status = com.web.enums.ProductStatus.APPROVED
 
-                            and (c.id = :categoryId or parent.id = :categoryId)
+                and p.locked = false
 
-                            order by
+                and (c.id = :categoryId or parent.id = :categoryId)
 
-                            case
+                order by
 
-                                when c.id = :categoryId then 100
+                case
 
-                                else 50
+                    when c.id = :categoryId then 100
 
-                            end desc,
+                    else 50
 
-                            s.avgStar desc,
+                end desc,
 
-                            s.reviewCount desc,
+                s.avgStar desc,
 
-                            p.avgStar desc,
+                s.reviewCount desc,
 
-                            p.reviewCount desc,
+                p.avgStar desc,
 
-                            p.sold desc,
+                p.reviewCount desc,
 
-                            p.price asc
+                p.sold desc,
 
-                        """, countQuery = """
+                p.price asc
 
-                            select count(distinct p)
+            """, countQuery = """
 
-                            from Product p
+                select count(distinct p)
 
-                            join p.category c
+                from Product p
 
-                            left join c.parent parent
+                join p.category c
 
-                            join p.shop s
+                left join c.parent parent
 
-                            where p.deleted = false
+                join p.shop s
 
-                            and s.status = com.web.enums.ShopStatus.APPROVED
+                where p.deleted = false
 
-                            and p.status = com.web.enums.ProductStatus.APPROVED
+                and s.status = com.web.enums.ShopStatus.APPROVED
 
-                            and (c.id = :categoryId or parent.id = :categoryId)
+                and p.status = com.web.enums.ProductStatus.APPROVED
 
-                        """)
+                and (c.id = :categoryId or parent.id = :categoryId)
 
-        Page<Product> findByCategoryIdIncludingChildren(@Param("categoryId") Long categoryId, Pageable pageable);
+            """)
 
-        Long countByShopId(Long shopId);
+    Page<Product> findByCategoryIdIncludingChildren(@Param("categoryId") Long categoryId, Pageable pageable);
 
-        /** Lấy tất cả sản phẩm của shop (dùng khi khóa/mở khóa shop) */
+    Long countByShopId(Long shopId);
 
-        List<Product> findByShopId(Long shopId);
+    /** Lấy tất cả sản phẩm của shop (dùng khi khóa/mở khóa shop) */
 
-        @Query(value = """
+    List<Product> findByShopId(Long shopId);
 
-                            select p
+    @Query(value = """
 
-                            from Product p
+                select p
 
-                            left join p.tradeMark tm
+                from Product p
 
-                            where p.deleted = false
+                left join p.tradeMark tm
 
-                            and p.shop is not null
+                where p.deleted = false
 
-                            and p.shop.status = com.web.enums.ShopStatus.APPROVED
+                and p.shop is not null
 
-                            and p.status = com.web.enums.ProductStatus.APPROVED
+                and p.shop.status = com.web.enums.ShopStatus.APPROVED
 
-                            and (
+                and p.status = com.web.enums.ProductStatus.APPROVED
 
-                                lower(p.name) like lower(concat('%', :keyword, '%'))
+                and p.locked = false
 
-                                or lower(p.code) like lower(concat('%', :keyword, '%'))
+                and (
 
-                                or lower(p.category.name) like lower(concat('%', :keyword, '%'))
+                    lower(p.name) like lower(concat('%', :keyword, '%'))
 
-                                or lower(tm.name) like lower(concat('%', :keyword, '%'))
+                    or lower(p.code) like lower(concat('%', :keyword, '%'))
 
-                            )
+                    or lower(p.category.name) like lower(concat('%', :keyword, '%'))
 
-                            order by
+                    or lower(tm.name) like lower(concat('%', :keyword, '%'))
 
-                            case
+                )
 
-                                when lower(p.name) = lower(:keyword) then 100
+                order by
 
-                                when lower(p.name) like lower(concat(:keyword, '%')) then 80
+                case
 
-                                when lower(p.name) like lower(concat('%', :keyword, '%')) then 60
+                    when lower(p.name) = lower(:keyword) then 100
 
-                                else 40
+                    when lower(p.name) like lower(concat(:keyword, '%')) then 80
 
-                            end desc,
+                    when lower(p.name) like lower(concat('%', :keyword, '%')) then 60
 
-                            p.avgStar desc,
+                    else 40
 
-                            p.reviewCount desc,
+                end desc,
 
-                            p.sold desc,
+                p.avgStar desc,
 
-                            p.shop.avgStar desc,
+                p.reviewCount desc,
 
-                            p.shop.reviewCount desc,
+                p.sold desc,
 
-                            p.price asc
+                p.shop.avgStar desc,
 
-                        """, countQuery = """
+                p.shop.reviewCount desc,
 
-                            select count(p)
+                p.price asc
 
-                            from Product p
+            """, countQuery = """
 
-                            left join p.tradeMark tm
+                select count(p)
 
-                            where p.deleted = false
+                from Product p
 
-                            and p.shop is not null
+                left join p.tradeMark tm
 
-                            and p.shop.status = com.web.enums.ShopStatus.APPROVED
+                where p.deleted = false
 
-                            and p.status = com.web.enums.ProductStatus.APPROVED
+                and p.shop is not null
 
-                            and (
+                and p.shop.status = com.web.enums.ShopStatus.APPROVED
 
-                                lower(p.name) like lower(concat('%', :keyword, '%'))
+                and p.status = com.web.enums.ProductStatus.APPROVED
 
-                                or lower(p.code) like lower(concat('%', :keyword, '%'))
+                and (
 
-                                or lower(p.category.name) like lower(concat('%', :keyword, '%'))
+                    lower(p.name) like lower(concat('%', :keyword, '%'))
 
-                                or lower(tm.name) like lower(concat('%', :keyword, '%'))
+                    or lower(p.code) like lower(concat('%', :keyword, '%'))
 
-                            )
+                    or lower(p.category.name) like lower(concat('%', :keyword, '%'))
 
-                        """)
+                    or lower(tm.name) like lower(concat('%', :keyword, '%'))
 
-        Page<Product> searchMarketplace(@Param("keyword") String keyword, Pageable pageable);
+                )
 
-        // ===================== PRODUCT APPROVAL =====================
+            """)
 
-        /** Lấy tất cả sản phẩm chờ duyệt (PENDING) */
+    Page<Product> searchMarketplace(@Param("keyword") String keyword, Pageable pageable);
 
-        @Query("select p from Product p where p.deleted = false and p.status = com.web.enums.ProductStatus.PENDING order by p.createdDate desc, p.createdTime desc")
+    // ===================== PRODUCT APPROVAL =====================
 
-        Page<Product> findAllPending(Pageable pageable);
+    /** Lấy tất cả sản phẩm chờ duyệt (PENDING) */
 
-        /** Tìm kiếm sản phẩm chờ duyệt theo tên/mã */
+    @Query("select p from Product p where p.deleted = false  and p.status = com.web.enums.ProductStatus.PENDING order by p.createdDate desc, p.createdTime desc")
 
-        @Query("select p from Product p where p.deleted = false and p.status = com.web.enums.ProductStatus.PENDING " +
+    Page<Product> findAllPending(Pageable pageable);
 
-                        "and (lower(p.name) like lower(concat('%', :keyword, '%')) or lower(p.code) like lower(concat('%', :keyword, '%'))) "
+    /** Tìm kiếm sản phẩm chờ duyệt theo tên/mã */
 
-                        +
+    @Query("select p from Product p where p.deleted = false and p.status = com.web.enums.ProductStatus.PENDING " +
 
-                        "order by p.createdDate desc, p.createdTime desc")
+            "and (lower(p.name) like lower(concat('%', :keyword, '%')) or lower(p.code) like lower(concat('%', :keyword, '%'))) "
 
-        Page<Product> searchPending(@Param("keyword") String keyword, Pageable pageable);
+            +
 
-        /** Đếm số sản phẩm đang chờ duyệt */
+            "order by p.createdDate desc, p.createdTime desc")
 
-        @Query("select count(p) from Product p where p.deleted = false and p.status = com.web.enums.ProductStatus.PENDING")
+    Page<Product> searchPending(@Param("keyword") String keyword, Pageable pageable);
 
-        Long countPending();
+    /** Đếm số sản phẩm đang chờ duyệt */
 
-        /**
-         * 
-         * Lấy tất cả sản phẩm APPROVED cho AI chatbot (tránh lỗi enum khi có dữ liệu
-         * 
-         * không hợp lệ trong DB)
-         * 
-         */
+    @Query("select count(p) from Product p where p.deleted = false and p.status = com.web.enums.ProductStatus.PENDING")
 
-        @Query(value = "SELECT * FROM product WHERE deleted = 0 AND status = 'APPROVED'", nativeQuery = true)
+    Long countPending();
 
-        List<Product> findAllApprovedForAI();
+    /**
+     * 
+     * Lấy tất cả sản phẩm APPROVED cho AI chatbot (tránh lỗi enum khi có dữ liệu
+     * 
+     * không hợp lệ trong DB)
+     * 
+     */
+
+    @Query(value = "SELECT * FROM product WHERE deleted = 0 AND status = 'APPROVED'", nativeQuery = true)
+
+    List<Product> findAllApprovedForAI();
+
+    // ===================== SHOP LOCK / UNLOCK =====================
+
+    /**
+     * Khóa tất cả sản phẩm của shop (dùng khi khóa shop).
+     * Chỉ set locked = true, KHÔNG đụng vào cờ deleted.
+     * Trả về số bản ghi được cập nhật.
+     */
+    @Modifying
+    @Query("update Product p set p.locked = true where p.shop.id = :shopId and p.deleted = false")
+    int lockAllByShopId(@Param("shopId") Long shopId);
+
+    /**
+     * Mở khóa tất cả sản phẩm của shop (dùng khi mở khóa shop).
+     * Chỉ reset locked = false cho những sp bị locked vì shop.
+     * Sản phẩm đã deleted thật sự (deleted = true) vẫn giữ nguyên.
+     */
+    @Modifying
+    @Query("update Product p set p.locked = false where p.shop.id = :shopId and p.locked = true")
+    int unlockAllByShopId(@Param("shopId") Long shopId);
 
 }

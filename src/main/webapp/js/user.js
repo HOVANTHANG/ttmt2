@@ -5,35 +5,41 @@ function handleCredentialResponse(response) {
 }
 
 async function sendLoginRequestToBackend(accessToken) {
-    var response = await fetch('http://localhost:8080/api/login/google', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'text/plain'
-        },
-        body: accessToken
-    })
-    var result = await response.json();
+    try {
+        var response = await fetch('http://localhost:8080/api/login/google', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain'
+            },
+            body: accessToken
+        });
+        var result = await response.json();
 
-    if (response.status < 300) {
-        localStorage.setItem("user", JSON.stringify(result.user));
-        localStorage.setItem("token", result.token);
-        if (result.user.authorities.name === "ROLE_ADMIN") {
-            window.location.href = 'admin/index';
+        if (response.status < 300) {
+            localStorage.setItem("user", JSON.stringify(result.user));
+            localStorage.setItem("token", result.token);
+
+            const role = result.user.role; // ✅ dùng role như login thường
+            if (role === "ROLE_ADMIN") {
+                window.location.href = 'admin/index';
+            } else if (role === "ROLE_USER") {
+                window.location.href = 'index';
+            } else if (role === "ROLE_EMPLOYEE") {
+                window.location.href = '/employee/invoice';
+            } else if (role === "ROLE_SELLER") {
+                window.location.href = '/seller/index';
+            } else {
+                window.location.href = 'index';
+            }
+        } else {
+            toastr.warning(result.defaultMessage || "Đăng nhập Google thất bại");
         }
-        if (result.user.authorities.name === "ROLE_USER") {
-            window.location.href = '/';
-        }
-        if (result.user.authorities.name === "ROLE_EMPLOYEE") {
-            window.location.href = '/employee/invoice';
-        }
-        if (result.user.authorities.name === "ROLE_SELLER") {
-            window.location.href = '/seller/index';
-        }
-    }
-    if (response.status == exceptionCode) {
-        toastr.warning(result.defaultMessage);
+    } catch (e) {
+        console.error("[Google Login]", e);
+        toastr.error("Không kết nối được server");
     }
 }
+
 
 
 

@@ -16,10 +16,14 @@ public class ShippingController {
     @Autowired
     private GhnClient ghnClient;
 
-
     @GetMapping("/tinh-phi")
-    public Map<String, Object> calculateShippingFee(@RequestParam Integer toDistrictId, @RequestParam String toWardCode, @RequestParam Integer weight) {
-        return ghnClient.calculateShippingFee(weight, toDistrictId,toWardCode);
+    public Map<String, Object> calculateShippingFee(
+            @RequestParam Integer toDistrictId,
+            @RequestParam String toWardCode,
+            @RequestParam Integer weight,
+            @RequestParam(required = false) Integer fromDistrictId,
+            @RequestParam(required = false) String fromWardCode) {
+        return ghnClient.calculateShippingFee(weight, toDistrictId, toWardCode, fromDistrictId, fromWardCode);
     }
 
     @GetMapping("/public/province")
@@ -37,4 +41,3 @@ public class ShippingController {
         return new ResponseEntity<>(ghnClient.getWard(districtId), HttpStatus.OK);
     }
 }
-
