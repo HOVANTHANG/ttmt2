@@ -288,6 +288,19 @@
             color: #fff;
         }
 
+        .pa-btn-detail {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        /* ── Detail Modal ────────────────────── */
+        #detailModal .modal-header {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            color: #fff;
+        }
+        #detailModal .modal-header .btn-close { filter: invert(1); }
+        #detailModal .modal-body { padding: 24px; max-height: 75vh; overflow-y: auto; }
+
         /* ── Reject Modal ────────────────────── */
         #rejectModal .modal-header {
             background: linear-gradient(135deg, #ef4444, #dc2626);
@@ -458,6 +471,23 @@
                     <button class="btn-confirm-reject" onclick="confirmReject()">
                         <i class="fa-solid fa-circle-xmark me-1"></i>Xác nhận từ chối
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Chi Tiết Sản Phẩm -->
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content" style="border-radius:14px;overflow:hidden;">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fa-solid fa-box-open me-2"></i>Chi Tiết Sản Phẩm
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="detailBody">
+                    <!-- Nội dung được render bởi JS -->
                 </div>
             </div>
         </div>

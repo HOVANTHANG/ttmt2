@@ -16,6 +16,10 @@ async function loadVoucher(page, start, end) {
     var list = result.content;
     var totalPage = result.totalPages;
     var main = '';
+
+    const tzoffset = (new Date()).getTimezoneOffset() * 60000;
+    const today = (new Date(Date.now() - tzoffset)).toISOString().slice(0, 10);
+
     for (i = 0; i < list.length; i++) {
         main += `<tr>
                     <td>${list[i].id}</td>
@@ -25,7 +29,7 @@ async function loadVoucher(page, start, end) {
                     <td>${formatmoney(list[i].discount)}</td>
                     <td>${list[i].startDate}</td>
                     <td>${list[i].endDate}</td>
-                    <td>${list[i].block == true ? '<span class="locked">Đã khóa</span>':'<span class="actived">Đang hoạt động</span>'}</td>
+                      <td>${list[i].block == true || list[i].endDate <= today ? '<span class="locked">Đã kết thúc</span>' : '<span class="actived">Đang hoạt động</span>'}</td>
                     <td class="sticky-col">
                         <i onclick="deleteVoucher(${list[i].id})" class="fa fa-trash iconaction"></i><br>
                         <a href="addvoucher?id=${list[i].id}"><i class="fa fa-edit iconaction"></i></a>
@@ -107,11 +111,11 @@ async function saveVoucher() {
     });
     if (response.status < 300) {
         swal({
-                title: "Thông báo",
-                text: "thêm/sửa voucher thành công!",
-                type: "success"
-            },
-            function() {
+            title: "Thông báo",
+            text: "thêm/sửa voucher thành công!",
+            type: "success"
+        },
+            function () {
                 window.location.href = 'voucher'
             });
     }
@@ -135,7 +139,7 @@ async function deleteVoucher(id) {
     });
     if (response.status < 300) {
         toastr.success("xóa voucher thành công!");
-        loadVoucher(null,document.getElementById("start").value, document.getElementById("end").value)
+        loadVoucher(null, document.getElementById("start").value, document.getElementById("end").value)
     }
     if (response.status == exceptionCode) {
         var result = await response.json()
