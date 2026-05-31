@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="vi">
 
-<head>
+<>
     <title>Địa chỉ kho hàng - Seller Center</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
     <link href="css/styles.css" rel="stylesheet" />
     <link href="/seller/css/seller-modern.css" rel="stylesheet" />
+    <link href="/seller/css/diachikho.css" rel="stylesheet" />
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.0/css/bootstrap.min.css"
         rel="stylesheet" />
@@ -17,250 +20,6 @@
     <script src="/seller/js/menu1.js"></script>
     <script src="/seller/js/addressshop.js"></script>
 
-    <style>
-        body {
-            background: #f0f4f8;
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        .address-card {
-            background: #fff;
-            border: 1.5px solid #e8edf3;
-            border-radius: 16px;
-            padding: 20px 22px;
-            margin-bottom: 14px;
-            transition: box-shadow .2s, border-color .2s;
-        }
-
-        .address-card:hover {
-            box-shadow: 0 6px 24px rgba(13, 148, 136, .10);
-            border-color: #99f6e4;
-        }
-
-        .address-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .address-card-name {
-            font-size: 16px;
-            font-weight: 700;
-            color: #1e293b;
-        }
-
-        .address-card-default {
-            display: inline-block;
-            background: #f0fdfa;
-            color: #0d9488;
-            border: 1.5px solid #99f6e4;
-            border-radius: 20px;
-            padding: 3px 12px;
-            font-size: 12px;
-            font-weight: 700;
-            margin-left: 10px;
-        }
-
-        .address-card-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn-action {
-            border: none;
-            border-radius: 10px;
-            padding: 6px 14px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-            transition: all .2s;
-        }
-
-        .btn-edit {
-            background: #eff6ff;
-            color: #2563eb;
-        }
-
-        .btn-edit:hover {
-            background: #2563eb;
-            color: #fff;
-        }
-
-        .btn-delete {
-            background: #fef2f2;
-            color: #ef4444;
-        }
-
-        .btn-delete:hover {
-            background: #ef4444;
-            color: #fff;
-        }
-
-        .address-card-info {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .info-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #64748b;
-            font-size: 14px;
-        }
-
-        .info-item i {
-            color: #0d9488;
-            width: 16px;
-        }
-
-        .modal-header-teal {
-            background: linear-gradient(135deg, #0d9488, #065f46);
-            color: #fff;
-            border-radius: 18px 18px 0 0;
-        }
-
-        .modal-header-teal .btn-close {
-            filter: brightness(0) invert(1);
-        }
-
-        .form-label-custom {
-            font-weight: 600;
-            color: #334155;
-            font-size: 13.5px;
-        }
-
-        .form-control-custom {
-            border: 1.5px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 9px 14px;
-            font-size: 14px;
-            outline: none;
-            width: 100%;
-            font-family: inherit;
-        }
-
-        .form-control-custom:focus {
-            border-color: #0d9488;
-            box-shadow: 0 0 0 3px rgba(13, 148, 136, .12);
-        }
-
-        /* Tùy biến giao diện các ô select xổ xuống giống thiết kế UI */
-        select.form-control-custom {
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2.5' stroke='%231e293b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 14px center;
-            background-size: 14px;
-            padding-right: 40px;
-            color: #1e293b;
-            cursor: pointer;
-        }
-
-        select.form-control-custom option {
-            color: #1e293b;
-        }
-
-        select.form-control-custom:invalid,
-        select.form-control-custom fieldset {
-            color: #94a3b8;
-        }
-
-        .btn-save-teal {
-            background: linear-gradient(135deg, #0d9488, #065f46);
-            color: #fff;
-            border: none;
-            border-radius: 12px;
-            padding: 11px 28px;
-            font-weight: 700;
-            font-size: 15px;
-            cursor: pointer;
-            font-family: inherit;
-            width: 100%;
-            transition: opacity .2s;
-        }
-
-        .btn-save-teal:hover {
-            opacity: .88;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 0;
-            color: #94a3b8;
-        }
-
-        .empty-state i {
-            font-size: 52px;
-            margin-bottom: 16px;
-            display: block;
-        }
-
-        /* Tùy biến ô checkbox Đặt làm địa chỉ mặc định - Cố định trục thẳng hàng tuyệt đối */
-        .custom-checkbox-wrapper {
-            display: flex !important;
-            align-items: center !important;
-            gap: 10px;
-            margin-top: 10px;
-            padding-left: 2px;
-        }
-
-        .custom-checkbox-wrapper input[type="checkbox"] {
-            appearance: none;
-            -webkit-appearance: none;
-            width: 19px;
-            height: 19px;
-            border: 2px solid #cbd5e1;
-            border-radius: 4px;
-            cursor: pointer;
-            display: inline-grid !important;
-            place-content: center;
-            transition: all 0.15s ease-in-out;
-            margin: 0 !important;
-            flex-shrink: 0;
-        }
-
-        .custom-checkbox-wrapper input[type="checkbox"]:hover {
-            border-color: #0d9488;
-        }
-
-        .custom-checkbox-wrapper input[type="checkbox"]:checked {
-            background: #0d9488;
-            border-color: #0d9488;
-        }
-
-        .custom-checkbox-wrapper input[type="checkbox"]::before {
-            content: "";
-            width: 11px;
-            height: 11px;
-            transform: scale(0);
-            transition: 120ms transform ease-in-out;
-            background-color: #fff;
-            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-        }
-
-        .custom-checkbox-wrapper input[type="checkbox"]:checked::before {
-            transform: scale(1);
-        }
-
-        .custom-checkbox-wrapper span {
-            font-weight: 600;
-            color: #334155;
-            font-size: 14.5px;
-            cursor: pointer;
-            user-select: none;
-            margin: 0 !important;
-            line-height: 1 !important;
-            display: inline-block;
-        }
-    </style>
 
     <script>
         window.onload = function () {
@@ -268,101 +27,103 @@
             loadShopTinh();
         };
     </script>
-</head>
+    </head>
 
-<body class="sb-nav-fixed">
-    <nav id="top" class="sb-topnav navbar navbar-expand navbar-dark bg-dark"></nav>
-    <div id="layoutSidenav">
-        <div id="layoutSidenav_nav"></div>
-        <div id="layoutSidenav_content">
-            <main class="main">
+    <body class="sb-nav-fixed">
+        <nav id="top" class="sb-topnav navbar navbar-expand navbar-dark bg-dark"></nav>
+        <div id="layoutSidenav">
+            <div id="layoutSidenav_nav"></div>
+            <div id="layoutSidenav_content">
+                <main class="main">
 
-                <div class="page-title-card">
-                    <div class="page-title-icon"><i class="fas fa-map-marker-alt"></i></div>
-                    <div>
-                        <h4>Địa chỉ kho hàng</h4>
-                        <p>Quản lý địa chỉ lấy hàng và trả hàng của shop</p>
-                    </div>
-                    <div class="ptc-actions">
-                        <button onclick="clearShopAddressForm()" data-bs-toggle="modal" data-bs-target="#modalShopAdd"
-                            class="btn btn-light btn-sm fw-bold">
-                            <i class="fas fa-plus me-1"></i> Thêm địa chỉ
-                        </button>
-                    </div>
-                </div>
-
-                <div style="max-width:860px;">
-                    <div id="listShopAddress">
-                        <div class="empty-state">
-                            <i class="fas fa-map-marked-alt"></i>
-                            <div style="font-size:15px;font-weight:600;">Đang tải...</div>
+                    <div class="page-title-card">
+                        <div class="page-title-icon"><i class="fas fa-map-marker-alt"></i></div>
+                        <div>
+                            <h4>Địa chỉ kho hàng</h4>
+                            <p>Quản lý địa chỉ lấy hàng và trả hàng của shop</p>
+                        </div>
+                        <div class="ptc-actions">
+                            <button onclick="clearShopAddressForm()" data-bs-toggle="modal"
+                                data-bs-target="#modalShopAdd" class="btn btn-light btn-sm fw-bold">
+                                <i class="fas fa-plus me-1"></i> Thêm địa chỉ
+                            </button>
                         </div>
                     </div>
-                </div>
 
-            </main>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalShopAdd" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content" style="border:none;border-radius:20px;overflow:hidden;">
-                <div class="modal-header modal-header-teal">
-                    <h5 class="modal-title"><i class="fas fa-map-marker-alt me-2"></i>Địa chỉ kho hàng</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <input type="hidden" id="shopAddId">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label-custom">Họ tên người liên hệ *</label>
-                            <input id="shopAddName" class="form-control-custom" placeholder="Nhập họ tên">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label-custom">Số điện thoại *</label>
-                            <input id="shopAddPhone" class="form-control-custom" placeholder="Nhập số điện thoại">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label-custom">Tên đường, số nhà *</label>
-                            <input id="shopAddStreet" class="form-control-custom" placeholder="Số nhà, tên đường...">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label-custom">Tỉnh / Thành phố</label>
-                            <select id="shopAddTinh" class="form-control-custom" onchange="loadShopHuyen(this.value)">
-                                <option value="" disabled selected>-- Chọn tỉnh --</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label-custom">Quận / Huyện</label>
-                            <select id="shopAddHuyen" class="form-control-custom" onchange="loadShopXa(this.value)">
-                                <option value="" hidden>---</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label-custom">Phường / Xã</label>
-                            <select id="shopAddXa" class="form-control-custom">
-                                <option value="" hidden>---</option>
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <div class="custom-checkbox-wrapper">
-
-                                <input type="checkbox" id="shopAddPrimary">
-                                <span for="shopAddPrimary">Đặt làm địa chỉ mặc định</span>
-
+                    <div style="max-width:860px;">
+                        <div id="listShopAddress">
+                            <div class="empty-state">
+                                <i class="fas fa-map-marked-alt"></i>
+                                <div style="font-size:15px;font-weight:600;">Đang tải...</div>
                             </div>
                         </div>
-                        <div class="col-12 mt-2">
-                            <button class="btn-save-teal" onclick="saveShopAddress()">
-                                <i class="fas fa-save me-2"></i>Lưu địa chỉ
-                            </button>
+                    </div>
+
+                </main>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modalShopAdd" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content" style="border:none;border-radius:20px;overflow:hidden;">
+                    <div class="modal-header modal-header-teal">
+                        <h5 class="modal-title"><i class="fas fa-map-marker-alt me-2"></i>Địa chỉ kho hàng</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <input type="hidden" id="shopAddId">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Họ tên người liên hệ *</label>
+                                <input id="shopAddName" class="form-control-custom" placeholder="Nhập họ tên">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Số điện thoại *</label>
+                                <input id="shopAddPhone" class="form-control-custom" placeholder="Nhập số điện thoại">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label-custom">Tên đường, số nhà *</label>
+                                <input id="shopAddStreet" class="form-control-custom"
+                                    placeholder="Số nhà, tên đường...">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-custom">Tỉnh / Thành phố</label>
+                                <select id="shopAddTinh" class="form-control-custom"
+                                    onchange="loadShopHuyen(this.value)">
+                                    <option value="" disabled selected>-- Chọn tỉnh --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-custom">Quận / Huyện</label>
+                                <select id="shopAddHuyen" class="form-control-custom" onchange="loadShopXa(this.value)">
+                                    <option value="" hidden>---</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-custom">Phường / Xã</label>
+                                <select id="shopAddXa" class="form-control-custom">
+                                    <option value="" hidden>---</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <div class="custom-checkbox-wrapper">
+
+                                    <input type="checkbox" id="shopAddPrimary">
+                                    <span for="shopAddPrimary">Đặt làm địa chỉ mặc định</span>
+
+                                </div>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <button class="btn-save-teal" onclick="saveShopAddress()">
+                                    <i class="fas fa-save me-2"></i>Lưu địa chỉ
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-</body>
+    </body>
 
 </html>

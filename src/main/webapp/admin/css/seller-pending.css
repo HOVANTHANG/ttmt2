@@ -1,0 +1,120 @@
+ body {
+     background: #f4f6f8;
+ }
+
+ .page-title {
+     font-weight: 700;
+     color: #111827;
+ }
+
+ .shop-card {
+     background: #fff;
+     border-radius: 16px;
+     box-shadow: 0 10px 28px rgba(15, 23, 42, .08);
+     overflow: hidden;
+ }
+
+ .shop-table img {
+     width: 54px;
+     height: 54px;
+     border-radius: 50%;
+     object-fit: cover;
+     border: 1px solid #eee;
+ }
+
+ .shop-name {
+     font-weight: 700;
+     color: #111827;
+ }
+
+ .shop-slug {
+     color: #6b7280;
+     font-size: 13px;
+ }
+
+ .badge-pending {
+     background: #fff7ed;
+     color: #ea580c;
+     border: 1px solid #fed7aa;
+ }
+
+ .action-btns {
+     display: flex;
+     gap: 6px;
+     flex-wrap: wrap;
+ }
+
+ .shop-table .shop-avatar-wrap {
+     width: 54px;
+     height: 54px;
+     border-radius: 50%;
+     overflow: hidden;
+     flex-shrink: 0;
+     background: linear-gradient(135deg, #0d9488, #065f46);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     border: 2px solid #e2e8f0;
+ }
+
+ .shop-table .shop-avatar-wrap img {
+     width: 100%;
+     height: 100%;
+     object-fit: cover;
+     display: block;
+     border-radius: 50%;
+ }
+
+ .shop-avatar-initial {
+     color: #fff;
+     font-weight: 800;
+     font-size: 20px;
+     text-transform: uppercase;
+     line-height: 1;
+ }
+
+ .detail-avatar-wrap {
+     width: 92px;
+     height: 92px;
+     border-radius: 50%;
+     overflow: hidden;
+     background: linear-gradient(135deg, #0d9488, #065f46);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     border: 3px solid #e2e8f0;
+     margin: 0 auto;
+ }
+
+ .detail-avatar-wrap img {
+     width: 100%;
+     height: 100%;
+     object-fit: cover;
+     display: block;
+ }
+
+ .detail-avatar-wrap .detail-avatar-initial {
+     color: #fff;
+     font-weight: 800;
+     font-size: 32px;
+     text-transform: uppercase;
+ }
+
+ .detail-avatar {
+     width: 92px;
+     height: 92px;
+     border-radius: 50%;
+     object-fit: cover;
+     border: 1px solid #eee;
+ }
+
+ .detail-label {
+     color: #6b7280;
+     font-size: 13px;
+     margin-bottom: 2px;
+ }
+
+ .detail-value {
+     font-weight: 600;
+     color: #111827;
+ }

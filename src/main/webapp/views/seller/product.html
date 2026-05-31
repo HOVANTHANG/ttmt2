@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <title>Quản lý Sản phẩm - Seller Center</title>
     <meta charset="utf-8" />
@@ -8,192 +9,17 @@
 
     <link href="css/styles.css" rel="stylesheet" />
     <link href="/seller/css/seller-modern.css" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.0/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/seller/css/product.css" rel="stylesheet" />
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.0/css/bootstrap.min.css"
+        rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link href="https://cdn.datatables.net/1.13.2/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.css" rel="stylesheet" />
 
-    <style>
-        /* ─────────────────────────────────────────────
-           PRODUCT PAGE — PREMIUM STYLES
-        ───────────────────────────────────────────── */
 
-        /* Label trên filter */
-        .lb-form {
-            font-size: 11.5px; font-weight: 700;
-            color: var(--tx2); text-transform: uppercase;
-            letter-spacing: .5px; margin-bottom: 6px; display: block;
-        }
-
-        /* ── Add product CTA button ── */
-        .btn-add-product {
-            background: var(--p-grad); color: #fff !important;
-            border: none; border-radius: 10px;
-            font-family: 'Inter', sans-serif; font-weight: 600; font-size: 13.5px;
-            padding: 10px 20px; text-decoration: none;
-            display: inline-flex; align-items: center; gap: 8px;
-            transition: all .25s; white-space: nowrap;
-            box-shadow: 0 4px 14px rgba(13,148,136,.3);
-        }
-        .btn-add-product:hover {
-            opacity: .9; transform: translateY(-1px);
-            box-shadow: 0 8px 22px rgba(13,148,136,.4);
-        }
-
-        /* ── Stat cards ── */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 14px; margin-bottom: 20px;
-        }
-        @media (max-width: 900px) { .stats-row { grid-template-columns: repeat(2,1fr); } }
-        @media (max-width: 500px) { .stats-row { grid-template-columns: 1fr 1fr; } }
-
-        .stat-card {
-            background: var(--card); border-radius: 14px;
-            border: 1px solid var(--border); box-shadow: var(--sh);
-            padding: 16px 20px; display: flex; align-items: center; gap: 14px;
-            transition: transform .2s, box-shadow .2s;
-        }
-        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--sh-lg); }
-        .stat-icon {
-            width: 46px; height: 46px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 19px; flex-shrink: 0;
-        }
-        .stat-icon.teal   { background: rgba(13,148,136,.12); color: var(--p); }
-        .stat-icon.blue   { background: rgba(59,130,246,.12);  color: #3b82f6; }
-        .stat-icon.amber  { background: rgba(245,158,11,.12);  color: #f59e0b; }
-        .stat-icon.purple { background: rgba(139,92,246,.12);  color: #8b5cf6; }
-        .stat-value { font-size: 24px; font-weight: 800; color: var(--tx); line-height: 1; }
-        .stat-label { font-size: 11px; color: var(--tx2); font-weight: 600; margin-top: 3px;
-            text-transform: uppercase; letter-spacing: .4px; }
-
-        /* ── Search input icon ── */
-        .search-wrap { position: relative; flex: 1; min-width: 180px; }
-        .search-wrap .fa-magnifying-glass {
-            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-            color: var(--tx3); font-size: 13px; pointer-events: none;
-        }
-        .inputsearchtable { padding-left: 34px !important; width: 100%; }
-
-        /* ── Table fixed layout (no horizontal scroll) ── */
-        #productTable {
-            table-layout: fixed;
-            width: 100%;
-        }
-        #productTable th:nth-child(1) { width: 50px; }
-        #productTable th:nth-child(2) { width: 68px; }
-        #productTable th:nth-child(3) { width: 160px; }  /* Tên — cố định hẹp */
-        #productTable th:nth-child(4) { width: 110px; }
-        #productTable th:nth-child(5) { width: 100px; }
-        #productTable th:nth-child(6) { width: 88px; }
-        #productTable th:nth-child(7) { width: 120px; text-align: center; }  /* Tồn kho */
-        #productTable th:nth-child(8) { width: 110px; text-align: center; }  /* Trạng thái */
-        #productTable th:nth-child(9) { width: 110px; }  /* Hành động */
-
-        /* ── Product thumbnail ── */
-        .product-thumb {
-            width: 56px; height: 56px; border-radius: 10px;
-            object-fit: cover; border: 1.5px solid var(--border); display: block;
-        }
-        .product-thumb-placeholder {
-            width: 56px; height: 56px; border-radius: 10px;
-            border: 1.5px dashed var(--border);
-            display: flex; align-items: center; justify-content: center;
-            color: var(--tx3); font-size: 17px; background: #f8fafc;
-        }
-
-        /* ── Product name / code ── */
-        .p-name {
-            font-weight: 600; color: var(--tx); font-size: 13.5px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            max-width: 100%;
-        }
-        .p-code {
-            font-size: 11px; color: var(--tx3);
-            font-family: 'Courier New', monospace; margin-top: 2px;
-        }
-
-        /* ── Category / brand badges ── */
-        .badge-cat {
-            background: rgba(59,130,246,.1); color: #3b82f6;
-            font-size: 11px; font-weight: 700; padding: 3px 9px;
-            border-radius: 20px; white-space: nowrap;
-            display: inline-block; max-width: 110px;
-            overflow: hidden; text-overflow: ellipsis;
-        }
-        .badge-brand {
-            background: rgba(139,92,246,.1); color: #8b5cf6;
-            font-size: 11px; font-weight: 700; padding: 3px 9px;
-            border-radius: 20px; white-space: nowrap;
-            display: inline-block; max-width: 100px;
-            overflow: hidden; text-overflow: ellipsis;
-        }
-
-        /* ── Stock badge (cũ, giữ lại phòng dùng) ── */
-        .stock-badge {
-            display: inline-flex; align-items: center; gap: 5px;
-            background: rgba(13,148,136,.1); color: var(--p);
-            font-size: 13px; font-weight: 700;
-            padding: 5px 11px; border-radius: 8px;
-            cursor: default; white-space: nowrap;
-        }
-        .stock-badge-zero { background: #f1f5f9; color: var(--tx3); }
-
-        /* ── Tồn kho chi tiết từng biến thể ── */
-        .variant-stock-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 6px;
-            padding: 2px 0;
-            border-bottom: 1px dashed #f1f5f9;
-            font-size: 11px;
-        }
-        .variant-stock-row:last-child { border-bottom: none; }
-        .variant-stock-name {
-            color: var(--tx2);
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 70px;
-        }
-        .variant-stock-qty {
-            font-weight: 700;
-            font-size: 12px;
-            flex-shrink: 0;
-        }
-
-        /* ── Row ID ── */
-        .row-id { font-size: 12px; color: var(--tx3); font-weight: 700; }
-
-        /* ── Date cell ── */
-        .col-date { font-size: 12px; color: var(--tx2); white-space: nowrap; }
-
-        /* ── Action icon buttons ── */
-        .tbl-actions { display: flex; align-items: center; gap: 5px; flex-wrap: nowrap; }
-        .btn-tbl {
-            width: 32px; height: 32px; border-radius: 8px; border: none;
-            display: inline-flex; align-items: center; justify-content: center;
-            font-size: 13px; cursor: pointer; transition: all .18s;
-            text-decoration: none; flex-shrink: 0;
-        }
-        .btn-tbl:hover { transform: scale(1.14); }
-        .btn-tbl-edit    { background: rgba(13,148,136,.1);  color: var(--p); }
-        .btn-tbl-delete  { background: rgba(239,68,68,.1);   color: #ef4444; }
-        .btn-tbl-comment { background: rgba(59,130,246,.1);  color: #3b82f6; }
-
-        /* ── Empty / error / loading state ── */
-        .td-state {
-            text-align: center; padding: 52px 20px !important; color: var(--tx3);
-        }
-        .td-state i   { font-size: 40px; display: block; margin-bottom: 12px; opacity: .35; }
-        .td-state span { font-size: 14px; }
-    </style>
 </head>
 
 <body class="sb-nav-fixed">
@@ -274,10 +100,8 @@
                             <label class="lb-form" for="searchtable">Tìm kiếm</label>
                             <div class="search-wrap">
                                 <i class="fa-solid fa-magnifying-glass"></i>
-                                <input id="searchtable"
-                                       onkeyup="loadProduct(0, this.value)"
-                                       placeholder="Tìm theo tên sản phẩm..."
-                                       class="inputsearchtable form-control" />
+                                <input id="searchtable" onkeyup="loadProduct(0, this.value)"
+                                    placeholder="Tìm theo tên sản phẩm..." class="inputsearchtable form-control" />
                             </div>
                         </div>
                         <div class="col-md-auto col-sm-6 d-flex gap-2">
@@ -294,11 +118,12 @@
                 <!-- ── Product table ── -->
                 <div class="wrapper">
                     <div class="headertable">
-                        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--tx);">
+                        <div
+                            style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--tx);">
                             <i class="fa-solid fa-list" style="color:var(--p);"></i>
                             Danh sách sản phẩm
                             <span id="resultCount"
-                                  style="background:rgba(13,148,136,.12);color:var(--p);font-size:11.5px;padding:3px 11px;border-radius:20px;font-weight:700;"></span>
+                                style="background:rgba(13,148,136,.12);color:var(--p);font-size:11.5px;padding:3px 11px;border-radius:20px;font-weight:700;"></span>
                         </div>
                     </div>
 
@@ -357,7 +182,8 @@
 
     <!-- ── Scripts ── -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" crossorigin="anonymous"></script>
     <script src="https://cdn.datatables.net/1.13.2/js/jquery.dataTables.min.js"></script>
@@ -403,4 +229,5 @@
         }
     </script>
 </body>
+
 </html>

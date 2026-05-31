@@ -1,4 +1,5 @@
 package com.web.utils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.mail.MailException;
@@ -23,8 +24,7 @@ public class MailService {
         this.javaMailSender = javaMailSender;
     }
 
-
-    final static String username = "dev002102@gmail.com";
+    final static String username = "hothang2262004@gmail.com";
 
     @Async
     public void sendEmail(String to, String subject, String content, boolean isMultipart, boolean isHtml) {
@@ -34,8 +34,7 @@ public class MailService {
                 isHtml,
                 to,
                 subject,
-                content
-        );
+                content);
 
         // Prepare message using a Spring helper
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
@@ -44,9 +43,9 @@ public class MailService {
             message.setTo(to);
             message.setFrom(username);
             message.setSubject(subject);
-            System.out.println("subject: "+subject);
+            System.out.println("subject: " + subject);
             message.setText(content, isHtml);
-            System.out.println("content: "+content);
+            System.out.println("content: " + content);
             javaMailSender.send(mimeMessage);
             log.debug("Sent email to User '{}'", to);
         } catch (MailException | MessagingException e) {

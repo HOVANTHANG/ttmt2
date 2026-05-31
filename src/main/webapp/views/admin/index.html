@@ -4,7 +4,10 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
     <link href="css/styles.css" rel="stylesheet" />
+    <link href="css/indexad.css" rel="stylesheet" />
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"
         crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
@@ -44,121 +47,7 @@
     </script>
 </head>
 
-    <style>
-        :root { --p:#4f46e5; --p2:#7c3aed; --teal:#0d9488; }
-        body { background:#f1f5f9; font-family:'Segoe UI',sans-serif; }
-
-        .dash-header {
-            background: linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);
-            border-radius: 18px;
-            padding: 22px 28px;
-            color: #fff;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        .dash-header h2 { margin:0; font-size:22px; font-weight:800; }
-        .dash-header .clock-box { font-size:14px; opacity:.85; }
-        #digital-clock { font-size:20px; font-weight:700; letter-spacing:1px; margin-top:2px; }
-
-        /* ── Stat cards ── */
-        .stat-card {
-            border-radius: 16px;
-            padding: 22px 20px;
-            color: #fff;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 6px 20px rgba(0,0,0,.10);
-            transition: transform .2s, box-shadow .2s;
-            margin-bottom: 20px;
-        }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,.14); }
-        .stat-card .sc-icon {
-            position:absolute; right:16px; top:16px;
-            font-size:38px; opacity:.22;
-        }
-        .stat-card .sc-label { font-size:12.5px; font-weight:600; opacity:.88; letter-spacing:.3px; text-transform:uppercase; }
-        .stat-card .sc-value { font-size:26px; font-weight:800; margin-top:8px; line-height:1.2; }
-        .stat-card .sc-sub   { font-size:12px; opacity:.75; margin-top:4px; }
-
-        .sc-1 { background: linear-gradient(135deg,#4f46e5,#7c3aed); }
-        .sc-2 { background: linear-gradient(135deg,#0d9488,#065f46); }
-        .sc-3 { background: linear-gradient(135deg,#f59e0b,#d97706); }
-        .sc-4 { background: linear-gradient(135deg,#3b82f6,#1d4ed8); }
-        .sc-5 { background: linear-gradient(135deg,#10b981,#059669); }
-        .sc-6 { background: linear-gradient(135deg,#ec4899,#be185d); }
-
-        /* ── Chart section ── */
-        .chart-card {
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 4px 18px rgba(0,0,0,.07);
-            padding: 24px;
-            margin-bottom: 24px;
-        }
-        .chart-card-header {
-            display: flex; align-items: center; gap: 16px;
-            margin-bottom: 20px; flex-wrap: wrap;
-        }
-        .chart-card-header h5 { margin:0; font-size:16px; font-weight:800; color:#1e293b; flex:1; }
-        .chart-card-header select {
-            border:1.5px solid #e2e8f0; border-radius:10px;
-            padding:7px 14px; font-size:13.5px; outline:none;
-            background:#f8fafc; color:#334155; font-family:inherit;
-        }
-        .chart-card-header button {
-            border:none; background:linear-gradient(135deg,#4f46e5,#7c3aed);
-            color:#fff; border-radius:10px; padding:8px 18px;
-            font-size:13.5px; font-weight:600; cursor:pointer;
-            font-family:inherit; transition:opacity .2s;
-        }
-        .chart-card-header button:hover { opacity:.88; }
-
-        /* ── Products table ── */
-        .product-card {
-            background:#fff; border-radius:16px;
-            box-shadow:0 4px 18px rgba(0,0,0,.07);
-            overflow:hidden; margin-bottom:24px;
-        }
-        .product-card-header {
-            padding:18px 24px; border-bottom:1px solid #f1f5f9;
-            display:flex; align-items:center; gap:10px;
-        }
-        .product-card-header h5 { margin:0; font-size:16px; font-weight:800; color:#1e293b; }
-        .product-card-header .badge-month {
-            background:#f0fdf4; color:#16a34a; border:1.5px solid #bbf7d0;
-            border-radius:20px; padding:4px 12px; font-size:12px; font-weight:700;
-        }
-        .tbl-modern { width:100%; border-collapse:collapse; }
-        .tbl-modern thead tr { background:#f8fafc; }
-        .tbl-modern thead th {
-            padding:12px 16px; font-size:12.5px; font-weight:700;
-            color:#64748b; text-transform:uppercase; letter-spacing:.4px;
-            border-bottom:2px solid #f1f5f9;
-        }
-        .tbl-modern tbody tr { border-bottom:1px solid #f8fafc; transition:background .15s; }
-        .tbl-modern tbody tr:hover { background:#fafcff; }
-        .tbl-modern tbody td { padding:13px 16px; font-size:13.5px; color:#334155; vertical-align:middle; }
-        .tbl-modern .img-thumb { width:48px; height:48px; border-radius:10px; object-fit:cover; border:1px solid #e2e8f0; }
-        .tbl-modern .rank-badge {
-            display:inline-flex; align-items:center; justify-content:center;
-            width:28px; height:28px; border-radius:50%; font-size:13px; font-weight:800;
-        }
-        .rank-1 { background:#fef9c3; color:#ca8a04; }
-        .rank-2 { background:#f1f5f9; color:#64748b; }
-        .rank-3 { background:#fff7ed; color:#c2410c; }
-        .rank-other { background:#f8fafc; color:#94a3b8; }
-        .price-col { font-weight:700; color:#0d9488; }
-        .qty-badge {
-            background:#eff6ff; color:#1d4ed8; border-radius:20px;
-            padding:3px 12px; font-size:12px; font-weight:700;
-        }
-    </style>
-
-    <body class="sb-nav-fixed">
+<body class="sb-nav-fixed">
     <nav id="top" class="sb-topnav navbar navbar-expand navbar-dark bg-dark"></nav>
     <div id="layoutSidenav">
         <div id="layoutSidenav_nav"></div>
@@ -185,7 +74,8 @@
                         <div class="stat-card sc-1">
                             <i class="fas fa-chart-line sc-icon"></i>
                             <div class="sc-label">Doanh thu tháng này</div>
-                            <div class="sc-value" id="doanhThu">[[${#numbers.formatDecimal(doanhThuThangNay, 0, 'POINT', 0, 'POINT')}]] ₫</div>
+                            <div class="sc-value" id="doanhThu">[[${#numbers.formatDecimal(doanhThuThangNay, 0, 'POINT',
+                                0, 'POINT')}]] ₫</div>
                             <div class="sc-sub">Tổng thu nhập trong tháng</div>
                         </div>
                     </div>
@@ -193,7 +83,8 @@
                         <div class="stat-card sc-2">
                             <i class="fas fa-calendar-day sc-icon"></i>
                             <div class="sc-label">Doanh thu hôm nay</div>
-                            <div class="sc-value" id="doanhThuNgay">[[${#numbers.formatDecimal(doanhThuHomNay, 0, 'POINT', 0, 'POINT')}]] ₫</div>
+                            <div class="sc-value" id="doanhThuNgay">[[${#numbers.formatDecimal(doanhThuHomNay, 0,
+                                'POINT', 0, 'POINT')}]] ₫</div>
                             <div class="sc-sub">Thu nhập trong ngày hôm nay</div>
                         </div>
                     </div>
@@ -234,7 +125,8 @@
                 <!-- ── Revenue Chart ── -->
                 <div class="chart-card">
                     <div class="chart-card-header">
-                        <h5><i class="fas fa-chart-bar" style="color:#4f46e5;margin-right:8px;"></i>Biểu đồ doanh thu theo năm</h5>
+                        <h5><i class="fas fa-chart-bar" style="color:#4f46e5;margin-right:8px;"></i>Biểu đồ doanh thu
+                            theo năm</h5>
                         <select id="nams"></select>
                         <button onclick="loadByNam()"><i class="fa fa-filter"></i> Lọc</button>
                     </div>
@@ -260,13 +152,16 @@
                         <tbody>
                             <tr th:each="c,iter : ${sanPhamBanChay}">
                                 <td>
-                                    <span th:classappend="${iter.index == 0} ? 'rank-badge rank-1' : (${iter.index == 1} ? 'rank-badge rank-2' : (${iter.index == 2} ? 'rank-badge rank-3' : 'rank-badge rank-other'))"
-                                          class="rank-badge"
-                                          th:text="${iter.count}">1</span>
+                                    <span
+                                        th:classappend="${iter.index == 0} ? 'rank-badge rank-1' : (${iter.index == 1} ? 'rank-badge rank-2' : (${iter.index == 2} ? 'rank-badge rank-3' : 'rank-badge rank-other'))"
+                                        class="rank-badge" th:text="${iter.count}">1</span>
                                 </td>
-                                <td><img th:src="${c.imageBanner}" class="img-thumb" onerror="this.src='/image/product1.webp'"></td>
-                                <td style="font-weight:600;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" th:text="${c.name}"></td>
-                                <td class="price-col">[[${#numbers.formatDecimal(c.price, 0, 'POINT', 0, 'POINT')}]] ₫</td>
+                                <td><img th:src="${c.imageBanner}" class="img-thumb"
+                                        onerror="this.src='/image/product1.webp'"></td>
+                                <td style="font-weight:600;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
+                                    th:text="${c.name}"></td>
+                                <td class="price-col">[[${#numbers.formatDecimal(c.price, 0, 'POINT', 0, 'POINT')}]] ₫
+                                </td>
                                 <td><span class="qty-badge" th:text="${c.quantitySold} + ' sản phẩm'">0</span></td>
                             </tr>
                         </tbody>

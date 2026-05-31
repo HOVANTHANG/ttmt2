@@ -42,15 +42,15 @@
                         <input id="productId" type="hidden" />
                         <div class="grid">
                             <div class="form-group col-3">
-                                <label>Mã sản phẩm <span style="color:#9ca3af;font-size:11px;font-weight:400">(tự động)</span></label>
+                                <label>Mã sản phẩm <span style="color:#9ca3af;font-size:11px;font-weight:400">(tự
+                                        động)</span></label>
                                 <div style="display:flex;gap:6px;align-items:center">
                                     <input id="code" type="text" readonly
-                                           style="background:#f8fafc;color:#64748b;cursor:default;letter-spacing:.5px;font-family:monospace;font-size:13px;flex:1" />
-                                    <button type="button" title="Tạo mã mới"
-                                            onclick="generateProductCode()"
-                                            style="padding:9px 11px;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;cursor:pointer;color:#64748b;font-size:14px;flex-shrink:0;transition:.2s"
-                                            onmouseover="this.style.borderColor='#0d9488';this.style.color='#0d9488'"
-                                            onmouseout="this.style.borderColor='#e2e8f0';this.style.color='#64748b'">&#x21bb;</button>
+                                        style="background:#f8fafc;color:#64748b;cursor:default;letter-spacing:.5px;font-family:monospace;font-size:13px;flex:1" />
+                                    <button type="button" title="Tạo mã mới" onclick="generateProductCode()"
+                                        style="padding:9px 11px;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;cursor:pointer;color:#64748b;font-size:14px;flex-shrink:0;transition:.2s"
+                                        onmouseover="this.style.borderColor='#0d9488';this.style.color='#0d9488'"
+                                        onmouseout="this.style.borderColor='#e2e8f0';this.style.color='#64748b'">&#x21bb;</button>
                                 </div>
                             </div>
 
@@ -804,10 +804,10 @@
                 return;
             }
 
-            // if (!payload.variants || payload.variants.length === 0) {
-            //     setStatus("Bạn chưa có biến thể nào.", "error");
-            //     return;
-            // }
+            if (!payload.variants || payload.variants.length === 0) {
+                setStatus("Bạn chưa có biến thể nào.", "error");
+                return;
+            }
 
             try {
                 const isUpdate = !!productId;
@@ -940,12 +940,12 @@
 
         /* ── Sinh mã sản phẩm ngẫu nhiên ──────────────────────────────── */
         function generateProductCode() {
-            const now   = new Date();
-            const ymd   = now.getFullYear().toString()
-                        + String(now.getMonth() + 1).padStart(2, "0")
-                        + String(now.getDate()).padStart(2, "0");
+            const now = new Date();
+            const ymd = now.getFullYear().toString()
+                + String(now.getMonth() + 1).padStart(2, "0")
+                + String(now.getDate()).padStart(2, "0");
             const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // loại I,O,0,1 dễ nhầm
-            let rand    = "";
+            let rand = "";
             for (let i = 0; i < 6; i++) {
                 rand += chars[Math.floor(Math.random() * chars.length)];
             }

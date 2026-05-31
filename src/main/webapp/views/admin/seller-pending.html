@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="vi">
 
-<head>
+<>
     <meta charset="utf-8" />
     <title>Duyệt shop</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <link href="css/styles.css" rel="stylesheet" />
+    <link href="css/seller-pending.css" rel="stylesheet" />
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"
         crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
@@ -37,245 +39,124 @@
 
     <script src="js/menu.js"></script>
 
-    <style>
-        body {
-            background: #f4f6f8;
-        }
 
-        .page-title {
-            font-weight: 700;
-            color: #111827;
-        }
+    </head>
 
-        .shop-card {
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 10px 28px rgba(15, 23, 42, .08);
-            overflow: hidden;
-        }
+    <body class="sb-nav-fixed">
+        <nav id="top" class="sb-topnav navbar navbar-expand navbar-dark bg-dark"></nav>
 
-        .shop-table img {
-            width: 54px;
-            height: 54px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 1px solid #eee;
-        }
+        <div id="layoutSidenav">
+            <div id="layoutSidenav_nav"></div>
 
-        .shop-name {
-            font-weight: 700;
-            color: #111827;
-        }
+            <div id="layoutSidenav_content">
+                <main class="container-fluid px-4">
+                    <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+                        <div>
+                            <h3 class="page-title mb-1">Duyệt đăng ký bán hàng</h3>
+                            <div class="text-muted">Xem thông tin shop và phê duyệt tài khoản người bán</div>
+                        </div>
 
-        .shop-slug {
-            color: #6b7280;
-            font-size: 13px;
-        }
-
-        .badge-pending {
-            background: #fff7ed;
-            color: #ea580c;
-            border: 1px solid #fed7aa;
-        }
-
-        .action-btns {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        .shop-table .shop-avatar-wrap {
-            width: 54px;
-            height: 54px;
-            border-radius: 50%;
-            overflow: hidden;
-            flex-shrink: 0;
-            background: linear-gradient(135deg, #0d9488, #065f46);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #e2e8f0;
-        }
-
-        .shop-table .shop-avatar-wrap img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            border-radius: 50%;
-        }
-
-        .shop-avatar-initial {
-            color: #fff;
-            font-weight: 800;
-            font-size: 20px;
-            text-transform: uppercase;
-            line-height: 1;
-        }
-
-        .detail-avatar-wrap {
-            width: 92px;
-            height: 92px;
-            border-radius: 50%;
-            overflow: hidden;
-            background: linear-gradient(135deg, #0d9488, #065f46);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 3px solid #e2e8f0;
-            margin: 0 auto;
-        }
-
-        .detail-avatar-wrap img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        .detail-avatar-wrap .detail-avatar-initial {
-            color: #fff;
-            font-weight: 800;
-            font-size: 32px;
-            text-transform: uppercase;
-        }
-
-        .detail-avatar {
-            width: 92px;
-            height: 92px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 1px solid #eee;
-        }
-
-        .detail-label {
-            color: #6b7280;
-            font-size: 13px;
-            margin-bottom: 2px;
-        }
-
-        .detail-value {
-            font-weight: 600;
-            color: #111827;
-        }
-    </style>
-</head>
-
-<body class="sb-nav-fixed">
-    <nav id="top" class="sb-topnav navbar navbar-expand navbar-dark bg-dark"></nav>
-
-    <div id="layoutSidenav">
-        <div id="layoutSidenav_nav"></div>
-
-        <div id="layoutSidenav_content">
-            <main class="container-fluid px-4">
-                <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
-                    <div>
-                        <h3 class="page-title mb-1">Duyệt đăng ký bán hàng</h3>
-                        <div class="text-muted">Xem thông tin shop và phê duyệt tài khoản người bán</div>
+                        <button class="btn btn-outline-primary" onclick="loadPendingSeller()">
+                            <i class="fas fa-sync-alt"></i> Tải lại
+                        </button>
                     </div>
 
-                    <button class="btn btn-outline-primary" onclick="loadPendingSeller()">
-                        <i class="fas fa-sync-alt"></i> Tải lại
-                    </button>
-                </div>
+                    <div class="shop-card">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 shop-table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Shop</th>
+                                        <th>Chủ shop</th>
+                                        <th>Liên hệ</th>
+                                        <th>Trạng thái</th>
+                                        <th style="width:230px;">Hành động</th>
+                                    </tr>
+                                </thead>
 
-                <div class="shop-card">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 shop-table">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Shop</th>
-                                    <th>Chủ shop</th>
-                                    <th>Liên hệ</th>
-                                    <th>Trạng thái</th>
-                                    <th style="width:230px;">Hành động</th>
-                                </tr>
-                            </thead>
-
-                            <tbody id="listSeller">
-                                <tr>
-                                    <td colspan="6" class="text-center py-4">Đang tải dữ liệu...</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                <tbody id="listSeller">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">Đang tải dữ liệu...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
-            </main>
+                </main>
+            </div>
         </div>
-    </div>
 
-    <div class="modal fade" id="shopDetailModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Chi tiết shop</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
+        <div class="modal fade" id="shopDetailModal" tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Chi tiết shop</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
 
-                <div class="modal-body" id="shopDetailBody"></div>
+                    <div class="modal-body" id="shopDetailBody"></div>
 
-                <div class="modal-footer">
-                    <button class="btn btn-success" id="btnApproveInModal">
-                        <i class="fas fa-check"></i> Duyệt shop
-                    </button>
-                    <button class="btn btn-danger" id="btnRejectInModal">
-                        <i class="fas fa-times"></i> Từ chối
-                    </button>
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <div class="modal-footer">
+                        <button class="btn btn-success" id="btnApproveInModal">
+                            <i class="fas fa-check"></i> Duyệt shop
+                        </button>
+                        <button class="btn btn-danger" id="btnRejectInModal">
+                            <i class="fas fa-times"></i> Từ chối
+                        </button>
+                        <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script>
-        const BASE_URL = "http://localhost:8080";
-        let selectedShopId = null;
+        <script>
+            const BASE_URL = "http://localhost:8080";
+            let selectedShopId = null;
 
-        window.onload = function () {
-            if (typeof loadMenu === "function") {
-                loadMenu();
-            }
-            loadPendingSeller();
-        };
-
-        function getToken() {
-            return localStorage.getItem("token");
-        }
-
-        async function loadPendingSeller() {
-            const token = getToken();
-
-            const res = await fetch(`${BASE_URL}/api/admin/seller/pending`, {
-                headers: {
-                    "Authorization": "Bearer " + token
+            window.onload = function () {
+                if (typeof loadMenu === "function") {
+                    loadMenu();
                 }
-            });
+                loadPendingSeller();
+            };
 
-            if (!res.ok) {
-                alert("Không tải được danh sách shop chờ duyệt");
-                return;
+            function getToken() {
+                return localStorage.getItem("token");
             }
 
-            const list = await res.json();
-            renderSellerList(list);
-        }
+            async function loadPendingSeller() {
+                const token = getToken();
 
-        function renderSellerList(list) {
-            let html = "";
+                const res = await fetch(`${BASE_URL}/api/admin/seller/pending`, {
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    }
+                });
 
-            list.forEach(item => {
-                html += `
+                if (!res.ok) {
+                    alert("Không tải được danh sách shop chờ duyệt");
+                    return;
+                }
+
+                const list = await res.json();
+                renderSellerList(list);
+            }
+
+            function renderSellerList(list) {
+                let html = "";
+
+                list.forEach(item => {
+                    html += `
                     <tr>
                         <td>#${item.id}</td>
                         <td>
                             <div class="d-flex align-items-center gap-3">
                                 <div class="shop-avatar-wrap">
                                     ${item.avatar
-                        ? `<img src="${item.avatar}" onerror="this.style.display='none';this.parentNode.innerHTML='<span class=shop-avatar-initial>' + '${escapeHtml(item.shopName || 'S').charAt(0)}' + '</span>'">`
-                        : `<span class="shop-avatar-initial">${escapeHtml(item.shopName || 'S').charAt(0)}</span>`
-                    }
+                            ? `<img src="${item.avatar}" onerror="this.style.display='none';this.parentNode.innerHTML='<span class=shop-avatar-initial>' + '${escapeHtml(item.shopName || 'S').charAt(0)}' + '</span>'">`
+                            : `<span class="shop-avatar-initial">${escapeHtml(item.shopName || 'S').charAt(0)}</span>`
+                        }
                                 </div>
                                 <div>
                                     <div class="shop-name">${escapeHtml(item.shopName)}</div>
@@ -313,38 +194,38 @@
                         </td>
                     </tr>
                 `;
-            });
+                });
 
-            document.getElementById("listSeller").innerHTML =
-                html || `<tr><td colspan="6" class="text-center py-4">Không có shop nào đang chờ duyệt</td></tr>`;
-        }
-
-        async function viewShopDetail(id) {
-            selectedShopId = id;
-
-            const token = getToken();
-
-            const res = await fetch(`${BASE_URL}/api/admin/seller/detail/${id}`, {
-                headers: {
-                    "Authorization": "Bearer " + token
-                }
-            });
-
-            if (!res.ok) {
-                alert("Không tải được chi tiết shop");
-                return;
+                document.getElementById("listSeller").innerHTML =
+                    html || `<tr><td colspan="6" class="text-center py-4">Không có shop nào đang chờ duyệt</td></tr>`;
             }
 
-            const item = await res.json();
+            async function viewShopDetail(id) {
+                selectedShopId = id;
 
-            document.getElementById("shopDetailBody").innerHTML = `
+                const token = getToken();
+
+                const res = await fetch(`${BASE_URL}/api/admin/seller/detail/${id}`, {
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    }
+                });
+
+                if (!res.ok) {
+                    alert("Không tải được chi tiết shop");
+                    return;
+                }
+
+                const item = await res.json();
+
+                document.getElementById("shopDetailBody").innerHTML = `
                 <div class="row g-4">
                     <div class="col-md-3 text-center">
                         <div class="detail-avatar-wrap mx-auto">
                             ${item.avatar
-                    ? `<img src="${item.avatar}" onerror="this.style.display='none';this.parentNode.innerHTML='<span class=detail-avatar-initial>${escapeHtml(item.shopName || 'S').charAt(0)}</span>'">`
-                    : `<span class="detail-avatar-initial">${escapeHtml(item.shopName || 'S').charAt(0)}</span>`
-                }
+                        ? `<img src="${item.avatar}" onerror="this.style.display='none';this.parentNode.innerHTML='<span class=detail-avatar-initial>${escapeHtml(item.shopName || 'S').charAt(0)}</span>'">`
+                        : `<span class="detail-avatar-initial">${escapeHtml(item.shopName || 'S').charAt(0)}</span>`
+                    }
                         </div>
                         <div class="mt-2 fw-bold">${escapeHtml(item.shopName)}</div>
                         <span class="badge badge-pending mt-1">${item.status || "PENDING"}</span>
@@ -393,73 +274,73 @@
                 </div>
             `;
 
-            document.getElementById("btnApproveInModal").onclick = function () {
-                approveSeller(selectedShopId);
-            };
+                document.getElementById("btnApproveInModal").onclick = function () {
+                    approveSeller(selectedShopId);
+                };
 
-            document.getElementById("btnRejectInModal").onclick = function () {
-                rejectSeller(selectedShopId);
-            };
+                document.getElementById("btnRejectInModal").onclick = function () {
+                    rejectSeller(selectedShopId);
+                };
 
-            const modal = new bootstrap.Modal(document.getElementById("shopDetailModal"));
-            modal.show();
-        }
-
-        async function approveSeller(id) {
-            if (!confirm("Bạn có chắc muốn duyệt shop này?")) return;
-
-            const token = getToken();
-
-            const res = await fetch(`${BASE_URL}/api/admin/seller/approve/${id}`, {
-                method: "POST",
-                headers: {
-                    "Authorization": "Bearer " + token
-                }
-            });
-
-            if (res.ok) {
-                toastr.success('Shop đã được duyệt thành công!');
-                loadPendingSeller();
-                closeModal();
-            } else {
-                toastr.error('Duyệt shop thất bại');
+                const modal = new bootstrap.Modal(document.getElementById("shopDetailModal"));
+                modal.show();
             }
-        }
 
-        async function rejectSeller(id) {
-            if (!confirm("Bạn có chắc muốn từ chối shop này?")) return;
+            async function approveSeller(id) {
+                if (!confirm("Bạn có chắc muốn duyệt shop này?")) return;
 
-            const token = getToken();
+                const token = getToken();
 
-            const res = await fetch(`${BASE_URL}/api/admin/seller/reject/${id}`, {
-                method: "POST",
-                headers: {
-                    "Authorization": "Bearer " + token
+                const res = await fetch(`${BASE_URL}/api/admin/seller/approve/${id}`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    }
+                });
+
+                if (res.ok) {
+                    toastr.success('Shop đã được duyệt thành công!');
+                    loadPendingSeller();
+                    closeModal();
+                } else {
+                    toastr.error('Duyệt shop thất bại');
                 }
-            });
-
-            if (res.ok) {
-                toastr.warning('Shop đã bị từ chối!');
-                loadPendingSeller();
-                closeModal();
-            } else {
-                toastr.error('Từ chối shop thất bại');
             }
-        }
 
-        function closeModal() {
-            const modalEl = document.getElementById("shopDetailModal");
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            if (modal) modal.hide();
-        }
+            async function rejectSeller(id) {
+                if (!confirm("Bạn có chắc muốn từ chối shop này?")) return;
 
-        function escapeHtml(text) {
-            return String(text || "")
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;");
-        }
-    </script>
-</body>
+                const token = getToken();
+
+                const res = await fetch(`${BASE_URL}/api/admin/seller/reject/${id}`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    }
+                });
+
+                if (res.ok) {
+                    toastr.warning('Shop đã bị từ chối!');
+                    loadPendingSeller();
+                    closeModal();
+                } else {
+                    toastr.error('Từ chối shop thất bại');
+                }
+            }
+
+            function closeModal() {
+                const modalEl = document.getElementById("shopDetailModal");
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+            }
+
+            function escapeHtml(text) {
+                return String(text || "")
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;");
+            }
+        </script>
+    </body>
 
 </html>
