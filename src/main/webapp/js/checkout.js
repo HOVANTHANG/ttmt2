@@ -247,20 +247,35 @@ async function loadCartCheckOut() {
 
 // ==================== PHÍ VẬN CHUYỂN ====================
 
-/** Xóa prefix hành chính để chuẩn hóa tên trước khi so sánh */
-function normAddr(s) {
-    if (!s) return "";
-    return s.toLowerCase()
-        .replace(/^(tỉnh|thành phố|tp\.|tp |quận|huyện|thị xã|tx\.|phường|xã|thị trấn|tt\.)\s+/i, "")
-        .trim();
+function removeAccents(str) {
+    if (!str) return "";
+    return str.normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "d");
 }
 
-/** So sánh 2 tên địa chỉ: thử full name trước, rồi normalized name */
+function cleanStringForMatch(s) {
+    if (!s) return "";
+    let clean = removeAccents(s).toLowerCase();
+    // Replaces dots, hyphens, commas with space
+    clean = clean.replace(/[\.\-\,]/g, " ");
+    // Clean double spaces
+    clean = clean.replace(/\s+/g, " ").trim();
+    // Normalize administrative prefixes
+    clean = clean.replace(/^(tinh|thanh pho|tp|quan|huyen|thi xa|tx|phuong|xa|thi tran|tt)\s+/g, "");
+    // Replace 'k' with 'c' to handle Kạn / Cạn mismatch
+    clean = clean.replace(/k/g, "c");
+    // Remove non-alphanumeric characters
+    clean = clean.replace(/[^a-z0-9]/g, "");
+    return clean.trim();
+}
+
 function addrMatch(a, b) {
-    const al = a.toLowerCase(), bl = b.toLowerCase();
-    if (al.includes(bl) || bl.includes(al)) return true;
-    const an = normAddr(a), bn = normAddr(b);
-    return an.includes(bn) || bn.includes(an);
+    if (!a || !b) return false;
+    const cleanA = cleanStringForMatch(a);
+    const cleanB = cleanStringForMatch(b);
+    return cleanA.includes(cleanB) || cleanB.includes(cleanA);
 }
 
 async function layTinhShip(tenTinh) {
@@ -325,7 +340,7 @@ async function getShopFromGHN(shopId) {
 }
 
 async function tinhPhiGHN(fromDistrictId, fromWardCode, toDistrictId, toWardCode, qty) {
-    const weight = Math.max(100, qty * 5000); // gram, ~500g/sản phẩm
+    const weight = Math.max(100, qty * 500);
     let url = `/api/shipping/tinh-phi?toDistrictId=${toDistrictId}&toWardCode=${toWardCode}&weight=${weight}`;
     if (fromDistrictId) url += `&fromDistrictId=${fromDistrictId}&fromWardCode=${fromWardCode}`;
     const res = await fetch(url);

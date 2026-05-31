@@ -557,4 +557,27 @@ public class InvoiceServiceImp implements InvoiceService {
         return latestId != null ? latestId : 0L;
     }
 
+    @Override
+    public java.util.Map<String, Object> getAdminPendingInfo(Long lastSeenId) {
+        Long count = invoiceRepository.countPendingForAdminSince(StatusInvoice.DANG_CHO_XAC_NHAN, lastSeenId);
+        Long latestId = invoiceRepository.maxPendingIdForAdmin(StatusInvoice.DANG_CHO_XAC_NHAN);
+        
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("count", count);
+        response.put("latestId", latestId);
+        return response;
+    }
+
+    @Override
+    public java.util.Map<String, Object> getSellerPendingInfo(Long lastSeenId) {
+        Long shopId = getCurrentSellerShopId();
+        Long count = invoiceRepository.countPendingForSellerSince(shopId, StatusInvoice.DANG_CHO_XAC_NHAN, lastSeenId);
+        Long latestId = invoiceRepository.maxPendingIdBySellerShopAndStatus(shopId, StatusInvoice.DANG_CHO_XAC_NHAN);
+        
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("count", count);
+        response.put("latestId", latestId);
+        return response;
+    }
+
 }

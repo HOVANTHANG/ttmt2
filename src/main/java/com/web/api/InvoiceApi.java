@@ -147,4 +147,14 @@ public class InvoiceApi {
         Long latestId = invoiceService.getLatestIdForSeller();
         return ResponseEntity.ok(java.util.Collections.singletonMap("latestId", latestId));
     }
+
+    @GetMapping("/admin/pending-info")
+    public ResponseEntity<?> getAdminPendingInfo(@RequestParam(value = "lastSeenId", defaultValue = "0") Long lastSeenId) {
+        return new ResponseEntity<>(invoiceService.getAdminPendingInfo(lastSeenId), HttpStatus.OK);
+    }
+
+    @GetMapping("/seller/pending-info")
+    public ResponseEntity<?> getSellerPendingInfo(@RequestParam(value = "lastSeenId", defaultValue = "0") Long lastSeenId) {
+        return new ResponseEntity<>(invoiceService.getSellerPendingInfo(lastSeenId), HttpStatus.OK);
+    }
 }

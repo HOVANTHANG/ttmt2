@@ -140,4 +140,11 @@ public class AdminShopApi {
         productRepository.save(product);
         return ResponseEntity.ok(Map.of("message", "Sản phẩm đã bị từ chối"));
     }
+
+    @GetMapping("/product/pending-info")
+    public ResponseEntity<?> getPendingProductsInfo(@RequestParam(value = "lastSeenId", defaultValue = "0") Long lastSeenId) {
+        Long count = productRepository.countPendingProductsSince(ProductStatus.PENDING, lastSeenId);
+        Long latestId = productRepository.maxPendingProductId(ProductStatus.PENDING);
+        return ResponseEntity.ok(Map.of("count", count, "latestId", latestId));
+    }
 }

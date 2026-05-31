@@ -210,5 +210,22 @@ public class ChatService1 {
 
         return res;
     }
+
+    public java.util.Map<String, Object> getSellerUnreadInfo(Long sellerId, Long lastSeenId) {
+        User seller = userRepository.findById(sellerId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy seller"));
+
+        if (seller.getShop() == null) {
+            throw new RuntimeException("Seller chưa có shop");
+        }
+        Long shopId = seller.getShop().getId();
+        Long count = chatMessageRepository.countMessagesForSellerSince(shopId, sellerId, lastSeenId);
+        Long latestId = chatMessageRepository.maxMessageIdForSeller(shopId, sellerId);
+        
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("count", count);
+        response.put("latestId", latestId);
+        return response;
+    }
 }
 

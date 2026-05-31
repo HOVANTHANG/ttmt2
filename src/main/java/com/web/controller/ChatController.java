@@ -104,6 +104,12 @@ public class ChatController {
         return new ResponseEntity<>(rooms, HttpStatus.OK);
     }
 
+    @GetMapping("/seller/unread-info")
+    public ResponseEntity<?> getSellerUnreadInfo(@RequestParam(value = "lastSeenId", defaultValue = "0") Long lastSeenId) {
+        Long sellerId = userUtils.getUserWithAuthority().getId();
+        return new ResponseEntity<>(chatService1.getSellerUnreadInfo(sellerId, lastSeenId), HttpStatus.OK);
+    }
+
     /**
      * Tìm seller userId từ nhiều nguồn:
      * 1. Từ request body (nếu frontend truyền lên)

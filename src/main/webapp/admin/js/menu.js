@@ -14,9 +14,16 @@ $(document).ready(function () {
                 <div class="sb-nav-link-icon"><i class="fas fa-user-alt iconmenu"></i></div>
                 Tài khoản
             </a>
-            <a class="nav-link" href="/admin/seller-pending">
+            <a class="nav-link" href="/admin/seller-pending" id="menuAdminSellerPending">
                 <div class="sb-nav-link-icon"><i class="fas fa-user-check iconmenu"></i></div>
                 Người bán chờ duyệt
+                <span id="pendingSellerBadge" style="
+                    display:none;
+                    background:#ef4444;color:#fff;
+                    font-size:10px;font-weight:700;
+                    border-radius:999px;padding:1px 7px;
+                    margin-left:6px;vertical-align:middle;
+                ">0</span>
             </a>
             <a class="nav-link" href="/admin/shop">
                 <div class="sb-nav-link-icon"> <i class="fas fa-store iconmenu"></i></div>
@@ -68,9 +75,16 @@ $(document).ready(function () {
                 <div class="sb-nav-link-icon"><i class="fa fa-image iconmenu"></i></div>
                 banner
             </a>
-            <a class="nav-link" href="/admin/invoice">
+            <a class="nav-link" href="/admin/invoice" id="menuAdminInvoice">
                 <div class="sb-nav-link-icon"><i class="fa fa-shopping-cart iconmenu"></i></div>
                 Đơn hàng
+                <span id="adminPendingOrderBadge" style="
+                    display:none;
+                    background:#ef4444;color:#fff;
+                    font-size:10px;font-weight:700;
+                    border-radius:999px;padding:1px 7px;
+                    margin-left:6px;vertical-align:middle;
+                ">0</span>
             </a>
             <a onclick="dangXuat()" class="nav-link" href="#">
                 <div class="sb-nav-link-icon"><i class="fas fa-sign-out-alt iconmenu"></i></div>
@@ -138,22 +152,89 @@ async function checkroleAdmin() {
 // ── Load badge số sản phẩm chờ duyệt trên menu ──────────
 async function loadPendingProductCount() {
     try {
-        const res = await fetch('http://localhost:8080/api/admin/shop/product/pending/count', {
+        const lastSeen = localStorage.getItem("lastSeenAdminProductId") || 0;
+        const res = await fetch(`http://localhost:8080/api/admin/shop/product/pending-info?lastSeenId=${lastSeen}`, {
             headers: { 'Authorization': 'Bearer ' + localStorage.getItem("token") }
         });
         if (!res.ok) return;
         const data = await res.json();
-        const count = data.count || 0;
-        const badge = document.getElementById('pendingProductBadge');
-        if (badge) {
-            badge.textContent = count;
-            badge.style.display = count > 0 ? 'inline' : 'none';
+        
+        // Nếu đang ở trang Duyệt sản phẩm, tự động đánh dấu đã xem tất cả
+        if (window.location.pathname.includes("/admin/product-approval")) {
+            localStorage.setItem("lastSeenAdminProductId", data.latestId);
+            const badge = document.getElementById('pendingProductBadge');
+            if (badge) badge.style.display = 'none';
+        } else {
+            const badge = document.getElementById('pendingProductBadge');
+            if (badge) {
+                badge.textContent = data.count;
+                badge.style.display = data.count > 0 ? 'inline' : 'none';
+            }
         }
     } catch (e) { /* silent */ }
 }
 
 // Gọi sau khi DOM sẵn sàng
 setTimeout(loadPendingProductCount, 500);
+setInterval(loadPendingProductCount, 8000);
+
+// ── Load badge số đơn hàng chờ duyệt trên menu ──────────
+async function loadAdminPendingOrders() {
+    try {
+        const lastSeen = localStorage.getItem("lastSeenAdminOrderId") || 0;
+        const res = await fetch(`http://localhost:8080/api/invoice/admin/pending-info?lastSeenId=${lastSeen}`, {
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem("token") }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        // Nếu đang ở trang Đơn hàng, tự động đánh dấu đã xem tất cả
+        if (window.location.pathname.includes("/admin/invoice")) {
+            localStorage.setItem("lastSeenAdminOrderId", data.latestId);
+            const badge = document.getElementById('adminPendingOrderBadge');
+            if (badge) badge.style.display = 'none';
+        } else {
+            const badge = document.getElementById('adminPendingOrderBadge');
+            if (badge) {
+                badge.textContent = data.count;
+                badge.style.display = data.count > 0 ? 'inline' : 'none';
+            }
+        }
+    } catch (e) { /* silent */ }
+}
+
+// Gọi sau khi DOM sẵn sàng
+setTimeout(loadAdminPendingOrders, 500);
+setInterval(loadAdminPendingOrders, 8000);
+
+// ── Load badge số người bán chờ duyệt trên menu ──────────
+async function loadAdminPendingSellers() {
+    try {
+        const lastSeen = localStorage.getItem("lastSeenAdminSellerId") || 0;
+        const res = await fetch(`http://localhost:8080/api/admin/seller/pending-info?lastSeenId=${lastSeen}`, {
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem("token") }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        // Nếu đang ở trang Duyệt người bán, tự động đánh dấu đã xem tất cả
+        if (window.location.pathname.includes("/admin/seller-pending")) {
+            localStorage.setItem("lastSeenAdminSellerId", data.latestId);
+            const badge = document.getElementById('pendingSellerBadge');
+            if (badge) badge.style.display = 'none';
+        } else {
+            const badge = document.getElementById('pendingSellerBadge');
+            if (badge) {
+                badge.textContent = data.count;
+                badge.style.display = data.count > 0 ? 'inline' : 'none';
+            }
+        }
+    } catch (e) { /* silent */ }
+}
+
+// Gọi sau khi DOM sẵn sàng
+setTimeout(loadAdminPendingSellers, 500);
+setInterval(loadAdminPendingSellers, 8000);
 
 
 

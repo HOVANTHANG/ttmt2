@@ -22,8 +22,13 @@ $(document).ready(function () {
             <a class="nav-link ${active('/seller/product')}" href="/seller/product">
                 <div class="sb-nav-link-icon"><i class="fas fa-box-open"></i></div>Sản phẩm
             </a>
-            <a class="nav-link ${active('/seller/invoice')}" href="/seller/invoice">
+            <a class="nav-link ${active('/seller/invoice')}" href="/seller/invoice" id="menuSellerInvoice">
                 <div class="sb-nav-link-icon"><i class="fas fa-receipt"></i></div>Đơn hàng
+                <span id="sellerPendingOrderBadge" style="
+                    display:none;background:#ef4444;color:#fff;
+                    font-size:10px;font-weight:700;border-radius:999px;
+                    padding:1px 7px;margin-left:6px;vertical-align:middle;
+                ">0</span>
             </a>
             <a class="nav-link ${active('/seller/voucher')}" href="/seller/voucher">
                 <div class="sb-nav-link-icon"><i class="fas fa-tags"></i></div>Voucher
@@ -32,8 +37,13 @@ $(document).ready(function () {
                 <div class="sb-nav-link-icon"><i class="fas fa-map-marker-alt"></i></div>Địa chỉ kho
             </a>
             <div class="sb-sidenav-menu-heading">Hỗ trợ</div>
-            <a class="nav-link ${active('/seller/seller-chat')}" href="/seller/seller-chat">
+            <a class="nav-link ${active('/seller/seller-chat')}" href="/seller/seller-chat" id="menuSellerChat">
                 <div class="sb-nav-link-icon"><i class="fas fa-comments"></i></div>Tin nhắn
+                <span id="sellerUnreadChatBadge" style="
+                    display:none;background:#ef4444;color:#fff;
+                    font-size:10px;font-weight:700;border-radius:999px;
+                    padding:1px 7px;margin-left:6px;vertical-align:middle;
+                ">0</span>
             </a>
         
             <a onclick="dangXuat()" class="nav-link" href="#">
@@ -375,6 +385,9 @@ $(document).ready(function () {
             if (e.target === this) closeShopModal();
         });
     }
+
+    setTimeout(loadSellerBadges, 800);
+    setInterval(loadSellerBadges, 8000);
 });
 
 window._shopData = null;
@@ -631,4 +644,53 @@ async function checkroleSeller() {
         alert("Không thể kết nối server");
         window.location.href = "/index";
     }
+}
+
+async function loadSellerBadges() {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    
+    // 1. Load badge đơn hàng
+    try {
+        const lastSeen = localStorage.getItem("lastSeenSellerOrderId") || 0;
+        const res = await fetch(`http://localhost:8080/api/invoice/seller/pending-info?lastSeenId=${lastSeen}`, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (window.location.pathname.includes("/seller/invoice")) {
+                localStorage.setItem("lastSeenSellerOrderId", data.latestId);
+                const b = document.getElementById("sellerPendingOrderBadge");
+                if (b) b.style.display = 'none';
+            } else {
+                const b = document.getElementById("sellerPendingOrderBadge");
+                if (b) {
+                    b.textContent = data.count;
+                    b.style.display = data.count > 0 ? 'inline' : 'none';
+                }
+            }
+        }
+    } catch(e) {}
+
+    // 2. Load badge tin nhắn
+    try {
+        const lastSeen = localStorage.getItem("lastSeenSellerMessageId") || 0;
+        const res = await fetch(`http://localhost:8080/api/chat/seller/unread-info?lastSeenId=${lastSeen}`, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (window.location.pathname.includes("/seller/seller-chat")) {
+                localStorage.setItem("lastSeenSellerMessageId", data.latestId);
+                const b = document.getElementById("sellerUnreadChatBadge");
+                if (b) b.style.display = 'none';
+            } else {
+                const b = document.getElementById("sellerUnreadChatBadge");
+                if (b) {
+                    b.textContent = data.count;
+                    b.style.display = data.count > 0 ? 'inline' : 'none';
+                }
+            }
+        }
+    } catch(e) {}
 }

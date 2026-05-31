@@ -99,4 +99,32 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
                         "  WHERE d.invoice_id = i.id AND p.shop_id = ?1)", nativeQuery = true)
         Long findLatestIdByShopId(Long shopId);
 
+        @Query("select count(distinct i.id) from Invoice i " +
+               "where exists (" +
+               "   select d.id from InvoiceDetail d " +
+               "   where d.invoice.id = i.id " +
+               "   and d.productVariant.product.shop.id = :shopId" +
+               ") " +
+               "and i.statusInvoice = :status " +
+               "and i.id > :lastSeenId")
+        Long countPendingForSellerSince(@Param("shopId") Long shopId, @Param("status") StatusInvoice status, @Param("lastSeenId") Long lastSeenId);
+
+        @Query("select coalesce(max(i.id), 0) from Invoice i " +
+               "where exists (" +
+               "   select d.id from InvoiceDetail d " +
+               "   where d.invoice.id = i.id " +
+               "   and d.productVariant.product.shop.id = :shopId" +
+               ") " +
+               "and i.statusInvoice = :status")
+        Long maxPendingIdBySellerShopAndStatus(@Param("shopId") Long shopId, @Param("status") StatusInvoice status);
+
+        @Query("select count(i.id) from Invoice i " +
+               "where i.statusInvoice = :status " +
+               "and i.id > :lastSeenId")
+        Long countPendingForAdminSince(@Param("status") StatusInvoice status, @Param("lastSeenId") Long lastSeenId);
+
+        @Query("select coalesce(max(i.id), 0) from Invoice i " +
+               "where i.statusInvoice = :status")
+        Long maxPendingIdForAdmin(@Param("status") StatusInvoice status);
+
 }

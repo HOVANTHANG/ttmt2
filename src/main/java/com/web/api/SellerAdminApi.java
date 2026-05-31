@@ -99,4 +99,11 @@ public class SellerAdminApi {
 
         return dto;
     }
+
+    @GetMapping("/pending-info")
+    public ResponseEntity<?> getPendingSellersInfo(@RequestParam(value = "lastSeenId", defaultValue = "0") Long lastSeenId) {
+        Long count = shopRepository.countPendingShopsSince(ShopStatus.PENDING, lastSeenId);
+        Long latestId = shopRepository.maxPendingShopId(ShopStatus.PENDING);
+        return ResponseEntity.ok(Map.of("count", count, "latestId", latestId));
+    }
 }

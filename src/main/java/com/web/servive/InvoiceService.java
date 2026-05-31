@@ -47,4 +47,8 @@ public interface InvoiceService {
 
         Long getLatestIdForSeller();
 
+        java.util.Map<String, Object> getAdminPendingInfo(Long lastSeenId);
+
+        java.util.Map<String, Object> getSellerPendingInfo(Long lastSeenId);
+
 }

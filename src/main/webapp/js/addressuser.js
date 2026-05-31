@@ -9,8 +9,8 @@ async function loadAddressUser() {
     var list = await response.json();
     var main = '';
     for (i = 0; i < list.length; i++) {
-        var defaultBadge = list[i].primaryAddres == true 
-            ? '<span class="address-card-default"><i class="fas fa-check-circle"></i> Mặc định</span>' 
+        var defaultBadge = list[i].primaryAddres == true
+            ? '<span class="address-card-default"><i class="fas fa-check-circle"></i> Mặc định</span>'
             : '';
         main += `<div class="address-card">
             <div class="address-card-header">
@@ -109,14 +109,9 @@ async function addAddressUser() {
         body: JSON.stringify(addu)
     });
     if (response.status < 300) {
-        swal({
-                title: "Thông báo",
-                text: "Thành công",
-                type: "success"
-            },
-            function() {
-                window.location.reload();
-            });
+        toastr.success("Thêm địa chỉ thành công!");
+        await new Promise(r => setTimeout(r, 1000));
+        window.location.reload();
     }
     if (response.status == exceptionCode) {
         var result = await response.json()
@@ -191,9 +186,9 @@ async function loadAddInfor() {
     if (!address) return;
 
     // Điền thông tin vào các ô readonly
-    document.getElementById("fullname").value    = address.fullname;
-    document.getElementById("phone").value       = address.phone;
-    document.getElementById("stressName").value  = address.streetName;
+    document.getElementById("fullname").value = address.fullname;
+    document.getElementById("phone").value = address.phone;
+    document.getElementById("stressName").value = address.streetName;
 
     // Tính phí vận chuyển (hàm định nghĩa trong checkout.js)
     await capNhatPhiShip(address);
