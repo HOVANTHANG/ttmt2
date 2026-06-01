@@ -1,4 +1,4 @@
-async function loadAllTrademark(){
+async function loadAllTrademark() {
     var url = 'http://localhost:8080/api/trademark/public/findAll';
     const res = await fetch(url, {});
     var list = await res.json();

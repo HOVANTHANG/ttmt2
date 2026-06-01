@@ -1,9 +1,9 @@
 const CHAT_BASE_URL = "http://localhost:8080";
 
-let chatRooms            = [];
-let selectedChatRoom     = null; // { shopId, shopName, sellerUserId, roomId }
-let chatStompClient      = null;
-let chatMyId             = null;
+let chatRooms = [];
+let selectedChatRoom = null; // { shopId, shopName, sellerUserId, roomId }
+let chatStompClient = null;
+let chatMyId = null;
 
 /* ── Init ── */
 document.addEventListener("DOMContentLoaded", function () {
@@ -48,7 +48,7 @@ function connectChatStomp() {
                 const msg = JSON.parse(frame.body);
                 console.log("[Chat Widget] WS received:", msg);
                 const incomingRoomId = Number(msg.roomId);
-                const currentRoomId  = selectedChatRoom ? Number(selectedChatRoom.roomId) : null;
+                const currentRoomId = selectedChatRoom ? Number(selectedChatRoom.roomId) : null;
                 if (currentRoomId && incomingRoomId === currentRoomId) {
                     appendChatBubble(msg.content, false);
                 } else {
@@ -93,7 +93,10 @@ function createChatWidgetHtml() {
 
             <div class="chat-main">
                 <div class="chat-main-header">
-                    <div class="chat-main-title" id="chatMainTitle">Shop Chat</div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button class="chat-back-btn" onclick="backToRoomList()"><i class="fa fa-chevron-left"></i></button>
+                        <div class="chat-main-title" id="chatMainTitle">Shop Chat</div>
+                    </div>
                     <button class="chat-main-close" onclick="toggleChatPopup()">&times;</button>
                 </div>
 
@@ -124,16 +127,27 @@ function getChatToken() {
 function toggleChatPopup() {
     const box = document.getElementById("chatPopup");
     if (!box) return;
+    const aiContainer = document.querySelector(".chat-bot-container");
 
     if (box.style.display === "grid") {
         box.style.display = "none";
+        if (aiContainer) aiContainer.style.display = "";
     } else {
         box.style.display = "grid";
+        box.classList.remove("show-main");
         loadChatRooms();
+        if (aiContainer) aiContainer.style.display = "none";
     }
 }
 
-/* ── Rooms ── */
+function backToRoomList() {
+    const box = document.getElementById("chatPopup");
+    if (box) {
+        box.classList.remove("show-main");
+    }
+}
+
+
 async function loadChatRooms() {
     const token = getChatToken();
     if (!token) { updateChatCount(0); return; }
@@ -153,9 +167,9 @@ async function loadChatRooms() {
 
 function updateChatCount(count) {
     const badge = document.getElementById("chatRoomCount");
-    const text  = document.getElementById("chatTotalText");
+    const text = document.getElementById("chatTotalText");
     if (badge) badge.innerText = count;
-    if (text)  text.innerText  = "(" + count + ")";
+    if (text) text.innerText = "(" + count + ")";
 }
 
 function renderChatRooms(rooms) {
@@ -218,9 +232,12 @@ async function selectChatRoom(roomId) {
     if (last) { last.style.fontWeight = ""; last.style.color = ""; }
 
     document.getElementById("chatMainTitle").innerText = selectedChatRoom.shopName || "Shop";
-    document.getElementById("chatEmpty").style.display        = "none";
-    document.getElementById("chatMessageArea").style.display  = "block";
-    document.getElementById("chatInputArea").style.display    = "flex";
+    document.getElementById("chatEmpty").style.display = "none";
+    document.getElementById("chatMessageArea").style.display = "block";
+    document.getElementById("chatInputArea").style.display = "flex";
+
+    const box = document.getElementById("chatPopup");
+    if (box) box.classList.add("show-main");
 
     await loadChatMessages();
 }
@@ -270,7 +287,7 @@ function appendChatBubble(content, mine, scroll) {
 
 /* ── Send ── */
 async function sendChatMessage() {
-    const input   = document.getElementById("chatInput");
+    const input = document.getElementById("chatInput");
     const content = (input.value || "").trim();
     if (!content || !selectedChatRoom) return;
 
@@ -282,16 +299,16 @@ async function sendChatMessage() {
     }
 
     const body = {
-        shopId:       selectedChatRoom.shopId,
-        content:      content,
+        shopId: selectedChatRoom.shopId,
+        content: content,
         sellerUserId: selectedChatRoom.sellerUserId  // push WS to seller
     };
 
     try {
         const res = await fetch(CHAT_BASE_URL + "/api/chat/user/send", {
-            method:  "POST",
+            method: "POST",
             headers: {
-                "Content-Type":  "application/json",
+                "Content-Type": "application/json",
                 "Authorization": "Bearer " + token
             },
             body: JSON.stringify(body)
@@ -329,7 +346,12 @@ function openChatWithShop(shop) {
     if (!shop || !shop.id) { alert("Khong tim thay shop"); return; }
 
     const box = document.getElementById("chatPopup");
-    if (box) box.style.display = "grid";
+    if (box) {
+        box.style.display = "grid";
+        box.classList.add("show-main");
+    }
+    const aiContainer = document.querySelector(".chat-bot-container");
+    if (aiContainer) aiContainer.style.display = "none";
 
     loadChatRooms().then(function () {
         // Find room by shopId
@@ -347,16 +369,16 @@ function openChatWithShop(shop) {
 function openNewChatWithShop(shop) {
     // Tạo room giả để hiện UI
     selectedChatRoom = {
-        shopId:       shop.id,
-        shopName:     shop.shopName || shop.name || "Shop",
+        shopId: shop.id,
+        shopName: shop.shopName || shop.name || "Shop",
         sellerUserId: shop.sellerUserId || null,
-        roomId:       null   // chưa có roomId thật, sẽ được tạo khi gửi tin đầu tiên
+        roomId: null   // chưa có roomId thật, sẽ được tạo khi gửi tin đầu tiên
     };
 
     document.getElementById("chatMainTitle").innerText = selectedChatRoom.shopName;
-    document.getElementById("chatEmpty").style.display        = "none";
-    document.getElementById("chatMessageArea").style.display  = "block";
-    document.getElementById("chatInputArea").style.display    = "flex";
+    document.getElementById("chatEmpty").style.display = "none";
+    document.getElementById("chatMessageArea").style.display = "block";
+    document.getElementById("chatInputArea").style.display = "flex";
 
     const box = document.getElementById("chatMessageArea");
     if (box) {
@@ -364,6 +386,9 @@ function openNewChatWithShop(shop) {
             Bắt đầu cuộc trò chuyện với <b>${selectedChatRoom.shopName}</b>
         </div>`;
     }
+
+    const popup = document.getElementById("chatPopup");
+    if (popup) popup.classList.add("show-main");
 
     const input = document.getElementById("chatInput");
     if (input) input.focus();

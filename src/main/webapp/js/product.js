@@ -69,41 +69,6 @@ async function loadSanPhamMoiNhat(page) {
 }
 
 
-async function loadPhuKien(page) {
-    var url = 'http://localhost:8080/api/product/public/phu-kien?page=' + page + '&size=' + size + '&sort=id,desc';
-    const response = await fetch(url, {
-    });
-    var result = await response.json();
-    var list = result.content;
-    var main = '';
-    for (i = 0; i < list.length; i++) {
-        main += `<div class="col-lg-20p col-md-3 col-sm-6 col-6">
-        <div class="singleproduct">
-            <a href="detail?id=${list[i].id}"><img src="${list[i].imageBanner}" class="productimg"></a>
-            <div class="contentsinglepro">
-                <p class="productname"><a class="productname" href="detail?id=${list[i].id}">${list[i].name}</a></p>
-                <div class="priceproduct">
-                    <strong class="newprice">${formatmoney(list[i].price)}</strong>
-                    <span class="oldprice">${list[i].oldPrice != null && list[i].oldPrice > 0 ? formatmoney(list[i].oldPrice) : ''}</span>
-                </div>
-            </div>
-        </div>
-    </div>`
-    }
-    document.getElementById("listphukien").innerHTML += main
-    if (result.last == false) {
-        document.getElementById("btnphukien").onclick = function () {
-            loadPhuKien(Number(page) + Number(1));
-        }
-    }
-    else {
-        document.getElementById("btnphukien").onclick = function () {
-            toastr.warning("Đã hết kết quả tìm kiếm");
-        }
-    }
-}
-
-
 async function loadSanPhamNoiBat() {
     var url = 'http://localhost:8080/api/product/public/best-saler?page=0&size=4&sort=sold,desc';
     const response = await fetch(url, {
@@ -212,91 +177,6 @@ async function loadAProductLegacy() {
     result.category.categoryType == "DIEN_THOAI" ? loadSanPhamLienQuan(result.tradeMark.id, null, id) : loadSanPhamLienQuan(null, result.category.id, id);
 }
 
-function loadBoNho(categoryType) {
-    if (categoryType == "DIEN_THOAI") {
-        var main = '';
-        for (k = 0; k < listbonho.length; k++) {
-            var act = ''
-            if (k == 0) {
-                act = 'activecolor'
-                loadMauSac(listbonho[k].id, null)
-            }
-            main += `<div class="col-lg-3 col-md-3 col-sm-6 col-6">
-            <div onclick="loadMauSac(${listbonho[k].id}, this)" class="storagediv ${act}">
-                <span class="">${listbonho[k].ram}-${listbonho[k].rom}</span>
-            </div>
-        </div>`
-        }
-        document.getElementById("listbonho").innerHTML = main;
-    }
-    if (categoryType == "PHU_KIEN") {
-        document.getElementById("storagedetaillable").style.display = "none";
-        var main = '';
-        for (i = 0; i < listbonho.length; i++) {
-            for (j = 0; j < listbonho[i].productColors.length; j++) {
-                var cls = 'hetsp';
-                var oncl = ``;
-                var mausac = listbonho[i].productColors[j];
-
-                if (mausac.quantity > 0) {
-                    cls = ''
-                    oncl = `onclick="chonMauSac(${mausac.id}, this, ${mausac.price})"`;
-                }
-                main += `<div class="col-lg-3 col-md-3 col-sm-6 col-6">
-                <div ${oncl} class="colorcdiv ${cls}">
-                    <img src="${mausac.image}" class="imgcolorpro"> <span class="storagedetail">${mausac.name}</span>
-                    <span class="pricestorage">${formatmoney(mausac.price)}</span>
-                </div>
-                </div>`
-            }
-        }
-        document.getElementById("listcolor").innerHTML = main;
-    }
-}
-
-
-async function loadMauSac(idbonho, e) {
-    var url = 'http://localhost:8080/api/product-color/public/find-by-storage?id=' + idbonho;
-    const response = await fetch(url, {
-    });
-    var listmausac = await response.json();
-    console.log(listmausac);
-    var main = ''
-    for (j = 0; j < listmausac.length; j++) {
-        var cls = 'hetsp';
-        var oncl = ``;
-        if (listmausac[j].quantity > 0) {
-            cls = ''
-            oncl = `onclick="chonMauSac(${listmausac[j].id}, this, ${listmausac[j].price})"`;
-        }
-        main += `<div class="col-lg-3 col-md-3 col-sm-6 col-6">
-                <div ${oncl} class="colorcdiv ${cls}">
-                    <img src="${listmausac[j].image}" class="imgcolorpro"> 
-                    <span class="storagedetail">${listmausac[j].name}</span>
-                    <span class="soluongcon">(${listmausac[j].quantity})</span>
-                    <span class="pricestorage">${formatmoney(listmausac[j].price)}</span>
-                </div>
-            </div>`
-    }
-    document.getElementById("listcolor").innerHTML = main;
-    if (e != null) {
-        var img = document.getElementsByClassName("storagediv");
-        for (k = 0; k < img.length; k++) {
-            document.getElementsByClassName("storagediv")[k].classList.remove('activecolor');
-        }
-        e.classList.add('activecolor')
-    }
-}
-
-function chonMauSac(idmausac, e, price) {
-    idColorCart = idmausac;
-    var img = document.getElementsByClassName("colorcdiv");
-    for (k = 0; k < img.length; k++) {
-        document.getElementsByClassName("colorcdiv")[k].classList.remove('activecolor');
-    }
-    e.classList.add('activecolor')
-    document.getElementById("pricedetail").innerHTML = formatmoney(price)
-}
 
 async function loadSanPhamLienQuanLegacy(idtrademark, idcategory, idproduct) {
     var url = 'http://localhost:8080/api/product/public/san-pham-lienquan?page=0&size=4&sort=id,desc&id=' + idproduct;
@@ -337,31 +217,45 @@ async function clickImgdetail(e) {
 
 
 
-/* ── Tính điểm ưu tiên theo từ khoá ─────────────────
-   3 = tên trùng khớp hoàn toàn
-   2 = tên bắt đầu bằng từ khoá
-   1 = tên chứa từ khoá
-   0 = không khớp tên (chỉ khớp mô tả...)
-   +bonus theo lượng đã bán (sold)
+/* ── Tính điểm ưu tiên tìm kiếm sản phẩm ──────────────
+   - Điểm khớp từ khoá (Trùng khớp hoàn toàn, bắt đầu hoặc chứa từ khoá)
+   - Lượng đã bán (sold)
+   - Số sao đánh giá trung bình sản phẩm (avgStar)
+   - Độ uy tín của Shop (shop.avgStar & shop.reviewCount)
 ──────────────────────────────────────────────────── */
 function calcRelevanceScore(product, keyword) {
-    if (!keyword || keyword.trim() === '') return product.quantitySold || 0;
+    var baseScore = (product.sold || 0);
+    // Cộng điểm đánh giá sản phẩm (0-5 sao => nhân 50, tối đa 250 điểm)
+    baseScore += (product.avgStar || 0) * 50;
+
+    // Cộng điểm uy tín shop (0-5 sao => nhân 50, tối đa 250 điểm + bonus theo lượt đánh giá)
+    if (product.shop) {
+        baseScore += (product.shop.avgStar || 0) * 50;
+        baseScore += Math.min(product.shop.reviewCount || 0, 100); // Tối đa 100 điểm thưởng lượt đánh giá shop
+    }
+
+    if (!keyword || keyword.trim() === '') {
+        return baseScore;
+    }
+
     var kw = keyword.trim().toLowerCase();
     var name = (product.name || '').toLowerCase();
     var score = 0;
-    if (name === kw) score = 3000;
-    else if (name.startsWith(kw)) score = 2000;
-    else if (name.includes(kw)) score = 1000;
-    // bonus: từng từ trong keyword khớp riêng lẻ
+
+    // 1. Mức độ trùng khớp từ khoá (trọng số cao nhất)
+    if (name === kw) score = 5000;
+    else if (name.startsWith(kw)) score = 3000;
+    else if (name.includes(kw)) score = 1500;
+
     kw.split(/\s+/).forEach(function (word) {
         if (word.length > 1 && name.includes(word)) score += 100;
     });
-    // bonus lượng bán
-    score += Math.min(product.quantitySold || 0, 500);
-    return score;
+
+    // 2. Kết hợp với điểm nền của sản phẩm (lượng bán + đánh giá + uy tín shop)
+    return score + baseScore;
 }
 
-/* Highlight từ khoá trong tên sản phẩm */
+
 function highlightKeyword(text, keyword) {
     if (!keyword || keyword.trim() === '') return text;
     var escaped = keyword.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -369,16 +263,16 @@ function highlightKeyword(text, keyword) {
     return text.replace(regex, '<mark class="sp-highlight">$1</mark>');
 }
 
-/* Render một sản phẩm thành HTML card */
+
 function renderProductCard(p, keyword) {
     var highlighted = highlightKeyword(p.name, keyword);
     var oldPriceHtml = (p.oldPrice != null && p.oldPrice > 0)
         ? `<span class="oldprice">${formatmoney(p.oldPrice)}</span>` : '';
-    // sp-meta luôn render (min-height giữ card đồng đều dù rỗng)
+
     var starHtml = (p.avgStar > 0)
         ? `<span class="sp-star">★ ${Number(p.avgStar).toFixed(1)}</span>` : '';
-    var soldHtml = (p.quantitySold > 0)
-        ? `<span class="sp-sold">Đã bán ${p.quantitySold}</span>` : '';
+    var soldHtml = (p.sold > 0)
+        ? `<span class="sp-sold">Đã bán ${p.sold}</span>` : '';
     return `
     <div class="col-lg-20p col-md-3 col-sm-6 col-6">
         <div class="singleproduct">
@@ -405,24 +299,21 @@ async function sanPhamByThuongHieuAndDanhMuc(page) {
     var thuonghieu = uls.searchParams.get("thuonghieu");
     var danhmuc = uls.searchParams.get("danhmuc");
     var search = uls.searchParams.get("search");
+    var sort = uls.searchParams.get("sort");
 
     var fetchSize = search ? Math.max(size, 20) : size;
 
-    var url = 'http://localhost:8080/api/product/public/loc-san-pham?page=' + page
-        + '&size=' + fetchSize + '&sort=id,desc&small=0&large=1000000000';
-    if (thuonghieu != null) url += '&trademark=' + thuonghieu;
-    if (danhmuc != null) url += '&idcategory=' + danhmuc;
-    if (search != null) url += '&search=' + encodeURIComponent(search);
+    var url = 'http://localhost:8080/api/product/public/search-marketplace?page=' + page
+        + '&size=' + fetchSize;
+    if (search) url += '&keyword=' + encodeURIComponent(search);
+    if (thuonghieu) url += '&trademark=' + encodeURIComponent(thuonghieu);
+    if (danhmuc) url += '&categoryId=' + danhmuc;
+    if (sort) url += '&sort=' + sort;
 
     const response = await fetch(url);
     var result = await response.json();
     var list = result.content;
 
-    if (search) {
-        list.sort(function (a, b) {
-            return calcRelevanceScore(b, search) - calcRelevanceScore(a, search);
-        });
-    }
 
     var main = '';
     if (list.length === 0 && page === 0) {
@@ -477,25 +368,19 @@ async function locSanPham(page) {
     var danhmucEl = document.getElementById("danhmuc");
     var danhmuc = danhmucEl ? danhmucEl.value : '';
 
-    var url = 'http://localhost:8080/api/product/public/loc-san-pham'
+    var url = 'http://localhost:8080/api/product/public/search-marketplace'
         + '?page=' + page
         + '&size=' + fetchSize
         + '&sort=' + sort
         + '&small=' + small
         + '&large=' + large;
-    if (search) url += '&search=' + encodeURIComponent(search);
+    if (search) url += '&keyword=' + encodeURIComponent(search);
     if (thuonghieu) url += '&trademark=' + encodeURIComponent(thuonghieu);
-    if (danhmuc) url += '&idcategory=' + encodeURIComponent(danhmuc);
+    if (danhmuc) url += '&categoryId=' + encodeURIComponent(danhmuc);
 
     const response = await fetch(url);
     var result = await response.json();
     var list = result.content;
-
-    if (search && sort === 'id,desc') {
-        list.sort(function (a, b) {
-            return calcRelevanceScore(b, search) - calcRelevanceScore(a, search);
-        });
-    }
 
     var main = '';
     if (list.length === 0 && page === 0) {

@@ -136,7 +136,7 @@ function loadMenu() {
 
                 <!-- ORDER -->
                 <a class="header-action-item"
-                   href="timdonhang">
+                   href="/timdonhang">
 
                     <div class="header-action-icon">
                         <i class="fas fa-shipping-fast"></i>

@@ -315,6 +315,10 @@
       $toggleBtn.style.background = 'linear-gradient(135deg,#475569,#334155)';
       $toggleBtn.style.boxShadow = 'none';
       $toggleBtn.style.animation = 'none';
+      
+      const shopBtn = document.querySelector(".chat-float-btn");
+      if (shopBtn) shopBtn.style.display = "none";
+      
       setTimeout(() => $input.focus(), 350);
     }
     function closeChat() {
@@ -324,6 +328,9 @@
       $toggleBtn.style.background = '';
       $toggleBtn.style.boxShadow = '';
       $toggleBtn.style.animation = '';
+      
+      const shopBtn = document.querySelector(".chat-float-btn");
+      if (shopBtn) shopBtn.style.display = "";
     }
     function toggleChat() { cbIsOpen ? closeChat() : openChat(); }
 

@@ -434,8 +434,102 @@ body {
 }
 
 @media (max-width: 768px) {
+    .cd-wrap {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch !important;
+    }
+
     .cd-sidebar-slot {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 4px;
+        overflow: visible !important;
+    }
+
+    .cd-sidebar {
+        width: 100%;
+        max-width: 100%;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        overflow: visible !important;
+    }
+
+    #sidebarContent {
+        width: 100%;
+        max-width: 100%;
+        overflow: visible !important;
+    }
+
+    .cd-sidebar-hd {
         display: none;
+    }
+
+    .cd-cat-parent {
+        display: none;
+    }
+
+    .cd-cat-group {
+        padding: 0;
+        width: 100%;
+        max-width: 100%;
+        overflow: visible !important;
+    }
+
+    .cd-cat-group ul {
+        display: flex !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        gap: 8px !important;
+        padding: 4px 4px 10px !important;
+        margin: 0 !important;
+        -webkit-overflow-scrolling: touch;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .cd-cat-group ul::-webkit-scrollbar {
+        display: none;
+    }
+
+    .cd-cat-group ul {
+        scrollbar-width: none;
+    }
+
+    .cd-cat-item {
+        flex-shrink: 0;
+    }
+
+    .cd-cat-item a {
+        padding: 6px 14px !important;
+        border-radius: 20px !important;
+        border: 1px solid var(--border) !important;
+        background: var(--card) !important;
+        border-left: none !important;
+        font-size: 13px !important;
+        gap: 0 !important;
+        transition: all 0.2s ease;
+        box-shadow: var(--shadow);
+    }
+
+    .cd-cat-item a .dot {
+        display: none !important;
+    }
+
+    .cd-cat-item a:hover {
+        background: #fef7f5 !important;
+        color: var(--accent) !important;
+        border-color: var(--accent) !important;
+    }
+
+    .cd-cat-item a.active {
+        background: var(--accent) !important;
+        color: #fff !important;
+        border-color: var(--accent) !important;
+        font-weight: 600 !important;
     }
 
     .cd-grid {

@@ -190,8 +190,12 @@ public class ProductApi {
     @GetMapping("/public/search-marketplace")
     public ResponseEntity<?> searchMarketplace(
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String trademark,
+            @RequestParam(required = false) Double small,
+            @RequestParam(required = false) Double large,
             Pageable pageable) {
-        return ResponseEntity.ok(productService.searchMarketplace(keyword, pageable));
+        return ResponseEntity.ok(productService.searchMarketplace(keyword, categoryId, trademark, small, large, pageable));
     }
 
     // ==================== PRODUCT APPROVAL ====================

@@ -3247,8 +3247,8 @@ tr {
 /* ── 1. Container ── */
 .chat-bot-container {
     position: fixed;
-    bottom: 28px;
-    right: 320px;
+    bottom: 94px;
+    right: 24px;
     z-index: 9999;
     display: flex;
     flex-direction: column;
@@ -3297,8 +3297,8 @@ tr {
 /* ── 3. Chatbox ── */
 .chat-bot-chatbox {
     position: fixed;
-    bottom: 90px;
-    right: 320px;
+    bottom: 160px;
+    right: 24px;
     width: 370px;
     height: 560px;
     display: flex;
@@ -3734,14 +3734,14 @@ tr {
     .chat-bot-chatbox {
         width: 94vw !important;
         height: 76vh !important;
-        bottom: 84px !important;
+        bottom: 150px !important;
         right: 3vw !important;
         left: 3vw !important;
         border-radius: 20px !important;
     }
     .chat-bot-container {
-        right: 14px !important;
-        bottom: 14px !important;
+        right: 20px !important;
+        bottom: 90px !important;
     }
 }
 

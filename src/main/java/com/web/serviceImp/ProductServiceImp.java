@@ -348,7 +348,12 @@ public class ProductServiceImp implements ProductService {
         if (idCategory != null && trademark != null) {
             page = productRepository.locSanPham(search, smallPrice, largePrice, trademark, idCategory, pageable);
         }
-        return page;
+        if (page == null) {
+            return new PageImpl<>(new ArrayList<>(), pageable, 0);
+        }
+        List<Product> originalList = page.getContent();
+        List<Product> diversifiedList = diversifyShops(originalList);
+        return new PageImpl<>(diversifiedList, pageable, page.getTotalElements());
     }
 
     @Override
@@ -452,19 +457,34 @@ public class ProductServiceImp implements ProductService {
     }
 
     @Override
-    public Page<Product> searchMarketplace(String keyword, Pageable pageable) {
+    public Page<Product> searchMarketplace(String keyword, Long categoryId, String trademarkName, Double small, Double large, Pageable pageable) {
         if (keyword == null) {
             keyword = "";
         }
 
-        // 1. Lấy dữ liệu tìm kiếm gốc
-        Page<Product> page = productRepository.searchMarketplace(keyword, pageable);
+        // Kiểm tra xem Pageable có chứa sắp xếp đặc biệt nào không (khác id,desc và unsorted)
+        boolean hasCustomSort = false;
+        if (pageable.getSort().isSorted()) {
+            for (org.springframework.data.domain.Sort.Order order : pageable.getSort()) {
+                if (!"id".equals(order.getProperty())) {
+                    hasCustomSort = true;
+                    break;
+                }
+            }
+        }
+
+        Page<Product> page;
+        if (hasCustomSort) {
+            // Sử dụng Query động hỗ trợ Sort được truyền vào
+            page = productRepository.searchMarketplaceWithDynamicSort(keyword, categoryId, trademarkName, small, large, pageable);
+        } else {
+            // Sử dụng Query tĩnh sắp xếp theo độ liên quan (bỏ Sort của pageable đi để tránh lỗi 500)
+            Pageable cleanPageable = org.springframework.data.domain.PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+            page = productRepository.searchMarketplaceWithRelevance(keyword, categoryId, trademarkName, small, large, cleanPageable);
+        }
+
         List<Product> originalList = page.getContent();
-
-        // 2. Áp dụng thuật toán trộn/xen kẽ sản phẩm
         List<Product> diversifiedList = diversifyShops(originalList);
-
-        // 3. Trả về PageImpl mới chứa danh sách thực thể Product đã phân tán
         return new PageImpl<>(diversifiedList, pageable, page.getTotalElements());
     }
 

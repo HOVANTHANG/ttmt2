@@ -6,27 +6,47 @@
     height: 58px;
     border-radius: 50%;
     border: none;
-    background: #ee4d2d;
+    background: linear-gradient(135deg, #ff6b4a, #ee4d2d);
     color: white;
     font-size: 24px;
     z-index: 9999;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+    box-shadow: 0 8px 24px rgba(238, 77, 45, 0.4);
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.chat-float-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 12px 28px rgba(238, 77, 45, 0.5);
+}
+
+.chat-float-btn:active {
+    transform: scale(0.97);
 }
 
 .chat-float-btn span {
     position: absolute;
-    top: -5px;
-    right: -5px;
-    min-width: 22px;
-    height: 22px;
+    top: -3px;
+    right: -3px;
+    min-width: 20px;
+    height: 20px;
     border-radius: 50%;
-    background: white;
+    background: #ffffff;
     color: #ee4d2d;
-    border: 1px solid #ee4d2d;
-    font-size: 12px;
-    line-height: 20px;
+    border: 2px solid #ee4d2d;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 16px;
     text-align: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes popup-slideUp {
+    from { opacity: 0; transform: translateY(20px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .chat-popup {
@@ -40,9 +60,41 @@
     z-index: 9998;
     display: none;
     grid-template-columns: 260px 1fr;
-    box-shadow: 0 10px 35px rgba(0, 0, 0, .25);
-    border-radius: 8px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.16);
+    border-radius: 16px;
     overflow: hidden;
+    animation: popup-slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.chat-back-btn {
+    display: none;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    cursor: pointer;
+    color: #888;
+    margin-right: 4px;
+    padding: 6px;
+    transition: color 0.2s;
+    line-height: 1;
+}
+
+.chat-back-btn:hover {
+    color: #ee4d2d;
+}
+
+.chat-room-list::-webkit-scrollbar {
+    width: 5px;
+}
+.chat-room-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+.chat-room-list::-webkit-scrollbar-thumb {
+    background: #e0e0e0;
+    border-radius: 4px;
+}
+.chat-room-list::-webkit-scrollbar-thumb:hover {
+    background: #cccccc;
 }
 
 /* ── Sidebar ── */
@@ -285,9 +337,52 @@
         width: auto;
         height: 78vh;
         grid-template-columns: 1fr;
+        border-radius: 20px;
     }
 
-    .chat-sidebar {
-        height: 200px;
+    /* By default on mobile, show sidebar (room list) and hide main (chat panel) */
+    .chat-popup .chat-sidebar {
+        display: flex;
+        height: 100%;
+        width: 100%;
+    }
+
+    .chat-popup .chat-main {
+        display: none;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* When .show-main class is applied, toggle visibility */
+    .chat-popup.show-main .chat-sidebar {
+        display: none;
+    }
+
+    .chat-popup.show-main .chat-main {
+        display: flex;
+        height: 100%;
+        width: 100%;
+    }
+
+    /* Show back button when inside active chat on mobile */
+    .chat-back-btn {
+        display: block;
+    }
+
+    .chat-float-btn {
+        right: 20px;
+        bottom: 20px;
+        width: 54px;
+        height: 54px;
+        font-size: 22px;
+    }
+
+    .chat-float-btn span {
+        top: -4px;
+        right: -4px;
+        min-width: 18px;
+        height: 18px;
+        font-size: 10px;
+        line-height: 14px;
     }
 }
