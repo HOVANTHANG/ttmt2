@@ -205,43 +205,62 @@ async function loadInvoice(page) {
         const list = result.content || [];
         const totalPage = result.totalPages || 0;
 
+        // Update resultCount badge
+        const countEl = document.getElementById("resultCount");
+        if (countEl) {
+            const total = result.totalElements !== undefined ? result.totalElements : list.length;
+            countEl.textContent = total + " đơn hàng";
+            countEl.style.display = "inline-block";
+        }
+
         let main = '';
-        for (let i = 0; i < list.length; i++) {
-            main += `
+        if (list.length === 0) {
+            main = `
                 <tr>
-                    <td>${list[i].id}</td>
-                    <td>${list[i].createdTime || ''}<br>${list[i].createdDate || ''}</td>
-                    <td>${list[i].address || ''}</td>
-                    <td>${formatmoney(list[i].totalAmount || 0)}</td>
-                    <td>${formatmoney(list[i].shipCost || 0)}</td>
-                    <td>
-                        ${list[i].payType === 'MOMO'
-                    ? '<span class="dathanhtoan">Đã thanh toán</span>'
-                    : '<span class="chuathanhtoan">Thanh toán khi nhận hàng (COD)</span>'}
-                    </td>
-                    <td>${list[i].statusInvoice || ''}</td>
-                    <td class="sticky-col">
-                        <div class="act-group">
-                            <button onclick="loadDetailInvoice(${list[i].id})"
-                               data-bs-toggle="modal"
-                               data-bs-target="#modaldeail"
-                               class="btn-act btn-act-blue" data-tip="Xem chi tiết">
-                                <i class="fa fa-eye"></i>
-                            </button>
-                            <button onclick="openStatus(${list[i].id},'${list[i].statusInvoice}')"
-                               data-bs-toggle="modal"
-                               data-bs-target="#capnhatdonhang"
-                               class="btn-act btn-act-teal" data-tip="Cập nhật">
-                                <i class="fa fa-edit"></i>
-                            </button>
-                            <a target="_blank" href="/seller/in-don?id=${list[i].id}"
-                               class="btn-act btn-act-purple" data-tip="In đơn">
-                                <i class="fa fa-print"></i>
-                            </a>
-                        </div>
+                    <td colspan="8" class="td-empty">
+                        <i class="fas fa-box-open" style="font-size:40px;display:block;margin-bottom:12px;opacity:0.35;"></i>
+                        <span>Không có đơn hàng nào</span>
                     </td>
                 </tr>
             `;
+        } else {
+            for (let i = 0; i < list.length; i++) {
+                main += `
+                    <tr>
+                        <td>${list[i].id}</td>
+                        <td>${list[i].createdTime || ''}<br>${list[i].createdDate || ''}</td>
+                        <td>${list[i].address || ''}</td>
+                        <td>${formatmoney(list[i].totalAmount || 0)}</td>
+                        <td>${formatmoney(list[i].shipCost || 0)}</td>
+                        <td>
+                            ${list[i].payType === 'MOMO'
+                        ? '<span class="dathanhtoan">Đã thanh toán</span>'
+                        : '<span class="chuathanhtoan">Thanh toán khi nhận hàng (COD)</span>'}
+                        </td>
+                        <td>${list[i].statusInvoice || ''}</td>
+                        <td class="sticky-col">
+                            <div class="act-group">
+                                <button onclick="loadDetailInvoice(${list[i].id})"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#modaldeail"
+                                   class="btn-act btn-act-blue" data-tip="Xem chi tiết">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                                <button onclick="openStatus(${list[i].id},'${list[i].statusInvoice}')"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#capnhatdonhang"
+                                   class="btn-act btn-act-teal" data-tip="Cập nhật">
+                                    <i class="fa fa-edit"></i>
+                                </button>
+                                <a target="_blank" href="/seller/in-don?id=${list[i].id}"
+                                   class="btn-act btn-act-purple" data-tip="In đơn">
+                                    <i class="fa fa-print"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
         }
 
         document.getElementById("listinvoice").innerHTML = main;
@@ -567,34 +586,53 @@ function searchInvoice(page = 0) {
         .then(res => res.json())
         .then(result => {
             var list = result.content || [];
-            var main = "";
+            
+            // Update resultCount badge
+            const countEl = document.getElementById("resultCount");
+            if (countEl) {
+                const total = result.totalElements !== undefined ? result.totalElements : list.length;
+                countEl.textContent = total + " đơn hàng";
+                countEl.style.display = "inline-block";
+            }
 
-            for (let i = 0; i < list.length; i++) {
-                main += `
-                <tr>
-                    <td>${list[i].id}</td>
-                    <td>${list[i].createdTime || ''}<br>${list[i].createdDate || ''}</td>
-                    <td>${list[i].address || ''}</td>
-                    <td>${formatmoney(list[i].totalAmount || 0)}</td>
-                    <td>${formatmoney(list[i].shipCost || 0)}</td>
-                    <td>
-                        ${list[i].payType == 'MOMO'
-                        ? '<span class="dathanhtoan">Đã thanh toán</span>'
-                        : '<span class="chuathanhtoan">Thanh toán khi nhận hàng (COD)</span>'}
-                    </td>
-                    <td>${list[i].statusInvoice || ''}</td>
-                    <td class="sticky-col">
-                        <div class="act-group">
-                            <button onclick="loadDetailInvoice(${list[i].id})"
-                               data-bs-toggle="modal"
-                               data-bs-target="#modaldeail"
-                               class="btn-act btn-act-blue" data-tip="Xem chi tiết">
-                                <i class="fa fa-eye"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
+            var main = "";
+            if (list.length === 0) {
+                main = `
+                    <tr>
+                        <td colspan="8" class="td-empty">
+                            <i class="fas fa-box-open" style="font-size:40px;display:block;margin-bottom:12px;opacity:0.35;"></i>
+                            <span>Không tìm thấy hóa đơn nào</span>
+                        </td>
+                    </tr>
+                `;
+            } else {
+                for (let i = 0; i < list.length; i++) {
+                    main += `
+                    <tr>
+                        <td>${list[i].id}</td>
+                        <td>${list[i].createdTime || ''}<br>${list[i].createdDate || ''}</td>
+                        <td>${list[i].address || ''}</td>
+                        <td>${formatmoney(list[i].totalAmount || 0)}</td>
+                        <td>${formatmoney(list[i].shipCost || 0)}</td>
+                        <td>
+                            ${list[i].payType == 'MOMO'
+                            ? '<span class="dathanhtoan">Đã thanh toán</span>'
+                            : '<span class="chuathanhtoan">Thanh toán khi nhận hàng (COD)</span>'}
+                        </td>
+                        <td>${list[i].statusInvoice || ''}</td>
+                        <td class="sticky-col">
+                            <div class="act-group">
+                                <button onclick="loadDetailInvoice(${list[i].id})"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#modaldeail"
+                                   class="btn-act btn-act-blue" data-tip="Xem chi tiết">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                }
             }
 
             document.getElementById("listinvoice").innerHTML = main;

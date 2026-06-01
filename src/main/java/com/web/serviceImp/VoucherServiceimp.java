@@ -137,6 +137,9 @@ public class VoucherServiceimp implements VoucherService {
         if (currentUser == null || currentUser.getShop() == null) {
             throw new MessageException("Tài khoản seller chưa có shop");
         }
+        if (currentUser.getShop().getStatus() == com.web.enums.ShopStatus.LOCKED) {
+            throw new MessageException("Cửa hàng của bạn đang bị khóa bởi Admin. Không thể thực hiện thao tác này.");
+        }
         Optional<Voucher> ex = voucherRepository.findByCode(voucher.getCode());
         if (ex.isPresent()) {
             throw new MessageException("Mã voucher đã tồn tại");
@@ -150,6 +153,9 @@ public class VoucherServiceimp implements VoucherService {
         com.web.entity.User currentUser = userUtils.getUserWithAuthority();
         if (currentUser == null || currentUser.getShop() == null) {
             throw new MessageException("Tài khoản seller chưa có shop");
+        }
+        if (currentUser.getShop().getStatus() == com.web.enums.ShopStatus.LOCKED) {
+            throw new MessageException("Cửa hàng của bạn đang bị khóa bởi Admin. Không thể thực hiện thao tác này.");
         }
         // Kiểm tra voucher này có thuộc shop của seller không
         Voucher exist = voucherRepository.findById(voucher.getId())

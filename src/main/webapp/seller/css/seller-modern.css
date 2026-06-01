@@ -36,6 +36,10 @@
     100% { box-shadow: 0 0 0 0 rgba(13,148,136,0); }
 }
 
+#layoutSidenav_content {
+    justify-content: flex-start !important;
+}
+
 #layoutSidenav_content main,
 .main { animation: fadeInUp .4s ease both; }
 
@@ -479,7 +483,7 @@ body {
 
 /* ── Filter bar ── */
 .filterdonhang {
-    gap: 12px;
+    gap: 0 !important;
 }
 
 .filterdonhang label {

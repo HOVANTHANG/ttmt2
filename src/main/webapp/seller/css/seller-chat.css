@@ -260,3 +260,70 @@
    .seller-chat-footer button:hover {
        opacity: .88;
    }
+
+   .chat-back-btn {
+       display: none;
+       border: none;
+       background: transparent;
+       font-size: 18px;
+       color: #64748b;
+       padding: 4px 8px;
+       margin-right: 8px;
+       cursor: pointer;
+       align-items: center;
+       justify-content: center;
+       transition: color .2s;
+   }
+
+   .chat-back-btn:hover {
+       color: #0d9488;
+   }
+
+   @media (max-width: 768px) {
+       .seller-chat-page {
+           height: calc(100vh - 57px);
+       }
+
+       .seller-chat-wrapper {
+           grid-template-columns: 1fr;
+           margin: 0;
+           border-radius: 0;
+           border: none;
+           height: 100%;
+       }
+
+       .chat-left {
+           display: flex;
+           width: 100%;
+           border-right: none;
+       }
+
+       .chat-panel {
+           display: none;
+           width: 100%;
+       }
+
+       .seller-chat-wrapper.show-chat .chat-left {
+           display: none;
+       }
+
+       .seller-chat-wrapper.show-chat .chat-panel {
+           display: flex;
+       }
+
+       .chat-back-btn {
+           display: flex;
+       }
+
+       .chat-panel-header {
+           padding: 12px 16px;
+       }
+
+       .seller-chat-body {
+           padding: 14px 16px;
+       }
+
+       .seller-chat-footer {
+           padding: 10px 12px;
+       }
+   }

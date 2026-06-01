@@ -48,7 +48,7 @@ public class AdminShopApi {
     public ResponseEntity<?> lockShop(@PathVariable Long id) {
         Shop shop = shopRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy shop"));
-        shop.setStatus(ShopStatus.REJECTED);
+        shop.setStatus(ShopStatus.LOCKED);
         shopRepository.save(shop);
         // Khóa tất cả sản phẩm của shop (dùng locked, KHÔNG đụng vào deleted)
         long count = productRepository.lockAllByShopId(id);

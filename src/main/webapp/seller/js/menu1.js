@@ -184,13 +184,90 @@ $(document).ready(function () {
             headers: { "Authorization": "Bearer " + t }
         }).then(function (r) { return r.ok ? r.json() : null; })
             .then(function (d) {
-                if (d && d.shopName) {
-                    var el = document.getElementById("topbarShopName");
-                    if (el) el.textContent = d.shopName;
-                    var sid = document.getElementById("shopNameSidebar");
-                    if (sid) sid.textContent = d.shopName;
+                if (d) {
+                    if (d.shopName) {
+                        var el = document.getElementById("topbarShopName");
+                        if (el) el.textContent = d.shopName;
+                        var sid = document.getElementById("shopNameSidebar");
+                        if (sid) sid.textContent = d.shopName;
+                    }
+                    if (d.status === "LOCKED") {
+                        // Prepend lock banner
+                        var contentArea = document.getElementById("layoutSidenav_content");
+                        if (contentArea && !document.getElementById("shop-locked-banner")) {
+                            var banner = document.createElement("div");
+                            banner.id = "shop-locked-banner";
+                            banner.style.cssText = "background:#fee2e2; border-bottom:1px solid #fca5a5; color:#b91c1c; padding:14px 20px; font-weight:700; text-align:center; font-size:14px; position:sticky; top:0; z-index:9999;";
+                            banner.innerHTML = '<i class="fas fa-lock" style="margin-right:8px;"></i> Cửa hàng của bạn đã bị khóa bởi Admin. Các tính năng thêm sản phẩm, thêm voucher và nhắn tin đã bị vô hiệu hóa.';
+                            contentArea.insertBefore(banner, contentArea.firstChild);
+                        }
+                        // Disable actions
+                        disableSellerActions();
+                    }
                 }
             }).catch(function () { });
+    }
+
+    function disableSellerActions() {
+        const currentPath = window.location.pathname;
+        
+        if (currentPath.includes("/seller/addproduct") || currentPath.includes("/seller/addvoucher") || currentPath.includes("/seller/addimportproduct")) {
+            const formElements = document.querySelectorAll("input, textarea, select, button:not(#sidebarToggle):not(#btnOpenShopModal)");
+            formElements.forEach(el => {
+                el.disabled = true;
+                el.style.opacity = "0.6";
+                el.style.cursor = "not-allowed";
+            });
+            
+            const customUploads = document.querySelectorAll(".btn-upload, .upload-btn, .avatar-pick-btn");
+            customUploads.forEach(el => {
+                el.style.pointerEvents = "none";
+                el.style.opacity = "0.6";
+            });
+            
+            const mainContent = document.querySelector("main");
+            if (mainContent) {
+                const overlay = document.createElement("div");
+                overlay.style.cssText = "background:rgba(254,226,226,0.9); border:1px solid #fca5a5; border-radius:12px; padding:16px; margin-bottom:20px; color:#b91c1c; font-weight:600; display:flex; align-items:center; gap:10px;";
+                overlay.innerHTML = '<i class="fas fa-exclamation-triangle" style="font-size:20px;"></i> <div>Trang này đã bị vô hiệu hóa vì cửa hàng của bạn đang bị khóa bởi Admin.</div>';
+                mainContent.insertBefore(overlay, mainContent.firstChild);
+            }
+        }
+        
+        if (currentPath.includes("/seller/product") || currentPath.includes("/seller/voucher")) {
+            const addButtons = document.querySelectorAll("a[href*='addproduct'], a[href*='addvoucher'], button[onclick*='add'], a[href*='addimport']");
+            addButtons.forEach(el => {
+                el.style.pointerEvents = "none";
+                el.style.opacity = "0.5";
+                el.style.cursor = "not-allowed";
+                el.removeAttribute("href");
+                el.onclick = function(e) { e.preventDefault(); return false; };
+            });
+            
+            const actionButtons = document.querySelectorAll(".btn-edit, .btn-delete, button[onclick*='edit'], button[onclick*='delete']");
+            actionButtons.forEach(el => {
+                el.style.pointerEvents = "none";
+                el.style.opacity = "0.5";
+                el.style.cursor = "not-allowed";
+                el.onclick = function(e) { e.preventDefault(); return false; };
+            });
+        }
+    
+        if (currentPath.includes("/seller/seller-chat") || currentPath.includes("/seller/chat")) {
+            const chatInput = document.getElementById("sellerChatInput");
+            if (chatInput) {
+                chatInput.disabled = true;
+                chatInput.placeholder = "Cửa hàng đã bị khóa - Không thể nhắn tin";
+                chatInput.style.background = "#f1f5f9";
+            }
+            const sendBtn = document.querySelector(".seller-chat-footer button");
+            if (sendBtn) {
+                sendBtn.disabled = true;
+                sendBtn.style.opacity = "0.6";
+                sendBtn.style.cursor = "not-allowed";
+                sendBtn.onclick = function(e) { e.preventDefault(); return false; };
+            }
+        }
     }
 
     function injectShopModal() {
@@ -466,8 +543,8 @@ function renderShopView(d) {
     // Status badge
     var statusEl = document.getElementById("__sv_status");
     if (statusEl) {
-        var cls = d.status === "APPROVED" ? "approved" : (d.status === "PENDING" ? "pending" : "rejected");
-        var label = d.status === "APPROVED" ? "✓ Đã duyệt" : (d.status === "PENDING" ? "⏳ Chờ duyệt" : "✗ Từ chối");
+        var cls = d.status === "APPROVED" ? "approved" : (d.status === "PENDING" ? "pending" : (d.status === "LOCKED" ? "rejected" : "rejected"));
+        var label = d.status === "APPROVED" ? "✓ Đã duyệt" : (d.status === "PENDING" ? "⏳ Chờ duyệt" : (d.status === "LOCKED" ? "🔒 Đã khóa" : "✗ Từ chối"));
         statusEl.innerHTML = '<span class="__sm-badge ' + cls + '">' + label + '</span>';
     }
 }

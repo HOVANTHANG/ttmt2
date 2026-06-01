@@ -155,7 +155,7 @@ public class UserApi {
         }
 
         // shop chưa approved
-        if (user.getShop().getStatus() != ShopStatus.APPROVED) {
+        if (user.getShop().getStatus() == ShopStatus.REJECTED) {
 
             return new ResponseEntity<>(
                     "Shop chưa được admin duyệt",

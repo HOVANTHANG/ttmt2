@@ -94,6 +94,10 @@ public class ChatService1 {
             throw new RuntimeException("Seller chưa có shop");
         }
 
+        if (seller.getShop().getStatus() == com.web.enums.ShopStatus.LOCKED) {
+            throw new RuntimeException("Cửa hàng của bạn đang bị khóa bởi Admin. Không thể thực hiện thao tác này.");
+        }
+
         ChatRoom room = chatRoomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng chat"));
 

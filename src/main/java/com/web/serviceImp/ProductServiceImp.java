@@ -9,6 +9,7 @@ import com.web.dto.response.ShopResponse;
 import com.web.entity.*;
 import com.web.enums.CategoryType;
 import com.web.enums.ProductStatus;
+import com.web.enums.ShopStatus;
 import com.web.exception.MessageException;
 import com.web.mapper.ProductMapper;
 import com.web.repository.*;
@@ -80,10 +81,15 @@ public class ProductServiceImp implements ProductService {
         }
 
         if ("ROLE_SELLER".equals(role)) {
-            if (currentUser.getShop() == null) {
+            Shop shop = currentUser.getShop();
+            if (shop == null) {
                 throw new MessageException("Tài khoản seller chưa có shop");
             }
-            return currentUser.getShop();
+            if (shop.getStatus() == ShopStatus.LOCKED) {
+                throw new MessageException(
+                        "Cửa hàng của bạn đang bị khóa bởi Admin. Không thể thực hiện thao tác này.");
+            }
+            return shop;
         }
 
         throw new MessageException("Bạn không có quyền thao tác sản phẩm");
@@ -457,12 +463,14 @@ public class ProductServiceImp implements ProductService {
     }
 
     @Override
-    public Page<Product> searchMarketplace(String keyword, Long categoryId, String trademarkName, Double small, Double large, Pageable pageable) {
+    public Page<Product> searchMarketplace(String keyword, Long categoryId, String trademarkName, Double small,
+            Double large, Pageable pageable) {
         if (keyword == null) {
             keyword = "";
         }
 
-        // Kiểm tra xem Pageable có chứa sắp xếp đặc biệt nào không (khác id,desc và unsorted)
+        // Kiểm tra xem Pageable có chứa sắp xếp đặc biệt nào không (khác id,desc và
+        // unsorted)
         boolean hasCustomSort = false;
         if (pageable.getSort().isSorted()) {
             for (org.springframework.data.domain.Sort.Order order : pageable.getSort()) {
@@ -476,11 +484,15 @@ public class ProductServiceImp implements ProductService {
         Page<Product> page;
         if (hasCustomSort) {
             // Sử dụng Query động hỗ trợ Sort được truyền vào
-            page = productRepository.searchMarketplaceWithDynamicSort(keyword, categoryId, trademarkName, small, large, pageable);
+            page = productRepository.searchMarketplaceWithDynamicSort(keyword, categoryId, trademarkName, small, large,
+                    pageable);
         } else {
-            // Sử dụng Query tĩnh sắp xếp theo độ liên quan (bỏ Sort của pageable đi để tránh lỗi 500)
-            Pageable cleanPageable = org.springframework.data.domain.PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
-            page = productRepository.searchMarketplaceWithRelevance(keyword, categoryId, trademarkName, small, large, cleanPageable);
+            // Sử dụng Query tĩnh sắp xếp theo độ liên quan (bỏ Sort của pageable đi để
+            // tránh lỗi 500)
+            Pageable cleanPageable = org.springframework.data.domain.PageRequest.of(pageable.getPageNumber(),
+                    pageable.getPageSize());
+            page = productRepository.searchMarketplaceWithRelevance(keyword, categoryId, trademarkName, small, large,
+                    cleanPageable);
         }
 
         List<Product> originalList = page.getContent();
