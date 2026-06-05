@@ -162,7 +162,7 @@
                                     th:text="${c.name}"></td>
                                 <td class="price-col">[[${#numbers.formatDecimal(c.price, 0, 'POINT', 0, 'POINT')}]] ₫
                                 </td>
-                                <td><span class="qty-badge" th:text="${c.quantitySold} + ' sản phẩm'">0</span></td>
+                                <td><span class="qty-badge" th:text="${c.sold} + ' sản phẩm'">0</span></td>
                             </tr>
                         </tbody>
                     </table>

@@ -187,11 +187,13 @@ public class InvoiceServiceImp implements InvoiceService {
         for (Cart c : carts) {
 
             ProductVariant variant = c.getProductVariant();
-            if (variant == null) throw new MessageException("Không tìm thấy biến thể sản phẩm");
-            if (variant.getProduct() == null) throw new MessageException("Không tìm thấy sản phẩm");
+            if (variant == null)
+                throw new MessageException("Không tìm thấy biến thể sản phẩm");
+            if (variant.getProduct() == null)
+                throw new MessageException("Không tìm thấy sản phẩm");
 
-            int cartQty    = (c.getQuantity()        != null) ? c.getQuantity()        : 0;
-            int currentQty = (variant.getQuantity()  != null) ? variant.getQuantity()  : 0;
+            int cartQty = (c.getQuantity() != null) ? c.getQuantity() : 0;
+            int currentQty = (variant.getQuantity() != null) ? variant.getQuantity() : 0;
 
             if (currentQty < cartQty) {
                 throw new MessageException("Sản phẩm \"" + variant.getProduct().getName() + "\" không đủ hàng");
@@ -233,7 +235,7 @@ public class InvoiceServiceImp implements InvoiceService {
         // Nếu có shopId: xóa đúng các cart item đã fetch (tránh lỗi MySQL DELETE+JOIN)
         // Nếu không: xóa toàn bộ
         if (shopId != null) {
-            cartRepository.deleteAll(carts);   // deleteAll(Iterable) → DELETE by ID, không dùng JOIN
+            cartRepository.deleteAll(carts); // deleteAll(Iterable) → DELETE by ID, không dùng JOIN
         } else {
             cartService.removeCart();
         }
@@ -499,8 +501,8 @@ public class InvoiceServiceImp implements InvoiceService {
         // trạng thái cũ
         StatusInvoice oldStatus = invoice.getStatusInvoice();
 
-        // update trạng thái mới
         invoice.setStatusInvoice(status);
+        invoice.setStatusUpdateDate(new Timestamp(System.currentTimeMillis()));
 
         invoiceRepository.save(invoice);
 
@@ -561,7 +563,7 @@ public class InvoiceServiceImp implements InvoiceService {
     public java.util.Map<String, Object> getAdminPendingInfo(Long lastSeenId) {
         Long count = invoiceRepository.countPendingForAdminSince(StatusInvoice.DANG_CHO_XAC_NHAN, lastSeenId);
         Long latestId = invoiceRepository.maxPendingIdForAdmin(StatusInvoice.DANG_CHO_XAC_NHAN);
-        
+
         java.util.Map<String, Object> response = new java.util.HashMap<>();
         response.put("count", count);
         response.put("latestId", latestId);
@@ -573,7 +575,7 @@ public class InvoiceServiceImp implements InvoiceService {
         Long shopId = getCurrentSellerShopId();
         Long count = invoiceRepository.countPendingForSellerSince(shopId, StatusInvoice.DANG_CHO_XAC_NHAN, lastSeenId);
         Long latestId = invoiceRepository.maxPendingIdBySellerShopAndStatus(shopId, StatusInvoice.DANG_CHO_XAC_NHAN);
-        
+
         java.util.Map<String, Object> response = new java.util.HashMap<>();
         response.put("count", count);
         response.put("latestId", latestId);

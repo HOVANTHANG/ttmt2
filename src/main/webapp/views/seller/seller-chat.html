@@ -74,7 +74,8 @@
 
                     <div class="chat-panel">
                         <div class="chat-panel-header">
-                            <button class="chat-back-btn" onclick="backToRoomList()"><i class="fas fa-chevron-left"></i></button>
+                            <button class="chat-back-btn" onclick="backToRoomList()"><i
+                                    class="fas fa-chevron-left"></i></button>
                             <div class="chat-panel-avatar"><i class="fas fa-user"></i></div>
                             <div>
                                 <h5 id="chatTitle">Chọn một khách hàng bên trái để bắt đầu trò chuyện</h5>
@@ -148,7 +149,6 @@
                         appendMsg(msg.content, false);
                     } else {
                         markUnread(incomingRoomId);
-                        // toastr.warning("Co tin nhan moi tu khach hang!");
                         toastr.success("Co tin nhan moi tu khach hang!");
                     }
                 });

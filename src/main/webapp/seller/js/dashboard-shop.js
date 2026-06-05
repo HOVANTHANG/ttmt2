@@ -168,7 +168,7 @@ async function loadRevenueChart(year) {
                         ticks: {
                             beginAtZero: true,
                             callback: function (value) {
-                                return Number(value).toLocaleString("vi-VN") + " đ";
+                                return formatmoney(value);
                             }
                         }
                     }]
@@ -237,7 +237,7 @@ async function loadProfitChart(year) {
                         ticks: {
                             beginAtZero: true,
                             callback: function (value) {
-                                return Number(value).toLocaleString("vi-VN") + " đ";
+                                return formatmoney(value);
                             }
                         }
                     }]

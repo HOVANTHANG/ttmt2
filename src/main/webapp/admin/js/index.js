@@ -1,5 +1,9 @@
 var token = localStorage.getItem("token");
 
+function formatmoney(value) {
+    return Number(value || 0).toLocaleString("vi-VN") + " đ";
+}
+
 function formatDollar(num) {
     var p = num.toFixed(2).split(".");
     return p[0].split("").reverse().reduce(function(acc, num, i, orig) {

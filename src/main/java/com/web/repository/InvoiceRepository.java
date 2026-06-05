@@ -53,7 +53,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
         public Double revenueByDate(Date ngay, Integer index);
 
         @Query(value = "select count(i.id) from invoice i\n" +
-                        "where i.status_invoice = ?2 and i.status_update_date = ?1", nativeQuery = true)
+                        "where i.status_invoice = ?2 and DATE(i.status_update_date) = ?1", nativeQuery = true)
         public Double numInvoiceToDay(Date ngay, Integer index);
 
         @Query("select i from Invoice i where i.createdDate >= ?1 and i.createdDate <= ?2 and i.statusInvoice = ?3")
