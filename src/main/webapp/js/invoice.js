@@ -1,4 +1,3 @@
-// ==================== GLOBALS ====================
 
 const BASE_URL = "http://localhost:8080";
 const EXCEPTION_CODE = 417;
@@ -8,8 +7,6 @@ var reviewStar = 5;
 var reviewImageUrls = [];
 var editingReviewId = null;
 var editingReviewType = null;
-
-// ==================== UTILITIES ====================
 
 function formatmoney(amount) {
     return Number(amount || 0).toLocaleString("vi-VN") + " ₫";
@@ -26,9 +23,7 @@ function getVariantDisplayName(variant) {
         .join(" - ") || "Biến thể mặc định";
 }
 
-/**
- * Wrapper fetch có Authorization header
- */
+
 async function authFetch(url, options = {}) {
     const tk = localStorage.getItem("token");
     return fetch(url, {

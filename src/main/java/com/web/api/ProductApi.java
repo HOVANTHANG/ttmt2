@@ -195,42 +195,8 @@ public class ProductApi {
             @RequestParam(required = false) Double small,
             @RequestParam(required = false) Double large,
             Pageable pageable) {
-        return ResponseEntity.ok(productService.searchMarketplace(keyword, categoryId, trademark, small, large, pageable));
+        return ResponseEntity
+                .ok(productService.searchMarketplace(keyword, categoryId, trademark, small, large, pageable));
     }
 
-    // ==================== PRODUCT APPROVAL ====================
-
-    @GetMapping("/admin/pending")
-    public ResponseEntity<?> getPendingProducts(
-            @RequestParam(value = "search", required = false, defaultValue = "") String search,
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Product> result = search.isBlank()
-                ? productRepository.findAllPending(pageable)
-                : productRepository.searchPending(search, pageable);
-        return ResponseEntity.ok(result);
-    }
-
-    @PostMapping("/admin/approve/{id}")
-    public ResponseEntity<?> approveProduct(@PathVariable Long id) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
-        product.setStatus(com.web.enums.ProductStatus.APPROVED);
-        product.setRejectedReason(null);
-        productRepository.save(product);
-        return ResponseEntity.ok(java.util.Map.of("message", "Sản phẩm đã được duyệt"));
-    }
-
-    @PostMapping("/admin/reject/{id}")
-    public ResponseEntity<?> rejectProduct(
-            @PathVariable Long id,
-            @RequestParam(required = false, defaultValue = "") String reason) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
-        product.setStatus(com.web.enums.ProductStatus.REJECTED);
-        product.setRejectedReason(reason.isBlank() ? null : reason);
-        productRepository.save(product);
-        return ResponseEntity.ok(java.util.Map.of("message", "Sản phẩm đã bị từ chối"));
-    }
 }

@@ -19,7 +19,7 @@ async function sendLoginRequestToBackend(accessToken) {
             localStorage.setItem("user", JSON.stringify(result.user));
             localStorage.setItem("token", result.token);
 
-            const role = result.user.role; // ✅ dùng role như login thường
+            const role = result.user.role;
             if (role === "ROLE_ADMIN") {
                 window.location.href = 'admin/index';
             } else if (role === "ROLE_USER") {
