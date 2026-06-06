@@ -1,7 +1,7 @@
-var size = 5;
+var size = 20;
 
 async function loadSanPhamBanChay(page) {
-    var url = 'http://localhost:8080/api/product/public/best-saler?page=' + page + '&size=' + size + '&sort=quantitySold,desc';
+    var url = 'http://localhost:8080/api/product/public/best-saler?page=' + page + '&size=' + size + '&sort=sold,desc';
     const response = await fetch(url, {
     });
     var result = await response.json();

@@ -10,7 +10,11 @@ public interface ShopCommentRepository extends JpaRepository<ShopComment, Long> 
 
     boolean existsByUserIdAndInvoiceIdAndShopId(Long userId, Long invoiceId, Long shopId);
 
+    boolean existsByUserIdAndShopId(Long userId, Long shopId);
+
     List<ShopComment> findByShopIdOrderByIdDesc(Long shopId);
 
     Optional<ShopComment> findByUserIdAndInvoiceIdAndShopId(Long userId, Long invoiceId, Long shopId);
+
+    List<ShopComment> findByUserIdAndShopId(Long userId, Long shopId);
 }

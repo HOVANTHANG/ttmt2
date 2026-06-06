@@ -10,7 +10,11 @@ public interface ProductCommentRepository extends JpaRepository<ProductComment, 
 
     boolean existsByUserIdAndInvoiceDetailId(Long userId, Long invoiceDetailId);
 
+    boolean existsByUserIdAndProductId(Long userId, Long productId);
+
     List<ProductComment> findByProductIdOrderByIdDesc(Long productId);
 
     Optional<ProductComment> findByUserIdAndInvoiceDetailId(Long userId, Long invoiceDetailId);
+
+    List<ProductComment> findByUserIdAndProductId(Long userId, Long productId);
 }

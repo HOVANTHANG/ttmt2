@@ -18,9 +18,9 @@ public interface ReviewService {
 
     List<ReviewResponse> findShopReviews(Long shopId);
 
-    ProductComment findMyProductReview(Long invoiceDetailId);
+    ReviewResponse findMyProductReview(Long invoiceDetailId);
 
-    ShopComment findMyShopReview(Long invoiceId, Long shopId);
+    ReviewResponse findMyShopReview(Long invoiceId, Long shopId);
 
     ProductComment updateProductReview(Long reviewId, ProductCommentRequest request);
 

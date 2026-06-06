@@ -34,6 +34,7 @@ body {
 /* ── Page wrapper ── */
 .cd-page {
     padding: 16px 0 60px;
+    min-height: 70vh;
 }
 
 /* ── Breadcrumb ── */

@@ -1,6 +1,5 @@
 package com.web.config;
 
-
 import com.cloudinary.Cloudinary;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -23,5 +22,4 @@ public class CloudConfig {
         cloudinary = new Cloudinary(config);
         return cloudinary;
     }
-
 }

@@ -28,6 +28,9 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     @Query("select c from Category c where (c.deleted is null or c.deleted = false)")
     List<Category> findAllNotDeleted();
 
+    @Query("select c from Category c where (c.deleted is null or c.deleted = false)")
+    Page<Category> findAllNotDeleted(Pageable pageable);
+
     @Query("select c from Category c where (c.deleted is null or c.deleted = false) and c.name like ?1")
     Page<Category> search(String search, Pageable pageable);
 

@@ -23,6 +23,43 @@ function getVariantDisplayName(variant) {
         .join(" - ") || "Biến thể mặc định";
 }
 
+function showModal(modalId) {
+    const modalEl = document.getElementById(modalId);
+    if (!modalEl) return;
+    let modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (!modalInstance) {
+        modalInstance = new bootstrap.Modal(modalEl);
+    }
+    modalInstance.show();
+}
+
+function hideModal(modalId) {
+    const modalEl = document.getElementById(modalId);
+    if (!modalEl) return;
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) {
+        modalInstance.hide();
+    }
+    
+    // Dọn dẹp sạch sẽ backdrop của Bootstrap 5 để tránh kẹt màn hình mờ
+    setTimeout(() => {
+        const modalsOpen = document.querySelectorAll('.modal.show').length;
+        if (modalsOpen === 0) {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        } else {
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            if (backdrops.length > modalsOpen) {
+                for (let i = modalsOpen; i < backdrops.length; i++) {
+                    backdrops[i].remove();
+                }
+            }
+        }
+    }, 350);
+}
+
 
 async function authFetch(url, options = {}) {
     const tk = localStorage.getItem("token");
@@ -244,7 +281,7 @@ async function openInvoiceDetail(invoiceId) {
         const [invoice, list] = await Promise.all([invoiceRes.json(), detailRes.json()]);
 
         renderInvoiceDetail(invoice, list);
-        new bootstrap.Modal(document.getElementById("invoiceDetailModal")).show();
+        showModal("invoiceDetailModal");
 
     } catch (e) {
         console.error("Lỗi openInvoiceDetail:", e);
@@ -368,7 +405,9 @@ async function checkReviewedButtons(invoice, list) {
             );
             if (!res.ok) return;
 
-            const review = await res.json();
+            const text = await res.text();
+            if (!text || text === "null") return;
+            const review = JSON.parse(text);
             if (!review?.id) return;
 
             const btn = document.getElementById("btnReviewProduct" + item.id);
@@ -400,7 +439,9 @@ async function checkReviewedButtons(invoice, list) {
             );
             if (!res.ok) return;
 
-            const review = await res.json();
+            const text = await res.text();
+            if (!text || text === "null") return;
+            const review = JSON.parse(text);
             if (!review?.id) return;
 
             const btn = document.getElementById(`btnReviewShop${invoice.id}_${shopId}`);
@@ -442,7 +483,7 @@ function _openReviewModal({ title, type, targetId, invoiceId = "", content = "",
     }
 
     setReviewStar(star);
-    new bootstrap.Modal(document.getElementById("reviewModal")).show();
+    showModal("reviewModal");
 }
 
 function openProductReview(invoiceDetailId) {
@@ -612,7 +653,7 @@ async function submitReview() {
 
         if (response.ok) {
             toastr.success(editingReviewId ? "Cập nhật đánh giá thành công" : "Đánh giá thành công");
-            bootstrap.Modal.getInstance(document.getElementById("reviewModal"))?.hide();
+            hideModal("reviewModal");
 
             const currentId = Number(document.getElementById("invoiceCodeText").innerText.replace("#", ""));
             if (currentId) openInvoiceDetail(currentId);

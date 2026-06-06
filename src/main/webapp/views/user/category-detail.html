@@ -71,7 +71,7 @@
         </div>
     </div>
 
-    <div class="container" id="footer"></div>
+    <div class="container" id="footer" style="display: none;"></div>
 
     <script>
         /* ══════════════════════════════════════
@@ -83,7 +83,7 @@
 
         let currentCategoryId = null;
         let currentPage = 0;
-        const PAGE_SIZE = 20;
+        const PAGE_SIZE = 40;
         let totalPages = 0;
         let currentSort = "default";
         let allCategories = [];
@@ -97,7 +97,8 @@
             currentCategoryId = getParam("id");
             await loadAllCategories();
             buildSidebar(currentCategoryId);
-            loadProducts(0);
+            await loadProducts(0);
+            document.getElementById("footer").style.display = "block";
         };
 
         /* ══════════════════════════════════════

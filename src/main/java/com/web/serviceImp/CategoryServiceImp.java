@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,7 +22,7 @@ public class CategoryServiceImp implements CategoryService {
 
     @Override
     public List<Category> findAllList() {
-        return categoryRepository.findAll();
+        return categoryRepository.findAllNotDeleted();
     }
 
     @Override
@@ -43,8 +44,21 @@ public class CategoryServiceImp implements CategoryService {
     }
 
     @Override
+    @Transactional
     public void delete(Long categoryId) {
-        categoryRepository.deleteById(categoryId);
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new MessageException("Không tìm thấy danh mục"));
+        softDeleteCategory(category);
+    }
+
+    private void softDeleteCategory(Category category) {
+        category.setDeleted(true);
+        categoryRepository.save(category);
+        if (category.getChildren() != null) {
+            for (Category child : category.getChildren()) {
+                softDeleteCategory(child);
+            }
+        }
     }
 
     @Override
@@ -58,13 +72,13 @@ public class CategoryServiceImp implements CategoryService {
 
     @Override
     public Page<Category> findAll(Pageable pageable) {
-        Page<Category> categories = categoryRepository.findAll(pageable);
+        Page<Category> categories = categoryRepository.findAllNotDeleted(pageable);
         return categories;
     }
 
     @Override
     public Page<Category> search(String param, Pageable pageable) {
-        Page<Category> categories = categoryRepository.findByParam("%" + param + "%", pageable);
+        Page<Category> categories = categoryRepository.search("%" + param + "%", pageable);
         return categories;
     }
 

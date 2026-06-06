@@ -293,20 +293,17 @@ public class ProductServiceImp implements ProductService {
     @Override
     public Page<Product> newProduct(Pageable pageable) {
         Page<Product> page = productRepository.newProduct(pageable);
-        return page;
+        List<Product> originalList = page.getContent();
+        List<Product> diversifiedList = diversifyShops(originalList);
+        return new PageImpl<>(diversifiedList, pageable, page.getTotalElements());
     }
-
-    // @Override
-    // public Page<Product> phuKien(Pageable pageable) {
-    // Page<Product> page = productRepository.findByCategoryId(categoryId,
-    // pageable);
-    // return page;
-    // }
 
     @Override
     public Page<Product> bestsaler(Pageable pageable) {
-        Page<Product> page = productRepository.bestSalerByCategory(CategoryType.DIEN_TU, pageable);
-        return page;
+        Page<Product> page = productRepository.bestSaler(pageable);
+        List<Product> originalList = page.getContent();
+        List<Product> diversifiedList = diversifyShops(originalList);
+        return new PageImpl<>(diversifiedList, pageable, page.getTotalElements());
     }
 
     @Override

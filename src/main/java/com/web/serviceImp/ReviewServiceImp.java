@@ -68,16 +68,17 @@ public class ReviewServiceImp implements ReviewService {
             throw new MessageException("Chỉ được đánh giá sau khi đã nhận hàng");
         }
 
-        if (productCommentRepository.existsByUserIdAndInvoiceDetailId(user.getId(), detail.getId())) {
+        if (detail.getProductVariant() == null || detail.getProductVariant().getProduct() == null) {
+            throw new MessageException("Sản phẩm không hợp lệ");
+        }
+
+        Product product = detail.getProductVariant().getProduct();
+        if (productCommentRepository.existsByUserIdAndProductId(user.getId(), product.getId())) {
             throw new MessageException("Bạn đã đánh giá sản phẩm này rồi");
         }
 
         if (request.getStar() == null || request.getStar() < 1 || request.getStar() > 5) {
             throw new MessageException("Số sao phải từ 1 đến 5");
-        }
-
-        if (detail.getProductVariant() == null || detail.getProductVariant().getProduct() == null) {
-            throw new MessageException("Sản phẩm không hợp lệ");
         }
 
         ProductComment comment = new ProductComment();
@@ -139,11 +140,7 @@ public class ReviewServiceImp implements ReviewService {
             throw new MessageException("Shop này không thuộc đơn hàng của bạn");
         }
 
-        if (shopCommentRepository.existsByUserIdAndInvoiceIdAndShopId(
-                user.getId(),
-                invoice.getId(),
-                shop.getId())) {
-
+        if (shopCommentRepository.existsByUserIdAndShopId(user.getId(), shop.getId())) {
             throw new MessageException("Bạn đã đánh giá shop này rồi");
         }
 
@@ -235,21 +232,77 @@ public class ReviewServiceImp implements ReviewService {
     }
 
     @Override
-    public ProductComment findMyProductReview(Long invoiceDetailId) {
+    public ReviewResponse findMyProductReview(Long invoiceDetailId) {
         User user = userUtils.getUserWithAuthority();
+        if (user == null) {
+            return null;
+        }
 
-        return productCommentRepository
-                .findByUserIdAndInvoiceDetailId(user.getId(), invoiceDetailId)
-                .orElse(null);
+        InvoiceDetail detail = invoiceDetailRepository.findById(invoiceDetailId).orElse(null);
+        if (detail == null || detail.getProductVariant() == null || detail.getProductVariant().getProduct() == null) {
+            return null;
+        }
+
+        List<ProductComment> list = productCommentRepository
+                .findByUserIdAndProductId(user.getId(), detail.getProductVariant().getProduct().getId());
+        if (list.isEmpty()) {
+            return null;
+        }
+        ProductComment c = list.get(0);
+
+        ReviewResponse response = new ReviewResponse();
+        response.setId(c.getId());
+        response.setStar(c.getStar());
+        response.setContent(c.getContent());
+        response.setCreatedDate(c.getCreatedDate());
+        response.setCreatedTime(c.getCreatedTime());
+
+        if (c.getUser() != null) {
+            response.setUserId(c.getUser().getId());
+            response.setUsername(c.getUser().getUsername());
+            response.setFullname(c.getUser().getFullname());
+        }
+
+        List<String> images = new ArrayList<>();
+        if (c.getProductCommentImages() != null) {
+            for (ProductCommentImage img : c.getProductCommentImages()) {
+                images.add(img.getLinkImage());
+            }
+        }
+        response.setImages(images);
+
+        return response;
     }
 
     @Override
-    public ShopComment findMyShopReview(Long invoiceId, Long shopId) {
+    public ReviewResponse findMyShopReview(Long invoiceId, Long shopId) {
         User user = userUtils.getUserWithAuthority();
+        if (user == null) {
+            return null;
+        }
 
-        return shopCommentRepository
-                .findByUserIdAndInvoiceIdAndShopId(user.getId(), invoiceId, shopId)
-                .orElse(null);
+        List<ShopComment> list = shopCommentRepository
+                .findByUserIdAndShopId(user.getId(), shopId);
+        if (list.isEmpty()) {
+            return null;
+        }
+        ShopComment c = list.get(0);
+
+        ReviewResponse response = new ReviewResponse();
+        response.setId(c.getId());
+        response.setStar(c.getStar());
+        response.setContent(c.getContent());
+        response.setCreatedDate(c.getCreatedDate());
+        response.setCreatedTime(c.getCreatedTime());
+
+        if (c.getUser() != null) {
+            response.setUserId(c.getUser().getId());
+            response.setUsername(c.getUser().getUsername());
+            response.setFullname(c.getUser().getFullname());
+        }
+        response.setImages(new ArrayList<>());
+
+        return response;
     }
 
     @Override
