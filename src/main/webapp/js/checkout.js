@@ -340,7 +340,7 @@ async function getShopFromGHN(shopId) {
 }
 
 async function tinhPhiGHN(fromDistrictId, fromWardCode, toDistrictId, toWardCode, qty) {
-    const weight = Math.max(100, qty * 500);
+    const weight = qty * 500 > 3000 ? 3000 : qty * 500;
     let url = `/api/shipping/tinh-phi?toDistrictId=${toDistrictId}&toWardCode=${toWardCode}&weight=${weight}`;
     if (fromDistrictId) url += `&fromDistrictId=${fromDistrictId}&fromWardCode=${fromWardCode}`;
     const res = await fetch(url);

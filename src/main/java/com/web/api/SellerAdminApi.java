@@ -9,6 +9,7 @@ import com.web.repository.AuthorityRepository;
 import com.web.repository.ShopRepository;
 import com.web.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,13 +22,16 @@ public class SellerAdminApi {
     private final ShopRepository shopRepository;
     private final UserRepository userRepository;
     private final AuthorityRepository authorityRepository;
+    private final SimpMessagingTemplate simpMessagingTemplate;
 
     public SellerAdminApi(ShopRepository shopRepository,
             UserRepository userRepository,
-            AuthorityRepository authorityRepository) {
+            AuthorityRepository authorityRepository,
+            SimpMessagingTemplate simpMessagingTemplate) {
         this.shopRepository = shopRepository;
         this.userRepository = userRepository;
         this.authorityRepository = authorityRepository;
+        this.simpMessagingTemplate = simpMessagingTemplate;
     }
 
     @GetMapping("/pending")
@@ -65,6 +69,14 @@ public class SellerAdminApi {
         shop.setStatus(ShopStatus.APPROVED);
         shopRepository.save(shop);
 
+        if (owner != null) {
+            try {
+                simpMessagingTemplate.convertAndSendToUser(owner.getUsername(), "/queue/messages", "SHOP_APPROVED");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
         return ResponseEntity.ok(Map.of("message", "Shop đã được duyệt thành công"));
     }
 
@@ -73,7 +85,17 @@ public class SellerAdminApi {
         Shop shop = shopRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy shop"));
 
+        User owner = shop.getOwner();
+
         shopRepository.delete(shop);
+
+        if (owner != null) {
+            try {
+                simpMessagingTemplate.convertAndSendToUser(owner.getUsername(), "/queue/messages", "SHOP_REJECTED");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
         return ResponseEntity.ok(Map.of("message", "Shop đã bị từ chối"));
     }

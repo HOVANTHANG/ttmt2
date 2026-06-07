@@ -119,5 +119,5 @@ function buildSkeleton(count) {
 function scrollCategory(direction) {
     const grid = document.getElementById("categoryGrid");
     if (!grid) return;
-    grid.scrollBy({ left: direction * 560, behavior: "smooth" });
+    grid.scrollBy({ left: direction * 500, behavior: "smooth" });
 }

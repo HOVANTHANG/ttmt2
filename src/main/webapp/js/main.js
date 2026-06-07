@@ -429,7 +429,28 @@ function connect(username) {
         stompClient.connect({ username: username, }, function () {
             console.log('Web Socket is connected');
             stompClient.subscribe('/users/queue/messages', function (message) {
-                appendRecivers(message.body)
+                if (message.body === 'SHOP_APPROVED') {
+                    showCustomModal({
+                        title: "Đăng ký thành công!",
+                        message: "Tài khoản của bạn đã được duyệt làm Người bán. Vui lòng đăng nhập lại để cập nhật quyền hạn mới.",
+                        type: "success",
+                        confirmText: "Đăng nhập lại",
+                        onConfirm: function() {
+                            localStorage.removeItem("token");
+                            localStorage.removeItem("user");
+                            window.location.replace('dangnhap');
+                        }
+                    });
+                } else if (message.body === 'SHOP_REJECTED') {
+                    showCustomModal({
+                        title: "Yêu cầu bị từ chối",
+                        message: "Rất tiếc, yêu cầu đăng ký mở shop của bạn đã bị từ chối.",
+                        type: "error",
+                        confirmText: "Đóng"
+                    });
+                } else {
+                    appendRecivers(message.body);
+                }
             });
         });
     } catch (e) {
@@ -648,4 +669,129 @@ async function checkSellerStatus() {
 
 function goSellerRegister() {
     window.location.href = "/sellerregister";
+}
+
+function showCustomModal({ title, message, type, confirmText, onConfirm }) {
+    if (!document.getElementById("custom-modal-style")) {
+        const style = document.createElement("style");
+        style.id = "custom-modal-style";
+        style.innerHTML = `
+            .custom-modal-overlay {
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(15, 23, 42, 0.6);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 999999;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+            .custom-modal-overlay.show {
+                opacity: 1;
+            }
+            .custom-modal-card {
+                background: #ffffff;
+                border-radius: 16px;
+                width: 90%;
+                max-width: 420px;
+                padding: 32px 24px;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                text-align: center;
+                transform: scale(0.9);
+                transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            .custom-modal-overlay.show .custom-modal-card {
+                transform: scale(1);
+            }
+            .custom-modal-icon {
+                width: 64px;
+                height: 64px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 20px;
+                font-size: 28px;
+            }
+            .custom-modal-icon.success {
+                background: #ecfdf5;
+                color: #10b981;
+                border: 2px solid #a7f3d0;
+            }
+            .custom-modal-icon.error {
+                background: #fef2f2;
+                color: #ef4444;
+                border: 2px solid #fca5a5;
+            }
+            .custom-modal-title {
+                font-size: 20px;
+                font-weight: 700;
+                color: #0f172a;
+                margin-bottom: 12px;
+                font-family: 'Inter', sans-serif;
+            }
+            .custom-modal-message {
+                font-size: 14.5px;
+                color: #475569;
+                line-height: 1.6;
+                margin-bottom: 24px;
+                font-family: 'Inter', sans-serif;
+            }
+            .custom-modal-btn {
+                background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+                color: #ffffff;
+                border: none;
+                padding: 12px 30px;
+                font-size: 14.5px;
+                font-weight: 600;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                font-family: 'Inter', sans-serif;
+                box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2);
+            }
+            .custom-modal-btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 6px 12px -1px rgba(13, 148, 136, 0.3);
+                opacity: 0.95;
+            }
+            .custom-modal-btn:active {
+                transform: translateY(0);
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    const overlay = document.createElement("div");
+    overlay.className = "custom-modal-overlay";
+
+    const iconHtml = type === "success" 
+        ? '<div class="custom-modal-icon success"><i class="fas fa-check"></i></div>'
+        : '<div class="custom-modal-icon error"><i class="fas fa-times"></i></div>';
+
+    overlay.innerHTML = `
+        <div class="custom-modal-card">
+            ${iconHtml}
+            <div class="custom-modal-title">${title}</div>
+            <div class="custom-modal-message">${message}</div>
+            <button class="custom-modal-btn" id="custom-modal-confirm-btn">${confirmText || "Đồng ý"}</button>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    overlay.offsetHeight;
+    overlay.classList.add("show");
+
+    const btn = overlay.querySelector("#custom-modal-confirm-btn");
+    btn.addEventListener("click", () => {
+        overlay.classList.remove("show");
+        setTimeout(() => {
+            document.body.removeChild(overlay);
+            if (typeof onConfirm === "function") onConfirm();
+        }, 300);
+    });
 }
