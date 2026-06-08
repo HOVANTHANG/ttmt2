@@ -429,7 +429,17 @@ public class ProductServiceImp implements ProductService {
         }
 
         // 1. Lấy dữ liệu đã được sắp xếp theo độ ưu tiên từ DB
-        Page<Product> page = productRepository.findByCategoryIdIncludingChildren(categoryId, pageable);
+        boolean hasCustomSort = false;
+        if (pageable.getSort().isSorted()) {
+            hasCustomSort = true;
+        }
+
+        Page<Product> page;
+        if (hasCustomSort) {
+            page = productRepository.findByCategoryIdIncludingChildrenWithDynamicSort(categoryId, pageable);
+        } else {
+            page = productRepository.findByCategoryIdIncludingChildren(categoryId, pageable);
+        }
         List<Product> originalList = page.getContent();
 
         // 2. Áp dụng thuật toán trộn/xen kẽ để phân tán các sản phẩm trùng Shop

@@ -235,6 +235,30 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Page<Product> findByCategoryIdIncludingChildren(@Param("categoryId") Long categoryId, Pageable pageable);
 
+    @Query(value = """
+                select distinct p
+                from Product p
+                join fetch p.category c
+                left join fetch c.parent parent
+                join fetch p.shop s
+                where p.deleted = false
+                and s.status = com.web.enums.ShopStatus.APPROVED
+                and p.status = com.web.enums.ProductStatus.APPROVED
+                and p.locked = false
+                and (c.id = :categoryId or parent.id = :categoryId)
+            """, countQuery = """
+                select count(distinct p)
+                from Product p
+                join p.category c
+                left join c.parent parent
+                join p.shop s
+                where p.deleted = false
+                and s.status = com.web.enums.ShopStatus.APPROVED
+                and p.status = com.web.enums.ProductStatus.APPROVED
+                and (c.id = :categoryId or parent.id = :categoryId)
+            """)
+    Page<Product> findByCategoryIdIncludingChildrenWithDynamicSort(@Param("categoryId") Long categoryId, Pageable pageable);
+
     Long countByShopId(Long shopId);
 
     /** Lấy tất cả sản phẩm của shop (dùng khi khóa/mở khóa shop) */

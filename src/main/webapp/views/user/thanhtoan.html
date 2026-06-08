@@ -124,18 +124,8 @@
                         </div>
                         <div class="ck-card-body">
                             <div class="pay-options">
-                                <div class="pay-option selected" onclick="selectPay(this,'momo')">
-                                    <input value="momo" id="momo" type="radio" name="paytype" checked>
-                                    <div class="pay-radio">
-                                        <div class="pay-radio-dot"></div>
-                                    </div>
-                                    <div class="pay-info">
-                                        <div class="pay-name">Ví MoMo</div>
-                                        <div class="pay-desc">Thanh toán nhanh qua ứng dụng MoMo</div>
-                                    </div>
-                                    <img src="image/momo.webp" class="pay-logo" alt="MoMo">
-                                </div>
-                                <div class="pay-option" onclick="selectPay(this,'code')">
+
+                                <div class="pay-option selected" onclick="selectPay(this,'code')">
                                     <input value="cod" id="code" type="radio" name="paytype">
                                     <div class="pay-radio">
                                         <div class="pay-radio-dot"></div>
@@ -145,6 +135,17 @@
                                         <div class="pay-desc">Trả tiền mặt khi nhận hàng tại nhà</div>
                                     </div>
                                     <i class="fa-solid fa-money-bill-wave pay-icon"></i>
+                                </div>
+                                <div class="pay-option " onclick="selectPay(this,'momo')">
+                                    <input value="momo" id="momo" type="radio" name="paytype" checked>
+                                    <div class="pay-radio">
+                                        <div class="pay-radio-dot"></div>
+                                    </div>
+                                    <div class="pay-info">
+                                        <div class="pay-name">Ví MoMo</div>
+                                        <div class="pay-desc">Thanh toán nhanh qua ứng dụng MoMo</div>
+                                    </div>
+                                    <img src="image/momo.webp" class="pay-logo" alt="MoMo">
                                 </div>
                             </div>
                         </div>

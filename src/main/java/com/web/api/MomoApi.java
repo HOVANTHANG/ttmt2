@@ -58,7 +58,7 @@ public class MomoApi {
         }
 
         Long td = Math.round(totalAmount);
-        String orderId   = String.valueOf(System.currentTimeMillis());
+        String orderId = String.valueOf(System.currentTimeMillis());
         String requestId = String.valueOf(System.currentTimeMillis());
 
         Environment environment = Environment.selectEnv("dev");
@@ -87,7 +87,7 @@ public class MomoApi {
 
     @GetMapping("/checkPayment")
     public Integer checkPayment(
-            @RequestParam("orderId")   String orderId,
+            @RequestParam("orderId") String orderId,
             @RequestParam("requestId") String requestId) throws Exception {
         Environment environment = Environment.selectEnv("dev");
         QueryStatusTransactionResponse resp = QueryTransactionStatus.process(environment, orderId, requestId);
