@@ -29,7 +29,6 @@ public class ChatApi {
     @Autowired
     private ChatService chatService;
 
-    /* ── Gemini AI Chat ── */
     @PostMapping
     public ResponseEntity<Map<String, String>> chat(@RequestBody Map<String, String> request, HttpSession session) {
         String userMessage = request.get("message");
@@ -43,7 +42,9 @@ public class ChatApi {
         }
     }
 
-    /* ── Current user info (cho cả user và seller để lấy username kết nối STOMP) ── */
+    /*
+     * ── Current user info (cho cả user và seller để lấy username kết nối STOMP) ──
+     */
     @GetMapping("/user/current-info")
     public ResponseEntity<?> currentUserInfo() {
         User u = userUtils.getUserWithAuthority();
@@ -53,10 +54,9 @@ public class ChatApi {
         }
         String fullname = u.getFullname() != null ? u.getFullname() : u.getUsername();
         return ResponseEntity.ok(Map.of(
-                "id",       u.getId(),
+                "id", u.getId(),
                 "username", u.getUsername(),
-                "fullname", fullname
-        ));
+                "fullname", fullname));
     }
 
     @GetMapping("/seller/current-info")
@@ -68,10 +68,9 @@ public class ChatApi {
         }
         String fullname = u.getFullname() != null ? u.getFullname() : u.getUsername();
         return ResponseEntity.ok(Map.of(
-                "id",       u.getId(),
+                "id", u.getId(),
                 "username", u.getUsername(),
-                "fullname", fullname
-        ));
+                "fullname", fullname));
     }
 
     /* ── Admin legacy ── */

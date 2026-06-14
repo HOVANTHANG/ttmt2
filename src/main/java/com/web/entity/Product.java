@@ -41,8 +41,6 @@ public class Product {
 
     private Time createdTime;
 
-    private Integer quantitySold;
-
     private Long sold = 0L;
     private Double avgStar = 0D;
     private Long reviewCount = 0L;

@@ -343,7 +343,7 @@ async function setImginput() {
     document.getElementById("btnupdatemausac").disabled = false
 }
 async function loadProduct(page, param = "") {
-    var category  = document.getElementById("danhmuc").value;
+    var category = document.getElementById("danhmuc").value;
     var trademark = document.getElementById("thuonghieu").value;
     var size = 10;
 
@@ -353,7 +353,7 @@ async function loadProduct(page, param = "") {
 
     var url = 'http://localhost:8080/api/product/seller/my-shop-products?page=' + page + '&size=' + size;
     if (param != null && param.trim() !== "") url += '&search=' + encodeURIComponent(param);
-    if (category)  url += '&category='  + category;
+    if (category) url += '&category=' + category;
     if (trademark) url += '&trademark=' + trademark;
 
     try {
@@ -361,9 +361,9 @@ async function loadProduct(page, param = "") {
             headers: new Headers({ 'Authorization': 'Bearer ' + token })
         });
 
-        const result        = await response.json();
-        const list          = result.content   || [];
-        const totalPage     = result.totalPages || 0;
+        const result = await response.json();
+        const list = result.content || [];
+        const totalPage = result.totalPages || 0;
         const totalElements = result.totalElements || list.length;
 
         // Empty state
@@ -388,7 +388,7 @@ async function loadProduct(page, param = "") {
             if (variants.length > 0) {
                 variants.forEach(v => {
                     const name = [v.tier1value, v.tier2value].filter(Boolean).join(' / ') || 'Mặc định';
-                    const qty  = v.quantity || 0;
+                    const qty = v.quantity || 0;
                     const color = qty > 0 ? 'var(--p)' : '#ef4444';
                     stockHtml += `<div class="variant-stock-row">
                         <span class="variant-stock-name">${name}</span>
@@ -409,7 +409,7 @@ async function loadProduct(page, param = "") {
                 <td><span class="row-id">#${p.id}</span></td>
                 <td>${imgHtml}</td>
                 <td>
-                    <div class="p-name" title="${(p.name || '').replace(/"/g,'&quot;')}">${p.name || '—'}</div>
+                    <div class="p-name" title="${(p.name || '').replace(/"/g, '&quot;')}">${p.name || '—'}</div>
                     <div class="p-code">${p.code || ''}</div>
                 </td>
                 <td><span class="badge-cat" title="${p.category ? p.category.name : ''}">${p.category ? p.category.name : '—'}</span></td>

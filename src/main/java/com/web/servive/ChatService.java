@@ -24,19 +24,14 @@ public class ChatService {
     @Autowired
     private ProductRepository productRepository;
 
-    // Groq API – tương thích OpenAI format
     private static final String GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-    // Model miễn phí, nhanh, hỗ trợ tiếng Việt tốt
     private static final String GROQ_MODEL = "llama-3.1-8b-instant";
 
-    // Pattern nhận URL ảnh từ frontend: [URL_IMAGE: https://...]
     private static final Pattern IMAGE_URL_PATTERN = Pattern.compile("\\[URL_IMAGE:\\s*(https?://\\S+)\\]");
 
-    // Giới hạn số lượt lịch sử giữ lại
     private static final int MAX_HISTORY = 5;
 
-    // Giới hạn số sản phẩm gửi vào prompt
     private static final int MAX_PRODUCTS = 40;
 
     public String chatWithGemini(String userMessage, HttpSession session) {
@@ -81,16 +76,21 @@ public class ChatService {
             }
 
             // --- 4. Tạo system prompt ---
-            String systemPrompt = "Bạn là trợ lý AI tư vấn bán điện thoại di động. Hãy trả lời bằng tiếng Việt, ngắn gọn và thân thiện.\n\n"
-                    +
-                    "QUY TẮC:\n" +
-                    "- Dùng **text** để in đậm từ quan trọng\n" +
-                    "- Dùng danh sách với dấu - cho nhiều mục\n" +
-                    "- Link sản phẩm dùng định dạng: http://localhost:8080/detail?id=[ID]\n" +
-                    "- Nếu câu hỏi không liên quan điện thoại, vẫn trả lời lịch sự\n" +
-                    "- Trả lời tối đa 300 từ\n\n" +
-                    "DANH SÁCH SẢN PHẨM HIỆN CÓ:\n" +
-                    (productData.isEmpty() ? "(Chưa có sản phẩm)" : productData);
+            String systemPrompt = "Bạn là trợ lý AI tư vấn bán hàng của sàn thương mại điện tử Sellora. Hãy trả lời bằng tiếng Việt, ngắn gọn, thân thiện và chuyên nghiệp.\n\n"
+                    + "CHÍNH SÁCH CỦA SÀN SELLORA:\n"
+                    + "- **Vận chuyển**: Tích hợp vận chuyển toàn quốc qua Giao Hàng Nhanh (GHN). Phí vận chuyển được tính tự động dựa trên khoảng cách từ địa chỉ của từng cửa hàng đến địa chỉ nhận hàng.\n"
+                    + "- **Thanh toán**: Hỗ trợ COD (Thanh toán khi nhận hàng) và thanh toán điện tử MoMo. Với đơn hàng chứa sản phẩm của nhiều shop, khách hàng có thể thanh toán MoMo gộp 1 lần duy nhất, hệ thống sẽ tự động tách thành các đơn hàng độc lập cho từng shop xử lý.\n"
+                    + "- **Đổi trả & Hoàn tiền**: Hỗ trợ đổi trả/hoàn tiền trong vòng 7 ngày kể từ khi nhận hàng nếu sản phẩm lỗi từ nhà cung cấp hoặc sai mô tả. Khách hàng vui lòng quay video mở hộp để được hỗ trợ tốt nhất.\n"
+                    + "- **Mã giảm giá (Voucher)**: Voucher của cửa hàng nào chỉ có giá trị áp dụng cho sản phẩm thuộc cửa hàng đó.\n"
+                    + "- **Kiểm duyệt sản phẩm**: Tất cả sản phẩm do Người bán đăng tải đều phải qua quy trình kiểm duyệt của Quản trị viên trước khi hiển thị công khai.\n\n"
+                    + "QUY TẮC:\n"
+                    + "- Dùng **text** để in đậm từ quan trọng\n"
+                    + "- Dùng danh sách với dấu - cho nhiều mục\n"
+                    + "- Link sản phẩm bắt buộc dùng định dạng: http://localhost:8080/detail?id=[ID]\n"
+                    + "- Hãy tư vấn dựa trên danh sách sản phẩm hiện có bên dưới. Nếu khách hàng hỏi về các chính sách của sàn, hãy giải thích rõ ràng dựa trên thông tin chính sách ở trên.\n"
+                    + "- Trả lời ngắn gọn, tối đa 300 từ\n\n"
+                    + "DANH SÁCH SẢN PHẨM HIỆN CÓ:\n"
+                    + (productData.isEmpty() ? "(Chưa có sản phẩm)" : productData);
 
             // --- 5. Xây dựng messages array (OpenAI format) ---
             JsonArray messages = new JsonArray();

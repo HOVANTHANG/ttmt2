@@ -44,7 +44,7 @@
         window.onload = function () {
             loadCategoryProduct();
             loadTrademarkProduct();
-            loadProduct(0, "", null);
+            loadProduct(0, "");
         }
     </script>
 </head>
@@ -57,10 +57,7 @@
             <main class="main">
                 <div class="col-sm-12 header-sp">
                     <div class="row">
-                        <div class="col-md-3 col-sm-12">
-                            <label class="lb-form">&ThickSpace;</label><br>
-                            <a href="addproduct" class="btn btn-primary"><i class="fa fa-plus"></i> Thêm sản phẩm</a>
-                        </div>
+
                         <div class="col-md-3 col-sm-6 col-6">
                             <label class="lb-form">Chọn danh mục</label>
                             <select id="danhmuc" class="form-control" style="width: 100%;">
@@ -75,7 +72,7 @@
                         </div>
                         <div class="col-md-3 col-sm-6 col-6">
                             <label class="lb-form" style="display: block;">&ThinSpace;</label>
-                            <button onclick="loadProduct(0,null)" class="btn btn-primary"><i class="fa fa-filter"></i>
+                            <button onclick="loadProduct(0,'')" class="btn btn-primary"><i class="fa fa-filter"></i>
                                 Lọc</button>
                         </div>
                     </div>

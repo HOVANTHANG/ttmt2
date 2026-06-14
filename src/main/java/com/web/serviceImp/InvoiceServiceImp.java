@@ -118,11 +118,11 @@ public class InvoiceServiceImp implements InvoiceService {
 
         // ================= ADDRESS =================
         if (invoiceRequest.getUserAddressId() == null) {
-            throw new MessageException("user address id require");
+            throw new MessageException("Hãy thêm địa chỉ của bạn vào tài khoản ");
         }
 
         UserAddress address = userAddressRepository.findById(invoiceRequest.getUserAddressId())
-                .orElseThrow(() -> new MessageException("user address not found"));
+                .orElseThrow(() -> new MessageException("Hãy thêm địa chỉ của bạn vào tài khoản"));
 
         User currentUser = userUtils.getUserWithAuthority();
 
@@ -333,11 +333,11 @@ public class InvoiceServiceImp implements InvoiceService {
             try {
                 Product product = d.getProductVariant() != null ? d.getProductVariant().getProduct() : null;
                 if (product != null) {
-                    Integer sold = product.getQuantitySold() == null ? 0 : product.getQuantitySold();
-                    Integer detailQty = d.getQuantity() == null ? 0 : d.getQuantity();
+                    Long sold = product.getSold() == null ? 0 : product.getSold();
+                    Long detailQty = d.getQuantity() == null ? 0L : d.getQuantity();
 
-                    int newSold = sold - detailQty;
-                    product.setQuantitySold(Math.max(newSold, 0));
+                    Long newSold = sold - detailQty;
+                    product.setSold(Math.max(newSold, 0));
                     productRepository.save(product);
                 }
             } catch (Exception e) {

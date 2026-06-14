@@ -120,7 +120,7 @@ async function loadSanPhamNoiBatCart() {
                         ${oldPriceHtml}
                     </div>
                     <div class="sp-meta">
-                        ${p.quantitySold > 0 ? `<span class="sp-sold">Đã bán ${p.quantitySold}</span>` : ''}
+                        ${p.sold > 0 ? `<span class="sp-sold">Đã bán ${p.sold}</span>` : ''}
                     </div>
                 </div>
             </div>

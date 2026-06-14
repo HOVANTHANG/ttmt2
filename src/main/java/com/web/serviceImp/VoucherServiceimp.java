@@ -30,7 +30,7 @@ public class VoucherServiceimp implements VoucherService {
     @Override
     public Voucher create(Voucher voucher) {
         Optional<Voucher> ex = voucherRepository.findByCode(voucher.getCode());
-        if(ex.isPresent()){
+        if (ex.isPresent()) {
             throw new MessageException("Mã voucher đã tồn tại");
         }
         Voucher result = voucherRepository.save(voucher);
@@ -40,8 +40,8 @@ public class VoucherServiceimp implements VoucherService {
     @Override
     public Voucher update(Voucher voucher) {
         Optional<Voucher> ex = voucherRepository.findByCode(voucher.getCode());
-        if(ex.isPresent()){
-            if(ex.get().getId() != voucher.getId()){
+        if (ex.isPresent()) {
+            if (ex.get().getId() != voucher.getId()) {
                 throw new MessageException("Mã voucher đã tồn tại");
             }
         }
@@ -57,28 +57,28 @@ public class VoucherServiceimp implements VoucherService {
 
     @Override
     public List<Voucher> findAll(Date start, Date end) {
-        if(start == null || end == null){
+        if (start == null || end == null) {
             start = Date.valueOf("2000-01-01");
             end = Date.valueOf("2200-01-01");
         }
-        List<Voucher> list = voucherRepository.findByDate(start,end);
+        List<Voucher> list = voucherRepository.findByDate(start, end);
         return list;
     }
 
     @Override
     public Page<Voucher> findAll(Date start, Date end, Pageable pageable) {
-        if(start == null || end == null){
+        if (start == null || end == null) {
             start = Date.valueOf("2000-01-01");
             end = Date.valueOf("2200-01-01");
         }
-        Page<Voucher> page = voucherRepository.findByDate(start,end,pageable);
+        Page<Voucher> page = voucherRepository.findByDate(start, end, pageable);
         return page;
     }
 
     @Override
     public Optional<Voucher> findById(Long id) {
         Optional<Voucher> ex = voucherRepository.findById(id);
-        if(ex.isEmpty()){
+        if (ex.isEmpty()) {
             throw new MessageException("Not found");
         }
         return ex;
@@ -87,7 +87,7 @@ public class VoucherServiceimp implements VoucherService {
     @Override
     public void block(Long id) {
         Optional<Voucher> ex = voucherRepository.findById(id);
-        if(ex.isEmpty()){
+        if (ex.isEmpty()) {
             throw new MessageException("Not found");
         }
         if (ex.get().getBlock() == true) {
@@ -100,7 +100,7 @@ public class VoucherServiceimp implements VoucherService {
 
     @Override
     public Optional<Voucher> findByCode(String code, Double amount) {
-        return findByCode(code, amount, null); // backward compat: không check shop
+        return findByCode(code, amount, null);
     }
 
     @Override
@@ -196,7 +196,7 @@ public class VoucherServiceimp implements VoucherService {
         }
         if (start == null || end == null) {
             start = Date.valueOf("2000-01-01");
-            end   = Date.valueOf("2200-01-01");
+            end = Date.valueOf("2200-01-01");
         }
         return voucherRepository.findByShopAndDate(currentUser.getShop().getId(), start, end, pageable);
     }
@@ -209,7 +209,7 @@ public class VoucherServiceimp implements VoucherService {
         }
         if (start == null || end == null) {
             start = Date.valueOf("2000-01-01");
-            end   = Date.valueOf("2200-01-01");
+            end = Date.valueOf("2200-01-01");
         }
         return voucherRepository.findByShopAndDate(currentUser.getShop().getId(), start, end);
     }

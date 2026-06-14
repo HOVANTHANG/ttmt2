@@ -258,15 +258,15 @@ function removeAccents(str) {
 function cleanStringForMatch(s) {
     if (!s) return "";
     let clean = removeAccents(s).toLowerCase();
-    // Replaces dots, hyphens, commas with space
+
     clean = clean.replace(/[\.\-\,]/g, " ");
-    // Clean double spaces
+
     clean = clean.replace(/\s+/g, " ").trim();
-    // Normalize administrative prefixes
+
     clean = clean.replace(/^(tinh|thanh pho|tp|quan|huyen|thi xa|tx|phuong|xa|thi tran|tt)\s+/g, "");
-    // Replace 'k' with 'c' to handle Kạn / Cạn mismatch
+
     clean = clean.replace(/k/g, "c");
-    // Remove non-alphanumeric characters
+
     clean = clean.replace(/[^a-z0-9]/g, "");
     return clean.trim();
 }

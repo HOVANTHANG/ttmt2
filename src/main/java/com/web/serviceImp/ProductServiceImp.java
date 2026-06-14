@@ -115,7 +115,7 @@ public class ProductServiceImp implements ProductService {
 
         product.setCreatedDate(new Date(System.currentTimeMillis()));
         product.setCreatedTime(new Time(System.currentTimeMillis()));
-        product.setQuantitySold(0);
+        product.setSold(0L);
         product.setTradeMark(tradeMark);
         product.setCategory(category.get());
         product.setShop(shop);
@@ -428,7 +428,6 @@ public class ProductServiceImp implements ProductService {
             throw new MessageException("categoryId không được để trống");
         }
 
-        // 1. Lấy dữ liệu đã được sắp xếp theo độ ưu tiên từ DB
         boolean hasCustomSort = false;
         if (pageable.getSort().isSorted()) {
             hasCustomSort = true;
@@ -442,10 +441,8 @@ public class ProductServiceImp implements ProductService {
         }
         List<Product> originalList = page.getContent();
 
-        // 2. Áp dụng thuật toán trộn/xen kẽ để phân tán các sản phẩm trùng Shop
         List<Product> diversifiedList = diversifyShops(originalList);
 
-        // 3. Map danh sách đã phân tán sang DTO
         List<ProductShopResponse> dtoList = diversifiedList.stream().map(p -> {
             ProductShopResponse dto = new ProductShopResponse();
             dto.setId(p.getId());
@@ -465,7 +462,6 @@ public class ProductServiceImp implements ProductService {
             return dto;
         }).toList();
 
-        // 4. Trả về đối tượng PageImpl mới với danh sách DTO đã được sắp xếp lại
         return new PageImpl<>(dtoList, pageable, page.getTotalElements());
     }
 
@@ -475,9 +471,6 @@ public class ProductServiceImp implements ProductService {
         if (keyword == null) {
             keyword = "";
         }
-
-        // Kiểm tra xem Pageable có chứa sắp xếp đặc biệt nào không (khác id,desc và
-        // unsorted)
         boolean hasCustomSort = false;
         if (pageable.getSort().isSorted()) {
             for (org.springframework.data.domain.Sort.Order order : pageable.getSort()) {
@@ -490,12 +483,9 @@ public class ProductServiceImp implements ProductService {
 
         Page<Product> page;
         if (hasCustomSort) {
-            // Sử dụng Query động hỗ trợ Sort được truyền vào
             page = productRepository.searchMarketplaceWithDynamicSort(keyword, categoryId, trademarkName, small, large,
                     pageable);
         } else {
-            // Sử dụng Query tĩnh sắp xếp theo độ liên quan (bỏ Sort của pageable đi để
-            // tránh lỗi 500)
             Pageable cleanPageable = org.springframework.data.domain.PageRequest.of(pageable.getPageNumber(),
                     pageable.getPageSize());
             page = productRepository.searchMarketplaceWithRelevance(keyword, categoryId, trademarkName, small, large,
@@ -507,35 +497,27 @@ public class ProductServiceImp implements ProductService {
         return new PageImpl<>(diversifiedList, pageable, page.getTotalElements());
     }
 
-    /**
-     * Thuật toán xen kẽ (Interleaving) sản phẩm của các Shop khác nhau.
-     * Giữ nguyên thứ tự ưu tiên tối đa nhưng không để các sản phẩm của cùng 1 Shop
-     * đứng cạnh nhau liên tiếp.
-     */
     private List<Product> diversifyShops(List<Product> originalList) {
         if (originalList == null || originalList.isEmpty()) {
             return new ArrayList<>();
         }
 
         List<Product> result = new ArrayList<>();
-        // Sử dụng LinkedHashMap để giữ nguyên thứ tự xuất hiện đầu tiên của các Shop
-        // (đảm bảo tính công bằng theo điểm số)
+
         Map<Long, Queue<Product>> shopProductsMap = new LinkedHashMap<>();
 
-        // Gom sản phẩm vào các hàng đợi (Queue) riêng biệt theo từng Shop ID
         for (Product p : originalList) {
-            Long shopId = (p.getShop() != null) ? p.getShop().getId() : -1L; // Đề phòng sản phẩm không có shop
+            Long shopId = (p.getShop() != null) ? p.getShop().getId() : -1L;
             shopProductsMap.computeIfAbsent(shopId, k -> new LinkedList<>()).add(p);
         }
 
-        // Lấy xen kẽ tuần tự 1 sản phẩm từ mỗi Shop ra đưa vào danh sách kết quả
         boolean hasMoreProducts = true;
         while (hasMoreProducts) {
             hasMoreProducts = false;
             for (Queue<Product> queue : shopProductsMap.values()) {
                 if (!queue.isEmpty()) {
                     result.add(queue.poll());
-                    hasMoreProducts = true; // Xác nhận vẫn còn sản phẩm để tiếp tục vòng lặp
+                    hasMoreProducts = true;
                 }
             }
         }

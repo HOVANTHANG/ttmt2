@@ -32,7 +32,7 @@ public class GhnClient {
         if (apiUrl != null && apiUrl.contains("/v2/shipping-order/fee")) {
             return apiUrl.replace("/v2/shipping-order/fee", "");
         }
-        // Fallback to dev gateway if not matched
+
         return "https://dev-online-gateway.ghn.vn/shiip/public-api";
     }
 
@@ -49,8 +49,7 @@ public class GhnClient {
         shippingData.put("to_district_id", toDistrictId);
         shippingData.put("to_ward_code", toWardCode);
         shippingData.put("weight", weight != null ? weight : 200);
-        
-        // GHN service_type_id = 2 (standard delivery) requires dimensions
+
         shippingData.put("service_type_id", 2);
         shippingData.put("length", 20);
         shippingData.put("width", 15);

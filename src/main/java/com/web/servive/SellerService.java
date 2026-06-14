@@ -32,12 +32,10 @@ public class SellerService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new MessageException("Không tìm thấy tài khoản người dùng."));
 
-        // ── Kiểm tra đã có shop chưa ──
         if (shopRepository.existsByOwnerId(userId)) {
             throw new MessageException("Tài khoản này đã đăng ký shop. Mỗi tài khoản chỉ được tạo một shop.");
         }
 
-        // ── Validate Tên shop ──
         String shopName = request.getShopName();
         if (shopName == null || shopName.isBlank()) {
             throw new MessageException("Tên shop không được để trống.");
@@ -49,13 +47,13 @@ public class SellerService {
             throw new MessageException("Tên shop không được vượt quá 100 ký tự.");
         }
 
-        // ── Validate Slug ──
         String shopSlug = request.getShopSlug();
         if (shopSlug == null || shopSlug.isBlank()) {
             throw new MessageException("Slug shop không được để trống.");
         }
         if (!shopSlug.matches("^[a-z0-9][a-z0-9\\-]*[a-z0-9]$")) {
-            throw new MessageException("Slug chỉ được chứa chữ thường, số và dấu gạch ngang (-). Không bắt đầu/kết thúc bằng dấu gạch ngang.");
+            throw new MessageException(
+                    "Slug chỉ được chứa chữ thường, số và dấu gạch ngang (-). Không bắt đầu/kết thúc bằng dấu gạch ngang.");
         }
         if (shopSlug.length() > 80) {
             throw new MessageException("Slug không được vượt quá 80 ký tự.");
@@ -64,7 +62,6 @@ public class SellerService {
             throw new MessageException("Slug \"" + shopSlug + "\" đã được sử dụng. Vui lòng chọn slug khác.");
         }
 
-        // ── Validate Số điện thoại ──
         String phone = request.getPhone();
         if (phone == null || phone.isBlank()) {
             throw new MessageException("Số điện thoại không được để trống.");
@@ -76,7 +73,6 @@ public class SellerService {
             throw new MessageException("Số điện thoại này đã được đăng ký cho một shop khác.");
         }
 
-        // ── Validate Email (không bắt buộc) ──
         String email = request.getEmail();
         if (email != null && !email.isBlank()) {
             if (!email.matches("^[\\w.+\\-]+@[\\w\\-]+(\\.[\\w\\-]+)+$")) {
@@ -87,7 +83,6 @@ public class SellerService {
             }
         }
 
-        // ── Tạo shop ──
         Shop shop = new Shop();
         shop.setShopName(shopName.trim());
         shop.setShopSlug(shopSlug.trim());
