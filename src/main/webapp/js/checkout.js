@@ -432,10 +432,14 @@ async function applyVoucher(sid) {
     }
 
     const s = shopMap[sid];
-    const amount = (s.subtotal || 0) + (s.ship || 0);
+    const amount = s.subtotal || 0;
 
     try {
-        const res = await fetch(`http://localhost:8080/api/voucher/public/findByCode?code=${code}&amount=${amount}&shopId=${sid}`);
+        const res = await fetch(`http://localhost:8080/api/voucher/public/findByCode?code=${code}&amount=${amount}&shopId=${sid}`, {
+            headers: new Headers({
+                'Authorization': 'Bearer ' + token
+            })
+        });
 
         const result = await res.json();
 
@@ -445,9 +449,10 @@ async function applyVoucher(sid) {
             s.discount = 0;
             s.voucherCode = null;
         } else if (res.ok) {
+            var discVal = (result.calculatedDiscount !== undefined && result.calculatedDiscount !== null) ? result.calculatedDiscount : (result.discount || 0);
             if (okEl) { okEl.style.display = 'flex'; }
-            if (okTxtEl) okTxtEl.textContent = `Giảm ${formatmoneyCheck(result.discount)}`;
-            s.discount = result.discount || 0;
+            if (okTxtEl) okTxtEl.textContent = `Giảm ${formatmoneyCheck(discVal)}`;
+            s.discount = discVal;
             s.voucherCode = result.code;
         }
         updateShopUI(sid);

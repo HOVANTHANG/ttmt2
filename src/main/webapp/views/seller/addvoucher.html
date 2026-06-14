@@ -1,9 +1,10 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="vi">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Cấu hình Voucher - Seller Center</title>
     <link href="css/styles.css" rel="stylesheet" />
     <link href="/seller/css/seller-modern.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"
@@ -36,10 +37,48 @@
     <script src="/seller/js/menu1.js"></script>
     <script src="/seller/js/voucher.js"></script>
     <script>
-        window.onload = function () {
+        window.onload = async function () {
+            await loadShopProductsForVoucher();
             loadAVoucher();
         }
     </script>
+    <style>
+        .segmented-control {
+            display: flex;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            margin-top: 4px;
+        }
+        .segment-item {
+            position: relative;
+            flex: 1;
+            text-align: center;
+        }
+        .segment-item input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .segment-label {
+            display: block;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--tx2);
+            transition: all .2s;
+            margin: 0 !important;
+        }
+        .segment-item input[type="radio"]:checked + .segment-label {
+            background: #fff;
+            color: var(--p) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+    </style>
 </head>
 
 <body class="sb-nav-fixed">
@@ -47,33 +86,127 @@
     <div id="layoutSidenav">
         <div id="layoutSidenav_nav"></div>
         <div id="layoutSidenav_content">
-            <main class="main row">
-                <div class="col-sm-5">
-                    <label class="lb-form">Mã voucher</label>
-                    <input id="code" type="text" class="form-control">
-                    <label class="lb-form">Tên voucher</label>
-                    <input id="namevoucher" type="text" class="form-control">
-                    <label class="lb-form">Số tiền tối thiểu</label>
-                    <input id="minamount" type="number" class="form-control">
-                    <label class="lb-form">Giảm giá</label>
-                    <input id="discount" type="number" class="form-control">
+            <main class="main">
+                <div class="page-title-card">
+                    <div class="page-title-icon"><i class="fas fa-tags"></i></div>
+                    <div>
+                        <h4 id="page-title">Thêm Voucher mới</h4>
+                        <p>Cấu hình chương trình khuyến mãi và mức giảm giá cho sản phẩm của shop</p>
+                    </div>
                 </div>
-                <div class="col-sm-5">
-                    <label class="lb-form">Từ ngày</label>
-                    <input id="from" type="date" class="form-control">
-                    <label class="lb-form">Đến ngày</label>
-                    <input id="to" type="date" class="form-control">
-                    <label class="checkbox-custom">Khóa voucher
-                        <input id="lockvoucher" type="checkbox">
-                        <span class="checkmark-checkbox"></span>
-                    </label><br>
-                    <button onclick="saveVoucher()" class="btn btn-success form-control action-btn">Thêm/ Cập nhật
-                        voucher</button>
+
+                <div class="row justify-content-center">
+                    <div class="col-xl-10 col-lg-12">
+                        <div class="card" style="border: none; border-radius: var(--r); box-shadow: var(--sh-lg); overflow: hidden; background: var(--card);">
+                            <div class="card-header" style="background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 1px solid var(--border); padding: 18px 24px;">
+                                <h5 style="margin: 0; font-weight: 700; color: var(--tx); font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                                    <i class="fas fa-cog" style="color: var(--p);"></i> Cấu hình thông tin Voucher
+                                </h5>
+                            </div>
+                            <div class="card-body" style="padding: 30px;">
+                                <div class="row g-4">
+                                    <!-- Cột trái: Thông tin cơ bản -->
+                                    <div class="col-md-6" style="border-right: 1px solid #f1f5f9; padding-right: 25px;">
+                                        <div class="mb-4">
+                                            <label class="lb-form" style="font-weight: 700; color: var(--tx2); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block;">
+                                                <i class="fas fa-qrcode me-1"></i> Mã voucher
+                                            </label>
+                                            <input id="code" type="text" class="form-control" placeholder="Ví dụ: GIAM50K, SELLER30%">
+                                        </div>
+                                        <div class="mb-4">
+                                            <label class="lb-form" style="font-weight: 700; color: var(--tx2); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block;">
+                                                <i class="fas fa-pen-nib me-1"></i> Tên voucher
+                                            </label>
+                                            <input id="namevoucher" type="text" class="form-control" placeholder="Ví dụ: Khuyến mãi hè rực rỡ">
+                                        </div>
+                                        <div class="mb-4">
+                                            <label class="lb-form" style="font-weight: 700; color: var(--tx2); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block;">
+                                                <i class="fas fa-shopping-bag me-1"></i> Giá trị đơn tối thiểu (đ)
+                                            </label>
+                                            <input id="minamount" type="number" class="form-control" placeholder="0">
+                                        </div>
+                                        <div class="mb-4">
+                                            <label class="lb-form" style="font-weight: 700; color: var(--tx2); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block;">
+                                                <i class="fas fa-sliders-h me-1"></i> Loại giảm giá
+                                            </label>
+                                            <div class="segmented-control">
+                                                <div class="segment-item">
+                                                    <input type="radio" id="type_flat" name="isPercentage" value="false" checked onchange="updateDiscountLabel()">
+                                                    <label for="type_flat" class="segment-label">Giảm tiền mặt (đ)</label>
+                                                </div>
+                                                <div class="segment-item">
+                                                    <input type="radio" id="type_percentage" name="isPercentage" value="true" onchange="updateDiscountLabel()">
+                                                    <label for="type_percentage" class="segment-label">Giảm phần trăm (%)</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-4">
+                                            <label class="lb-form" id="discount-label" style="font-weight: 700; color: var(--tx2); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block;">
+                                                <i class="fas fa-gift me-1"></i> Giảm giá (đ)
+                                            </label>
+                                            <input id="discount" type="number" class="form-control" placeholder="0">
+                                        </div>
+                                    </div>
+
+                                    <!-- Cột phải: Thời gian & Phạm vi áp dụng -->
+                                    <div class="col-md-6" style="padding-left: 25px;">
+                                        <div class="mb-4">
+                                            <label class="lb-form" style="font-weight: 700; color: var(--tx2); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block;">
+                                                <i class="fas fa-calendar-alt me-1"></i> Từ ngày
+                                            </label>
+                                            <input id="from" type="date" class="form-control">
+                                        </div>
+                                        <div class="mb-4">
+                                            <label class="lb-form" style="font-weight: 700; color: var(--tx2); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block;">
+                                                <i class="fas fa-calendar-check me-1"></i> Đến ngày
+                                            </label>
+                                            <input id="to" type="date" class="form-control">
+                                        </div>
+                                        <div class="mb-4">
+                                            <label class="lb-form" style="font-weight: 700; color: var(--tx2); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block;">
+                                                <i class="fas fa-globe me-1"></i> Phạm vi áp dụng
+                                            </label>
+                                            <div class="segmented-control">
+                                                <div class="segment-item">
+                                                    <input type="radio" id="apply_all" name="applyAll" value="true" checked onchange="toggleProductSelection()">
+                                                    <label for="apply_all" class="segment-label">Tất cả sản phẩm</label>
+                                                </div>
+                                                <div class="segment-item">
+                                                    <input type="radio" id="apply_specific" name="applyAll" value="false" onchange="toggleProductSelection()">
+                                                    <label for="apply_specific" class="segment-label">Sản phẩm cụ thể</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="product-selection-container" style="display: none; margin-bottom: 24px; border: 1.5px solid var(--border); border-radius: var(--r); padding: 18px; background: #fafbfc; max-height: 280px; overflow-y: auto; box-shadow: inset 0 2px 8px rgba(0,0,0,.03);">
+                                            <h6 style="font-weight: 800; color: var(--tx); margin-bottom: 12px; font-size: 13.5px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                                                <span>Chọn sản phẩm & Mức giảm:</span>
+                                                <span id="prod-discount-type-hint" style="font-size: 11px; font-weight: 800; color: var(--p); background: rgba(13, 148, 136, 0.1); padding: 2px 8px; border-radius: 10px;">đ</span>
+                                            </h6>
+                                            <div id="product-list-checkboxes">
+                                                <!-- Populated dynamically by JS -->
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-4" style="margin-top: 15px;">
+                                            <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13.5px; color: var(--tx); font-weight: 600; margin: 0; -webkit-user-select: none; user-select: none;">
+                                                <input id="lockvoucher" type="checkbox" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--p); border-radius: 4px;">
+                                                <span>Khóa voucher này</span>
+                                            </label>
+                                        </div>
+
+                                        <button onclick="saveVoucher()" class="btn btn-primary w-100 py-3 action-btn" style="background: var(--p-grad) !important; font-size: 14px; letter-spacing: 0.5px; text-transform: uppercase;">
+                                            <i class="fas fa-check-circle me-1"></i> Lưu cấu hình Voucher
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>
     </div>
 </body>
-
 
 </html>

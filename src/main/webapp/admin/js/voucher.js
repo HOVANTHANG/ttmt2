@@ -21,12 +21,16 @@ async function loadVoucher(page, start, end) {
     const today = (new Date(Date.now() - tzoffset)).toISOString().slice(0, 10);
 
     for (i = 0; i < list.length; i++) {
+        var discDisplay = "-";
+        if (list[i].discount != null) {
+            discDisplay = list[i].isPercentage ? list[i].discount + '%' : formatmoney(list[i].discount);
+        }
         main += `<tr>
                     <td>${list[i].id}</td>
                     <td>${list[i].code}</td>
                     <td>${list[i].name}</td>
                     <td>${formatmoney(list[i].minAmount)}</td>
-                    <td>${formatmoney(list[i].discount)}</td>
+                    <td>${discDisplay}</td>
                     <td>${list[i].startDate}</td>
                     <td>${list[i].endDate}</td>
                       <td>${list[i].block == true || list[i].endDate <= today ? '<span class="locked">Đã kết thúc</span>' : '<span class="actived">Đang hoạt động</span>'}</td>
@@ -79,6 +83,7 @@ async function loadAVoucher() {
 async function saveVoucher() {
     var uls = new URL(document.URL)
     var id = uls.searchParams.get("id");
+    id = id ? Number(id) : null;
     var code = document.getElementById("code").value
     var namevoucher = document.getElementById("namevoucher").value
     var minamount = document.getElementById("minamount").value
@@ -95,10 +100,10 @@ async function saveVoucher() {
         "id": id,
         "code": code,
         "name": namevoucher,
-        "discount": discount,
-        "minAmount": minamount,
-        "startDate": from,
-        "endDate": to,
+        "discount": discount === "" ? null : Number(discount),
+        "minAmount": minamount === "" ? null : Number(minamount),
+        "startDate": from === "" ? null : from,
+        "endDate": to === "" ? null : to,
         "block": lockvoucher
     }
     const response = await fetch(url, {

@@ -2,6 +2,9 @@ package com.web.entity;
 
 import lombok.Getter;
 import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
+import java.util.ArrayList;
 
 import javax.persistence.*;
 import java.sql.Date;
@@ -32,6 +35,17 @@ public class Voucher {
     private Boolean block;
 
     private Integer quantity;
+
+    private Boolean isPercentage = false;
+
+    private Boolean applyAll = true;
+
+    @OneToMany(mappedBy = "voucher", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("voucher")
+    private List<VoucherProduct> voucherProducts = new ArrayList<>();
+
+    @Transient
+    private Double calculatedDiscount;
 
     @ManyToOne
     @JoinColumn(name = "shop_id")

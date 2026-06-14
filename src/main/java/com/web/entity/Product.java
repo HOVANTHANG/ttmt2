@@ -64,11 +64,9 @@ public class Product {
     private Category category;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.REMOVE)
-    @JsonManagedReference
     private List<ProductImage> productImages = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.REMOVE)
-    @JsonManagedReference
     private List<ProductVariant> productVariants = new ArrayList<>();
 
     @ManyToOne

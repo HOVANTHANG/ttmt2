@@ -173,9 +173,17 @@ public class InvoiceServiceImp implements InvoiceService {
 
         // ================= VOUCHER =================
         if (invoiceRequest.getVoucherCode() != null && !invoiceRequest.getVoucherCode().isEmpty()) {
-            Optional<Voucher> voucher = voucherService.findByCode(invoiceRequest.getVoucherCode(), totalAmount, shopId);
+            double subtotalAmount = totalAmount;
+            if (invoiceRequest.getShipCost() != null) {
+                subtotalAmount -= invoiceRequest.getShipCost();
+            }
+            Optional<Voucher> voucher = voucherService.findByCode(invoiceRequest.getVoucherCode(), subtotalAmount, shopId);
             if (voucher.isPresent()) {
-                totalAmount -= voucher.get().getDiscount();
+                Double discount = voucher.get().getCalculatedDiscount();
+                if (discount == null) {
+                    discount = voucher.get().getDiscount();
+                }
+                totalAmount -= discount;
                 invoice.setVoucher(voucher.get());
             }
         }

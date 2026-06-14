@@ -90,7 +90,9 @@
                                     <th>Mã</th>
                                     <th>Tên voucher</th>
                                     <th>Đơn hàng tối thiểu</th>
-                                    <th>Giảm giá</th>
+                                    <th>Loại giảm giá</th>
+                                    <th>Mức giảm</th>
+                                    <th>Áp dụng</th>
                                     <th>Ngày bắt đầu</th>
                                     <th>Ngày kết thúc</th>
                                     <th>Trạng thái</th>
@@ -128,6 +130,25 @@
         </div>
     </div>
 
+    <!-- Modal xem sản phẩm áp dụng -->
+    <div class="modal fade" id="voucherProductsModal" tabindex="-1" aria-labelledby="voucherProductsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border: none; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+                <div class="modal-header" style="background: var(--p-grad); color: #fff; border: none; padding: 16px 24px;">
+                    <h5 class="modal-title" id="voucherProductsModalLabel" style="font-weight: 700; font-size: 15px;">Sản phẩm áp dụng Voucher</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1);"></button>
+                </div>
+                <div class="modal-body" style="padding: 24px; max-height: 400px; overflow-y: auto;">
+                    <div id="modal-products-list" style="display: flex; flex-direction: column; gap: 12px;">
+                        <!-- JS renders products here -->
+                    </div>
+                </div>
+                <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid var(--border); padding: 12px 24px;">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" style="font-size: 13px; font-weight: 600; border-radius: 8px;">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

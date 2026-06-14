@@ -117,13 +117,13 @@
             // Kiểm tra token trước khi gọi API
             if (!token || token === "null") {
                 alert("Vui lòng đăng nhập để sử dụng tính năng chat!");
-                window.location.href = "/login";
+                window.location.href = "/dangnhap";
                 return;
             }
             const info = await apiFetch("/api/chat/seller/current-info");
             if (!info) {
-                alert("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại!");
-                window.location.href = "/login";
+                alert("Phiên đăng nhập hết hạn. ");
+                window.location.href = "/dangnhap";
                 return;
             }
             myId = info.id;
