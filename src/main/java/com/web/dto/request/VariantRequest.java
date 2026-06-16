@@ -19,4 +19,6 @@ public class VariantRequest {
     private Double importPrice;
     private Integer quantity;
     private String image;
+
+    private java.util.List<com.web.servive.WarehouseInventoryService.WarehouseAllocationDto> allocations;
 }

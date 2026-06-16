@@ -22,6 +22,9 @@ $(document).ready(function () {
             <a class="nav-link ${active('/seller/product')}" href="/seller/product">
                 <div class="sb-nav-link-icon"><i class="fas fa-box-open"></i></div>Sản phẩm
             </a>
+            <a class="nav-link ${active('/seller/tonkho')}" href="/seller/tonkho">
+                <div class="sb-nav-link-icon"><i class="fas fa-boxes-stacked"></i></div>Quản lý tồn kho
+            </a>
             <a class="nav-link ${active('/seller/invoice')}" href="/seller/invoice" id="menuSellerInvoice">
                 <div class="sb-nav-link-icon"><i class="fas fa-receipt"></i></div>Đơn hàng
                 <span id="sellerPendingOrderBadge" style="
@@ -210,7 +213,7 @@ $(document).ready(function () {
 
     function disableSellerActions() {
         const currentPath = window.location.pathname;
-        
+
         if (currentPath.includes("/seller/addproduct") || currentPath.includes("/seller/addvoucher") || currentPath.includes("/seller/addimportproduct")) {
             const formElements = document.querySelectorAll("input, textarea, select, button:not(#sidebarToggle):not(#btnOpenShopModal)");
             formElements.forEach(el => {
@@ -218,13 +221,13 @@ $(document).ready(function () {
                 el.style.opacity = "0.6";
                 el.style.cursor = "not-allowed";
             });
-            
+
             const customUploads = document.querySelectorAll(".btn-upload, .upload-btn, .avatar-pick-btn");
             customUploads.forEach(el => {
                 el.style.pointerEvents = "none";
                 el.style.opacity = "0.6";
             });
-            
+
             const mainContent = document.querySelector("main");
             if (mainContent) {
                 const overlay = document.createElement("div");
@@ -233,7 +236,7 @@ $(document).ready(function () {
                 mainContent.insertBefore(overlay, mainContent.firstChild);
             }
         }
-        
+
         if (currentPath.includes("/seller/product") || currentPath.includes("/seller/voucher")) {
             const addButtons = document.querySelectorAll("a[href*='addproduct'], a[href*='addvoucher'], button[onclick*='add'], a[href*='addimport']");
             addButtons.forEach(el => {
@@ -241,18 +244,18 @@ $(document).ready(function () {
                 el.style.opacity = "0.5";
                 el.style.cursor = "not-allowed";
                 el.removeAttribute("href");
-                el.onclick = function(e) { e.preventDefault(); return false; };
+                el.onclick = function (e) { e.preventDefault(); return false; };
             });
-            
+
             const actionButtons = document.querySelectorAll(".btn-edit, .btn-delete, button[onclick*='edit'], button[onclick*='delete']");
             actionButtons.forEach(el => {
                 el.style.pointerEvents = "none";
                 el.style.opacity = "0.5";
                 el.style.cursor = "not-allowed";
-                el.onclick = function(e) { e.preventDefault(); return false; };
+                el.onclick = function (e) { e.preventDefault(); return false; };
             });
         }
-    
+
         if (currentPath.includes("/seller/seller-chat") || currentPath.includes("/seller/chat")) {
             const chatInput = document.getElementById("sellerChatInput");
             if (chatInput) {
@@ -265,7 +268,7 @@ $(document).ready(function () {
                 sendBtn.disabled = true;
                 sendBtn.style.opacity = "0.6";
                 sendBtn.style.cursor = "not-allowed";
-                sendBtn.onclick = function(e) { e.preventDefault(); return false; };
+                sendBtn.onclick = function (e) { e.preventDefault(); return false; };
             }
         }
     }
@@ -726,7 +729,7 @@ async function checkroleSeller() {
 async function loadSellerBadges() {
     const token = localStorage.getItem("token");
     if (!token) return;
-    
+
     // 1. Load badge đơn hàng
     try {
         const lastSeen = localStorage.getItem("lastSeenSellerOrderId") || 0;
@@ -747,7 +750,7 @@ async function loadSellerBadges() {
                 }
             }
         }
-    } catch(e) {}
+    } catch (e) { }
 
     // 2. Load badge tin nhắn
     try {
@@ -769,5 +772,5 @@ async function loadSellerBadges() {
                 }
             }
         }
-    } catch(e) {}
+    } catch (e) { }
 }

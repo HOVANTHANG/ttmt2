@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <title>Quản lý tồn kho - Seller Center</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="Quản lý chi tiết phân bổ tồn kho sản phẩm theo từng kho hàng của shop" />
+
+    <link href="css/styles.css" rel="stylesheet" />
+    <link href="/seller/css/seller-modern.css" rel="stylesheet" />
+    <link href="/seller/css/diachikho.css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.0/css/bootstrap.min.css"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" />
+    <style>
+        .product-variant-item {
+            border-bottom: 1px solid #f1f5f9;
+            padding: 12px;
+            transition: background 0.2s;
+        }
+        .product-variant-item:hover {
+            background: #f8fafc;
+        }
+        .warehouse-badge {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            margin: 2px;
+        }
+        .form-control-stock {
+            width: 100px;
+            padding: 8px 12px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: center;
+            outline: none;
+            transition: all 0.2s;
+            font-weight: 700;
+        }
+        .form-control-stock:focus {
+            border-color: #0d9488;
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+        }
+        .btn-alloc {
+            background: #0d9488;
+            color: #fff;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 6px 12px;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-alloc:hover {
+            background: #0f766e;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body class="sb-nav-fixed">
+
+    <nav id="top" class="sb-topnav navbar navbar-expand navbar-dark bg-dark"></nav>
+
+    <div id="layoutSidenav">
+        <div id="layoutSidenav_nav"></div>
+
+        <div id="layoutSidenav_content">
+            <main class="main" style="padding: 24px;">
+
+                <!-- ── Page title ── -->
+                <div class="page-title-card">
+                    <div class="page-title-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+                    <div>
+                        <h4>Quản lý tồn kho</h4>
+                        <p>Theo dõi, phân phối và cập nhật số lượng sản phẩm chi tiết theo các kho hàng</p>
+                    </div>
+                </div>
+
+                <!-- ── Filter bar ── -->
+                <div class="filter-card">
+                    <div class="filter-title">
+                        <i class="fa-solid fa-sliders"></i> Bộ lọc &amp; tìm kiếm
+                    </div>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3 col-sm-6">
+                            <label class="lb-form" for="danhmuc">Danh mục</label>
+                            <select id="danhmuc" class="form-control" style="width:100%;">
+                                <option value="">Tất cả danh mục</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <label class="lb-form" for="thuonghieu">Thương hiệu</label>
+                            <select id="thuonghieu" class="form-control" style="width:100%;">
+                                <option value="">Tất cả thương hiệu</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <label class="lb-form" for="searchtable">Tìm kiếm</label>
+                            <div class="search-wrap">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input id="searchtable" placeholder="Tìm theo tên sản phẩm..." class="inputsearchtable form-control" />
+                            </div>
+                        </div>
+                        <div class="col-md-auto col-sm-6 d-flex gap-2">
+                            <button onclick="applyStockFilter()" class="btn btn-primary" style="background:#0d9488; border-color:#0d9488;">
+                                <i class="fa-solid fa-filter me-1"></i> Lọc
+                            </button>
+                            <button onclick="resetStockFilter()" class="btn btn-secondary">
+                                <i class="fa-solid fa-rotate-left me-1"></i> Đặt lại
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Product table ── -->
+                <div class="wrapper">
+                    <div class="headertable">
+                        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--tx);">
+                            <i class="fa-solid fa-list" style="color:var(--p);"></i>
+                            Danh sách tồn kho biến thể sản phẩm
+                            <span id="resultCount" style="background:rgba(13,148,136,.12);color:var(--p);font-size:11.5px;padding:3px 11px;border-radius:20px;font-weight:700;"></span>
+                        </div>
+                    </div>
+
+                    <table class="table table-striped" id="stockTable">
+                        <thead class="thead-tablefix">
+                            <tr>
+                                <th>#</th>
+                                <th>Ảnh</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Biến thể</th>
+                                <th>Phân bổ tồn kho tại các kho hàng</th>
+                                <th style="text-align:center;">Tổng tồn</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listProductStock">
+                            <tr>
+                                <td colspan="7" class="td-state text-center py-4">
+                                    <i class="fa-solid fa-spinner fa-spin me-2"></i>
+                                    <span>Đang tải dữ liệu...</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL PHÂN BỔ KHO HÀNG -->
+    <div class="modal fade" id="modalAllocation" tabindex="-1" aria-labelledby="modalAllocLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border:none; border-radius:20px; overflow:hidden;">
+                <div class="modal-header" style="background: linear-gradient(135deg,#0d9488 0%,#065f46 100%); color:#fff; padding:18px 24px; border:none;">
+                    <h5 class="modal-title fw-bold" id="modalAllocLabel"><i class="fas fa-warehouse me-2"></i>Phân bổ tồn kho</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="box-shadow:none; filter: invert(1); border:none; background-color:transparent; font-size:18px; color:#fff;"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <input type="hidden" id="allocVariantId">
+                        <label class="fw-bold text-muted mb-1" style="font-size:11px; text-transform:uppercase;">Tên biến thể</label>
+                        <div class="fw-bold text-dark" id="allocVariantName" style="font-size:16px;">Biến thể</div>
+                    </div>
+                    <hr class="my-3 text-muted">
+                    <div id="allocList" style="max-height:300px; overflow-y:auto; padding-right:4px;">
+                        <!-- Danh sách kho hàng render từ js -->
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                        <div class="fw-bold text-muted" style="font-size:14px;">Tổng số lượng: <span id="allocTotalQty" style="color:#0d9488; font-weight:800; font-size:16px;">0</span></div>
+                        <button class="btn btn-teal px-4" type="button" onclick="saveAllocations()" style="background:#0d9488; color:#fff; border-radius:10px; font-weight:700; border:none; padding:8px 20px;">
+                            <i class="fas fa-save me-2"></i>Lưu phân bổ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Scripts ── -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+
+    <script src="/seller/js/menu1.js"></script>
+    <script src="/seller/js/category.js"></script>
+    <script src="/seller/js/thuonghieu.js"></script>
+    <script src="/seller/js/tonkho.js"></script>
+
+    <script>
+        window.onload = async function () {
+            await loadCategoryProduct();
+            await loadTrademarkProduct();
+            await loadStockProducts();
+        };
+
+        function applyStockFilter() {
+            filterStockProducts();
+        }
+
+        function resetStockFilter() {
+            document.getElementById("searchtable").value = "";
+            document.getElementById("danhmuc").value = "";
+            document.getElementById("thuonghieu").value = "";
+            filterStockProducts();
+        }
+    </script>
+</body>
+
+</html>

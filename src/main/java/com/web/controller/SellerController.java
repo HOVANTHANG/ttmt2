@@ -18,6 +18,7 @@ public class SellerController {
 
     @Autowired
     private InvoiceDetailRepository invoiceDetailRepository;
+
     @RequestMapping(value = { "/index" }, method = RequestMethod.GET)
     public String dashboard() {
         return "seller/index";
@@ -78,7 +79,12 @@ public class SellerController {
         return "seller/diachi";
     }
 
-    @RequestMapping(value = {"/in-don"}, method = RequestMethod.GET)
+    @RequestMapping(value = { "/tonkho" }, method = RequestMethod.GET)
+    public String tonkho() {
+        return "seller/tonkho";
+    }
+
+    @RequestMapping(value = { "/in-don" }, method = RequestMethod.GET)
     public String indon(Model model, @RequestParam Long id) {
         model.addAttribute("hoaDon", invoiceRepository.findById(id).get());
         model.addAttribute("ctHoaDon", invoiceDetailRepository.findByInvoiceId(id));

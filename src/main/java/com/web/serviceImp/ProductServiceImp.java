@@ -58,6 +58,12 @@ public class ProductServiceImp implements ProductService {
     private UserUtils userUtils;
 
     @Autowired
+    private WarehouseInventoryRepository warehouseInventoryRepository;
+
+    @Autowired
+    private ShopAddressRepository shopAddressRepository;
+
+    @Autowired
     private InvoiceDetailRepository invoiceDetailRepository;
 
     @Autowired
@@ -151,7 +157,8 @@ public class ProductServiceImp implements ProductService {
             variant.setImage(v.getImage());
             variant.setProduct(savedProduct);
 
-            productVariantRepository.save(variant);
+            ProductVariant savedVariant = productVariantRepository.save(variant);
+            saveWarehouseAllocations(savedVariant, v, shop);
         }
 
         return savedProduct;
@@ -219,7 +226,8 @@ public class ProductServiceImp implements ProductService {
                 variant.setQuantity(v.getQuantity());
                 variant.setImage(v.getImage());
 
-                productVariantRepository.save(variant);
+                ProductVariant savedVariant = productVariantRepository.save(variant);
+                saveWarehouseAllocations(savedVariant, v, shop);
             }
         }
 
@@ -228,12 +236,55 @@ public class ProductServiceImp implements ProductService {
                 boolean usedInInvoice = invoiceDetailRepository.existsByProductVariantId(old.getId());
 
                 if (!usedInInvoice) {
+                    // Xóa các phân bổ kho tương ứng của variant bị xóa trước
+                    warehouseInventoryRepository.deleteByProductVariantId(old.getId());
                     productVariantRepository.delete(old);
                 }
             }
         }
 
         return savedProduct;
+    }
+
+    private void saveWarehouseAllocations(ProductVariant savedVariant, VariantRequest request, Shop shop) {
+        // Xóa phân bổ cũ của variant này
+        warehouseInventoryRepository.deleteByProductVariantId(savedVariant.getId());
+        warehouseInventoryRepository.flush();
+
+        if (request.getAllocations() != null && !request.getAllocations().isEmpty()) {
+            for (com.web.servive.WarehouseInventoryService.WarehouseAllocationDto alloc : request.getAllocations()) {
+                if (alloc.getQuantity() != null && alloc.getQuantity() > 0) {
+                    ShopAddress warehouse = shopAddressRepository.findById(alloc.getWarehouseId())
+                            .orElseThrow(() -> new MessageException("Không tìm thấy kho hàng id: " + alloc.getWarehouseId()));
+                    WarehouseInventory wi = new WarehouseInventory();
+                    wi.setProductVariant(savedVariant);
+                    wi.setShopAddress(warehouse);
+                    wi.setQuantity(alloc.getQuantity());
+                    warehouseInventoryRepository.save(wi);
+                }
+            }
+        } else {
+            // Mặc định phân phối vào kho chính
+            if (shop != null) {
+                Optional<ShopAddress> primaryOpt = shopAddressRepository.findPrimaryByShopId(shop.getId());
+                ShopAddress warehouse = null;
+                if (primaryOpt.isPresent()) {
+                    warehouse = primaryOpt.get();
+                } else {
+                    List<ShopAddress> addresses = shopAddressRepository.findByShop(shop.getId());
+                    if (!addresses.isEmpty()) {
+                        warehouse = addresses.get(0);
+                    }
+                }
+                if (warehouse != null) {
+                    WarehouseInventory wi = new WarehouseInventory();
+                    wi.setProductVariant(savedVariant);
+                    wi.setShopAddress(warehouse);
+                    wi.setQuantity(savedVariant.getQuantity() != null ? savedVariant.getQuantity() : 0);
+                    warehouseInventoryRepository.save(wi);
+                }
+            }
+        }
     }
 
     @Override

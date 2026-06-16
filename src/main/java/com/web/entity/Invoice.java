@@ -57,4 +57,8 @@ public class Invoice {
     @JoinColumn(name = "voucher_id")
     private Voucher voucher;
 
+    @ManyToOne
+    @JoinColumn(name = "shop_address_id")
+    private ShopAddress shopAddress;
+
 }

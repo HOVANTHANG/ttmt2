@@ -79,7 +79,11 @@ function updateShopUI(sid) {
             el.textContent = 'Miễn phí';
             el.style.color = '#059669';
         } else {
-            el.textContent = formatmoneyCheck(s.ship);
+            let text = formatmoneyCheck(s.ship);
+            if (s.warehouseProvince) {
+                text += ` (từ ${s.warehouseProvince})`;
+            }
+            el.textContent = text;
             el.style.color = '#1e293b';
         }
     }
@@ -348,6 +352,101 @@ async function tinhPhiGHN(fromDistrictId, fromWardCode, toDistrictId, toWardCode
     return Number(data?.data?.total || 30000);
 }
 
+async function getCheapestWarehouseWithStock(shopId, toGHN, qty, token) {
+    try {
+        // 1. Gọi API check-stock để tìm tất cả kho có hàng cho shop
+        const resStock = await fetch(`/api/warehouse-inventory/public/check-stock?shopId=${shopId}`, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (resStock.ok) {
+            const warehouses = await resStock.json();
+            // Lọc các kho có hàng
+            const withStock = warehouses.filter(w => w.hasStock);
+            
+            if (withStock.length > 0) {
+                console.log(`[Ship] Các kho có hàng cho shop ${shopId}:`, withStock);
+                
+                let cheapestWarehouse = null;
+                let minFee = Infinity;
+                
+                // Tính phí ship cho từng kho có hàng
+                for (const w of withStock) {
+                    try {
+                        const tinh = await layTinhShip(w.provinceName);
+                        if (!tinh) continue;
+                        const huyen = await layHuyenShip(w.districtName, tinh.ProvinceID);
+                        if (!huyen) continue;
+                        const xa = await layXaShip(w.wardName, huyen.DistrictID);
+                        if (!xa) continue;
+                        
+                        const phi = await tinhPhiGHN(
+                            huyen.DistrictID,
+                            xa.WardCode,
+                            toGHN.districtId,
+                            toGHN.wardCode,
+                            qty
+                        );
+                        
+                        console.log(`[Ship] Kho "${w.fullname}" (${w.provinceName}) -> phí: ${phi}đ`);
+                        if (phi < minFee) {
+                            minFee = phi;
+                            cheapestWarehouse = {
+                                warehouseId: w.warehouseId,
+                                warehouseName: w.fullname,
+                                provinceName: w.provinceName,
+                                shipCost: phi
+                            };
+                        }
+                    } catch (err) {
+                        console.warn(`[Ship] Lỗi tính phí cho kho "${w.fullname}":`, err);
+                    }
+                }
+                
+                if (cheapestWarehouse) {
+                    console.log(`[Ship] Chọn kho rẻ nhất cho shop ${shopId}:`, cheapestWarehouse);
+                    return cheapestWarehouse;
+                }
+            }
+        }
+    } catch (e) {
+        console.warn(`[Ship] Lỗi check-stock/tính phí tối ưu cho shop ${shopId}:`, e);
+    }
+
+    // 2. Fallback: Dùng kho chính mặc định
+    try {
+        const resPrimary = await fetch(`/api/shop-address/public/primary?shopId=${shopId}`);
+        if (resPrimary.ok) {
+            const addr = await resPrimary.json();
+            const tinh = await layTinhShip(addr.provinceName);
+            if (tinh) {
+                const huyen = await layHuyenShip(addr.districtName, tinh.ProvinceID);
+                if (huyen) {
+                    const xa = await layXaShip(addr.wardName, huyen.DistrictID);
+                    if (xa) {
+                        const phi = await tinhPhiGHN(
+                            huyen.DistrictID,
+                            xa.WardCode,
+                            toGHN.districtId,
+                            toGHN.wardCode,
+                            qty
+                        );
+                        return {
+                            warehouseId: addr.id,
+                            warehouseName: addr.fullname,
+                            provinceName: addr.provinceName,
+                            shipCost: phi
+                        };
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.warn(`[Ship] Lỗi lấy kho mặc định cho shop ${shopId}:`, e);
+    }
+
+    return null;
+}
+
 /**
  * Gọi bởi addressuser.js khi user chọn địa chỉ
  */
@@ -390,17 +489,18 @@ async function capNhatPhiShip(address) {
     }
 
     // Tính phí riêng từng shop (from = địa chỉ shop, to = địa chỉ user)
+    const token = localStorage.getItem("token");
     for (const sid of Object.keys(shopMap)) {
         try {
-            const from = await getShopFromGHN(sid);
-            const phi = await tinhPhiGHN(
-                from?.districtId || null,
-                from?.wardCode || null,
-                toGHN.districtId,
-                toGHN.wardCode,
-                shopMap[sid].qty
-            );
-            shopMap[sid].ship = phi;
+            const cheapest = await getCheapestWarehouseWithStock(sid, toGHN, shopMap[sid].qty, token);
+            if (cheapest) {
+                shopMap[sid].warehouseId = cheapest.warehouseId;
+                shopMap[sid].warehouseName = cheapest.warehouseName;
+                shopMap[sid].warehouseProvince = cheapest.provinceName;
+                shopMap[sid].ship = cheapest.shipCost;
+            } else {
+                shopMap[sid].ship = 30000;
+            }
         } catch (e) {
             console.warn(`[Ship] Lỗi tính phí shop ${sid}:`, e.message);
             shopMap[sid].ship = 30000;
@@ -503,7 +603,8 @@ async function paymentCod() {
             voucherCode: s.voucherCode || "",
             note: note,
             shipCost: s.ship || 0,
-            shopId: Number(sid)
+            shopId: Number(sid),
+            warehouseId: s.warehouseId || null
         };
 
         try {
@@ -555,6 +656,12 @@ async function requestPayMentMomo() {
     localStorage.setItem('multiShopData', JSON.stringify(shopMap));
     localStorage.setItem('ghichudonhang', note);
     localStorage.setItem('sodiachi', addressId);
+
+    // Lưu warehouseId cho trường hợp đơn lẻ (backward compat)
+    const firstShop = Object.values(shopMap)[0];
+    if (firstShop) {
+        localStorage.setItem('warehouseId', firstShop.warehouseId || "");
+    }
 
     try {
         const res = await fetch('http://localhost:8080/api/urlpayment', {
@@ -610,7 +717,8 @@ async function paymentMomo() {
                 shipCost: s.ship || 0,
                 shopId: Number(sid),
                 requestIdMomo: requestId,
-                orderIdMomo: orderId
+                orderIdMomo: orderId,
+                warehouseId: s.warehouseId || null
             };
 
             try {
@@ -644,6 +752,7 @@ async function paymentMomo() {
 }
 
 async function _paymentMomoSingle(orderId, requestId, note, addressId) {
+    const singleWarehouseId = localStorage.getItem("warehouseId");
     const body = {
         payType: "MOMO",
         userAddressId: addressId,
@@ -651,7 +760,8 @@ async function _paymentMomoSingle(orderId, requestId, note, addressId) {
         note: note,
         requestIdMomo: requestId,
         orderIdMomo: orderId,
-        shipCost: localStorage.getItem("shipCost") || 0
+        shipCost: localStorage.getItem("shipCost") || 0,
+        warehouseId: singleWarehouseId ? Number(singleWarehouseId) : null
     };
 
     const res = await fetch('http://localhost:8080/api/invoice/user/create', {

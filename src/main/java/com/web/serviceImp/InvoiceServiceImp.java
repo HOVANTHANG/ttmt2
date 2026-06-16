@@ -79,6 +79,12 @@ public class InvoiceServiceImp implements InvoiceService {
     @Autowired
     private ShopRepository shopRepository;
 
+    @Autowired
+    private WarehouseInventoryRepository warehouseInventoryRepository;
+
+    @Autowired
+    private ShopAddressRepository shopAddressRepository;
+
     @Override
     @Transactional
     public InvoiceResponse create(InvoiceRequest invoiceRequest) {
@@ -171,13 +177,30 @@ public class InvoiceServiceImp implements InvoiceService {
                         address.getWards().getDistricts().getName() + ", " +
                         address.getWards().getDistricts().getProvince().getName());
 
+        if (invoiceRequest.getWarehouseId() != null) {
+            ShopAddress warehouse = shopAddressRepository.findById(invoiceRequest.getWarehouseId())
+                    .orElseThrow(() -> new MessageException("Không tìm thấy kho hàng"));
+            invoice.setShopAddress(warehouse);
+        } else {
+            Optional<ShopAddress> primaryOpt = shopAddressRepository.findPrimaryByShopId(shopId);
+            if (primaryOpt.isPresent()) {
+                invoice.setShopAddress(primaryOpt.get());
+            } else {
+                List<ShopAddress> addresses = shopAddressRepository.findByShop(shopId);
+                if (!addresses.isEmpty()) {
+                    invoice.setShopAddress(addresses.get(0));
+                }
+            }
+        }
+
         // ================= VOUCHER =================
         if (invoiceRequest.getVoucherCode() != null && !invoiceRequest.getVoucherCode().isEmpty()) {
             double subtotalAmount = totalAmount;
             if (invoiceRequest.getShipCost() != null) {
                 subtotalAmount -= invoiceRequest.getShipCost();
             }
-            Optional<Voucher> voucher = voucherService.findByCode(invoiceRequest.getVoucherCode(), subtotalAmount, shopId);
+            Optional<Voucher> voucher = voucherService.findByCode(invoiceRequest.getVoucherCode(), subtotalAmount,
+                    shopId);
             if (voucher.isPresent()) {
                 Double discount = voucher.get().getCalculatedDiscount();
                 if (discount == null) {
@@ -214,6 +237,33 @@ public class InvoiceServiceImp implements InvoiceService {
             detail.setQuantity(cartQty);
             detail.setProductVariant(variant);
             invoiceDetailRepository.save(detail);
+
+            // Khấu trừ số lượng tại kho hàng được chỉ định
+            if (savedInvoice.getShopAddress() != null) {
+                Long warehouseId = savedInvoice.getShopAddress().getId();
+                Optional<WarehouseInventory> wiOpt = warehouseInventoryRepository.findByShopAddressIdAndProductVariantId(warehouseId, variant.getId());
+                if (wiOpt.isPresent()) {
+                    WarehouseInventory wi = wiOpt.get();
+                    if (wi.getQuantity() < cartQty) {
+                        throw new MessageException("Sản phẩm \"" + variant.getProduct().getName() + "\" không đủ hàng trong kho được chọn");
+                    }
+                    wi.setQuantity(wi.getQuantity() - cartQty);
+                    warehouseInventoryRepository.save(wi);
+                } else {
+                    // Legacy variant backward compatibility:
+                    // If no allocations exist at all for this variant, initialize them for the chosen warehouse (which is primary)
+                    List<WarehouseInventory> allAllocs = warehouseInventoryRepository.findByProductVariantId(variant.getId());
+                    if (allAllocs.isEmpty()) {
+                        WarehouseInventory wi = new WarehouseInventory();
+                        wi.setProductVariant(variant);
+                        wi.setShopAddress(savedInvoice.getShopAddress());
+                        wi.setQuantity(currentQty - cartQty);
+                        warehouseInventoryRepository.save(wi);
+                    } else {
+                        throw new MessageException("Sản phẩm \"" + variant.getProduct().getName() + "\" không có sẵn trong kho được chọn");
+                    }
+                }
+            }
 
             variant.setQuantity(currentQty - cartQty);
             productVariantRepository.save(variant);
@@ -333,6 +383,26 @@ public class InvoiceServiceImp implements InvoiceService {
             if (variant != null) {
                 Integer currentQty = variant.getQuantity() == null ? 0 : variant.getQuantity();
                 Integer detailQty = d.getQuantity() == null ? 0 : d.getQuantity();
+
+                // Hoàn trả tồn kho vào WarehouseInventory tương ứng
+                if (invoice.getShopAddress() != null) {
+                    Optional<WarehouseInventory> wiOpt = warehouseInventoryRepository.findByShopAddressIdAndProductVariantId(invoice.getShopAddress().getId(), variant.getId());
+                    if (wiOpt.isPresent()) {
+                        WarehouseInventory wi = wiOpt.get();
+                        wi.setQuantity(wi.getQuantity() + detailQty);
+                        warehouseInventoryRepository.save(wi);
+                    } else {
+                        // Legacy fallback: if there are no allocations for this variant at all, create one for the shopAddress
+                        List<WarehouseInventory> allAllocs = warehouseInventoryRepository.findByProductVariantId(variant.getId());
+                        if (allAllocs.isEmpty()) {
+                            WarehouseInventory wi = new WarehouseInventory();
+                            wi.setProductVariant(variant);
+                            wi.setShopAddress(invoice.getShopAddress());
+                            wi.setQuantity(currentQty + detailQty);
+                            warehouseInventoryRepository.save(wi);
+                        }
+                    }
+                }
 
                 variant.setQuantity(currentQty + detailQty);
                 productVariantRepository.save(variant);

@@ -448,7 +448,23 @@
                     data.productVariants ||
                     [];
 
-                generatedVariants = variantsFromApi.map(normalizeVariantFromApi);
+                generatedVariants = await Promise.all(variantsFromApi.map(async item => {
+                    const normalized = normalizeVariantFromApi(item);
+                    if (normalized.id) {
+                        try {
+                            const token = localStorage.getItem("token");
+                            const res = await fetch(`/api/warehouse-inventory/seller/allocations?variantId=${normalized.id}`, {
+                                headers: { 'Authorization': 'Bearer ' + token }
+                            });
+                            if (res.ok) {
+                                normalized.allocations = await res.json();
+                            }
+                        } catch (e) {
+                            console.error("Error loading allocations:", e);
+                        }
+                    }
+                    return normalized;
+                }));
 
                 fillVariantConfigFromData(generatedVariants);
                 renderVariants();
@@ -639,17 +655,19 @@
             <td>${variant.tier2name || ""}</td>
             <td>${variant.tier2value || ""}</td>
             <td>
-    <input class="mini-input" type="number" value="${variant.importPrice || 0}"
-        onchange="updateVariantField(${index}, 'importPrice', this.value)" />
-</td>
-
-<td>
-    <input class="mini-input" type="number" value="${variant.price || 0}"
-        onchange="updateVariantField(${index}, 'price', this.value)" />
-</td>
+                <input class="mini-input" type="number" value="${variant.importPrice || 0}"
+                    onchange="updateVariantField(${index}, 'importPrice', this.value)" />
+            </td>
             <td>
-                <input class="mini-input" type="number" value="${variant.quantity || 0}"
-                    onchange="updateVariantField(${index}, 'quantity', this.value)" />
+                <input class="mini-input" type="number" value="${variant.price || 0}"
+                    onchange="updateVariantField(${index}, 'price', this.value)" />
+            </td>
+            <td>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <input class="mini-input text-center" type="number" value="${variant.quantity || 0}" readonly
+                        style="background:#f1f5f9; cursor:pointer; font-weight:700; width:70px;" onclick="openAllocModalInAddProduct(${index})" />
+                    <button class="btn btn-sm btn-outline-teal" type="button" onclick="openAllocModalInAddProduct(${index})" style="padding: 2px 6px; border-color:#0d9488; color:#0d9488;">🏢</button>
+                </div>
             </td>
             <td>
                 <input class="mini-input" type="file" accept="image/*"
@@ -785,7 +803,11 @@
                     importPrice: Number(item.importPrice || 0),
                     price: Number(item.price || 0),
                     quantity: Number(item.quantity || 0),
-                    image: item.image || ""
+                    image: item.image || "",
+                    allocations: (item.allocations || []).map(a => ({
+                        warehouseId: Number(a.warehouseId),
+                        quantity: Number(a.quantity || 0)
+                    }))
                 }))
             };
 
@@ -955,6 +977,7 @@
         async function initPage() {
             toggleVariantConfig();
             await initDropdowns();
+            await fetchSellerWarehouses();
 
             const productId = getProductIdFromUrl();
             if (productId) {
@@ -962,6 +985,102 @@
             } else {
                 // Sản phẩm mới → tự sinh mã
                 generateProductCode();
+            }
+        }
+
+        let sellerWarehouses = [];
+        async function fetchSellerWarehouses() {
+            try {
+                const token = localStorage.getItem("token");
+                const res = await fetch('/api/shop-address/seller/my-address', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.ok) {
+                    sellerWarehouses = await res.json();
+                }
+            } catch (e) {
+                console.error("Lỗi fetch seller warehouses:", e);
+            }
+        }
+
+        let currentEditingVariantIndex = null;
+
+        async function openAllocModalInAddProduct(index) {
+            currentEditingVariantIndex = index;
+            const variant = generatedVariants[index];
+
+            document.getElementById("addProdAllocVariantName").textContent = 
+                [variant.tier1value, variant.tier2value].filter(Boolean).join(' / ') || 'Mặc định';
+
+            // Khởi tạo allocations nếu chưa có
+            if (!variant.allocations) {
+                variant.allocations = [];
+            }
+
+            // Đồng bộ allocations với danh sách kho hàng hiện có
+            let mergedAllocations = sellerWarehouses.map(w => {
+                const existing = variant.allocations.find(a => Number(a.warehouseId) === Number(w.id));
+                return {
+                    warehouseId: w.id,
+                    warehouseName: w.fullname,
+                    address: w.streetName + ", " + (w.wards ? w.wards.name : ""),
+                    quantity: existing ? Number(existing.quantity || 0) : 0
+                };
+            });
+
+            let html = '';
+            if (mergedAllocations.length === 0) {
+                html = `<div class="text-center text-muted py-3">Bạn chưa cấu hình kho hàng nào. Vui lòng vào trang "Địa chỉ kho" để thêm.</div>`;
+            } else {
+                mergedAllocations.forEach((alloc, i) => {
+                    html += `
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div>
+                            <div class="fw-bold text-dark" style="font-size:14px;">${alloc.warehouseName}</div>
+                            <div class="text-muted" style="font-size:11px;">${alloc.address}</div>
+                        </div>
+                        <div>
+                            <input type="number" class="form-control" style="width: 90px; text-align:center;" value="${alloc.quantity}" min="0" oninput="changeAddProdAllocQty(${i}, this.value)">
+                        </div>
+                    </div>`;
+                });
+            }
+
+            window.tempAllocations = mergedAllocations;
+
+            document.getElementById("addProdAllocList").innerHTML = html;
+            updateAddProdAllocTotal();
+
+            const modal = new bootstrap.Modal(document.getElementById('modalAddProdAllocation'));
+            modal.show();
+        }
+
+        function changeAddProdAllocQty(i, val) {
+            let qty = parseInt(val);
+            if (isNaN(qty) || qty < 0) qty = 0;
+            window.tempAllocations[i].quantity = qty;
+            updateAddProdAllocTotal();
+        }
+
+        function updateAddProdAllocTotal() {
+            const total = window.tempAllocations.reduce((sum, item) => sum + (item.quantity || 0), 0);
+            document.getElementById("addProdAllocTotalQty").textContent = total;
+        }
+
+        function saveAddProdAllocations() {
+            if (currentEditingVariantIndex === null) return;
+
+            const total = window.tempAllocations.reduce((sum, item) => sum + (item.quantity || 0), 0);
+
+            generatedVariants[currentEditingVariantIndex].allocations = window.tempAllocations;
+            generatedVariants[currentEditingVariantIndex].quantity = total;
+
+            renderVariants();
+
+            const modalEl = document.getElementById("modalAddProdAllocation");
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) {
+                modalInstance.hide();
             }
         }
 
@@ -990,6 +1109,32 @@
             await initPage();
         });
     </script>
+    <!-- MODAL PHÂN BỔ KHO HÀNG TRONG THÊM SẢN PHẨM -->
+    <div class="modal fade" id="modalAddProdAllocation" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border:none; border-radius:20px; overflow:hidden;">
+                <div class="modal-header" style="background: linear-gradient(135deg,#0d9488 0%,#065f46 100%); color:#fff; padding:18px 24px; border:none;">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-warehouse me-2"></i>Phân bổ kho hàng</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" style="box-shadow:none; filter: invert(1); border:none; background-color:transparent; font-size:18px; color:#fff;" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="fw-bold text-muted mb-1" style="font-size:11px; text-transform:uppercase;">Biến thể đang phân bổ</label>
+                        <div class="fw-bold text-dark" id="addProdAllocVariantName" style="font-size:15px;">Biến thể</div>
+                    </div>
+                    <hr class="my-3 text-muted">
+                    <div id="addProdAllocList" style="max-height: 250px; overflow-y:auto; padding-right:4px;">
+                        <!-- List warehouses -->
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                        <div class="fw-bold text-muted" style="font-size:13px;">Tổng số lượng: <span id="addProdAllocTotalQty" style="color:#0d9488; font-weight: 800;">0</span></div>
+                        <button class="btn btn-teal px-4" type="button" onclick="saveAddProdAllocations()" style="background:#0d9488; color:#fff; border-radius:10px; font-weight:700; border:none; padding:8px 20px;">
+                            <i class="fas fa-check-circle me-2"></i>Xác nhận
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
-
 </html>
